@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Logistik.API/Logistik.API.csproj" />
+    <Project Path="src/Logistik.Application/Logistik.Application.csproj" />
+    <Project Path="src/Logistik.Domain/Logistik.Domain.csproj" />
+    <Project Path="src/Logistik.Infrastructure/Logistik.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Logistik.Application.Tests/Logistik.Application.Tests.csproj" />
+    <Project Path="tests/Logistik.Domain.Tests/Logistik.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

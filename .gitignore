@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+logs/
+
+# Angular
+logistik-frontend/node_modules/
+logistik-frontend/dist/
+logistik-frontend/.angular/
+
+# Secrets / env
+.env
+*.local.json
+
+# OS
+.DS_Store
+Thumbs.db

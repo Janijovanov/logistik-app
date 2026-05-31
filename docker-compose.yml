@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: logistik_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: logistik_db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Logistik.API/Dockerfile
+    container_name: logistik_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=logistik_db;User=${MYSQL_USER};Password=${MYSQL_PASSWORD};"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY}
+      JwtSettings__Issuer: ${JWT_ISSUER:-logistik.mk}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-logistik.mk}
+      EmailSettings__SmtpHost: ${SMTP_HOST:-mailpit}
+      EmailSettings__SmtpPort: ${SMTP_PORT:-1025}
+      EmailSettings__SenderEmail: ${SMTP_SENDER_EMAIL:-noreply@logistik.mk}
+      EmailSettings__SenderName: "Logistik System"
+      EmailSettings__Username: ${SMTP_USERNAME:-}
+      EmailSettings__Password: ${SMTP_PASSWORD:-}
+      Seed__AdminUsername: ${ADMIN_USERNAME:-admin}
+      Seed__AdminEmail: ${ADMIN_EMAIL:-admin@logistik.mk}
+      Seed__AdminPassword: ${ADMIN_PASSWORD:-Admin123!}
+      Cors__AllowedOrigins__0: ${FRONTEND_URL:-http://localhost:4200}
+    ports:
+      - "5000:8080"
+
+  frontend:
+    build:
+      context: ./logistik-frontend
+      dockerfile: Dockerfile
+    container_name: logistik_frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: logistik_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  mysql_data:
+    driver: local
