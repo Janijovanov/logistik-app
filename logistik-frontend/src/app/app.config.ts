@@ -22,6 +22,6 @@ export const appConfig: ApplicationConfig = {
     provideStore(),
     provideEffects(),
     provideTranslateService({ defaultLanguage: 'mk' }),
-    provideTranslateHttpLoader({ prefix: '/assets/i18n/', suffix: '.json' })
+    provideTranslateHttpLoader({ prefix: 'assets/i18n/', suffix: '.json' })
   ]
 };

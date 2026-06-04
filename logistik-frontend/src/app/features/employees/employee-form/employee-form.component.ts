@@ -16,6 +16,7 @@ import { EmployeesService } from '../employees.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/termination-emails-dialog.component';
 
 @Component({
   selector: 'app-employee-form',
@@ -125,6 +126,7 @@ export class EmployeeFormComponent implements OnInit {
   companyId!: number;
   employeeId: number | null = null;
   saving = signal(false);
+  private hadEndDateOnLoad = false;
 
   form = this.fb.group({
     fullName: ['', Validators.required],
@@ -142,6 +144,7 @@ export class EmployeeFormComponent implements OnInit {
       this.isEdit = true;
       this.employeeId = +id;
       this.service.getById(this.companyId, this.employeeId).subscribe(e => {
+        this.hadEndDateOnLoad = !!e.employmentEndDate;
         this.form.patchValue({
           ...e,
           employmentStartDate: e.employmentStartDate ? new Date(e.employmentStartDate) : null,
@@ -180,10 +183,27 @@ export class EmployeeFormComponent implements OnInit {
       ...(transferFromEmployeeId ? { transferFromEmployeeId } : {})
     };
 
+    const endDateNewlySet = this.isEdit && !this.hadEndDateOnLoad && !!payload.employmentEndDate;
+
     const onSuccess = () => {
       this.notifications.success(this.isEdit
         ? this.translate.instant('employees.editEmployee')
         : this.translate.instant('employees.addEmployee'));
+
+      if (endDateNewlySet && this.employeeId) {
+        // Check if there are termination notification emails to send
+        this.service.getTerminationEmails(this.companyId, this.employeeId).subscribe(emails => {
+          if (emails.length > 0) {
+            this.dialog.open(TerminationEmailsDialogComponent, {
+              width: '660px',
+              maxWidth: '96vw',
+              disableClose: false,
+              data: { companyId: this.companyId, employeeId: this.employeeId! }
+            });
+          }
+        });
+      }
+
       this.goBack();
     };
 

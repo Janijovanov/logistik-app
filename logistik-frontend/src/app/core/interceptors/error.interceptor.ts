@@ -13,6 +13,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const notifications = inject(NotificationService);
 
+  // Skip error notifications for asset/i18n requests
+  if (req.url.includes('/assets/') || req.url.includes('i18n')) {
+    return next(req).pipe(catchError(err => throwError(() => err)));
+  }
+
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && !req.url.includes('/auth/')) {

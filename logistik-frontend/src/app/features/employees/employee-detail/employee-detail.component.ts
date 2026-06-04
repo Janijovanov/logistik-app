@@ -27,6 +27,7 @@ import { OrderFormDialogComponent } from '../../enforcement-orders/order-form-di
 import { MarkPaidDialogComponent } from '../../enforcement-orders/mark-paid-dialog/mark-paid-dialog.component';
 import { ExecutorDialogComponent } from '../../enforcement-orders/executor-dialog/executor-dialog.component';
 import { EmailPreviewDialogComponent } from '../../enforcement-orders/email-preview-dialog/email-preview-dialog.component';
+import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/termination-emails-dialog.component';
 
 @Component({
   selector: 'app-employee-detail',
@@ -86,6 +87,19 @@ import { EmailPreviewDialogComponent } from '../../enforcement-orders/email-prev
                 <span class="info-value">{{ employee()!.employmentEndDate ? (employee()!.employmentEndDate | date:'dd.MM.yyyy') : ('employees.currentlyEmployed' | translate) }}</span>
               </div>
             </div>
+
+            @if (employee()!.employmentEndDate && authService.canEditCompany(companyId)) {
+              <div class="termination-notice">
+                <mat-icon class="term-icon">person_off</mat-icon>
+                <div class="term-text">
+                  <span>Работникот е одјавен на {{ employee()!.employmentEndDate | date:'dd.MM.yyyy' }}</span>
+                </div>
+                <button mat-stroked-button color="warn" (click)="openTerminationEmails()" class="term-notify-btn">
+                  <mat-icon>mail_lock</mat-icon>
+                  Известувања
+                </button>
+              </div>
+            }
 
             @if (employee()!.employmentHistories?.length) {
               <div class="history-section">
@@ -318,6 +332,10 @@ import { EmailPreviewDialogComponent } from '../../enforcement-orders/email-prev
     .payment-order-cell { white-space: nowrap; text-align: right; padding-right: 4px; }
     .btn-nalog { color: #c62828; }
     .btn-nalog-2 { color: #1565c0; }
+    .termination-notice { display: flex; align-items: center; gap: 10px; margin-top: 20px; padding: 12px 16px; background: #fff3e0; border: 1px solid #ffb74d; border-radius: 8px; }
+    .term-icon { color: #e65100; }
+    .term-text { flex: 1; font-size: 13px; color: #e65100; font-weight: 500; }
+    .term-notify-btn { flex-shrink: 0; }
     .history-section { margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1); }
     .history-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: rgba(0,0,0,0.54); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 14px; }
     .history-icon { font-size: 18px; width: 18px; height: 18px; }
@@ -499,6 +517,14 @@ export class EmployeeDetailComponent implements OnInit {
       data: { companyId: this.companyId, employeeId: this.employeeId, order }
     }).afterClosed().subscribe(done => {
       if (done) { this.notifications.success(this.translate.instant('orders.markPaid')); this.load(); }
+    });
+  }
+
+  openTerminationEmails(): void {
+    this.dialog.open(TerminationEmailsDialogComponent, {
+      width: '660px',
+      maxWidth: '96vw',
+      data: { companyId: this.companyId, employeeId: this.employeeId }
     });
   }
 

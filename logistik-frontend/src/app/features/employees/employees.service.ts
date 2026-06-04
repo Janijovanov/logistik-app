@@ -5,6 +5,20 @@ import { environment } from '../../../environments/environment';
 import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, SalaryHistory, RecordSalaryRequest, EmployeeMonthlySalary } from '../../core/models/employee.models';
 import { PaginatedResult } from '../../core/models/pagination.models';
 
+export interface TerminationEmailPreview {
+  emailLogId: number | null;
+  orderId: number;
+  executorName: string;
+  executorEmail: string;
+  orderNumber: string;
+  subject: string;
+  contentText: string;
+  senderName: string;
+  isSent: boolean;
+  sentAt: string | null;
+  errorMessage: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EmployeesService {
   private http = inject(HttpClient);
@@ -77,5 +91,20 @@ export class EmployeesService {
     const params = overflow ? '?overflow=true' : '';
     return this.http.get(`${environment.apiUrl}/reports/salary-history/${salaryRecordId}/payment-order${params}`,
       { responseType: 'blob' });
+  }
+
+  getTerminationEmails(companyId: number, employeeId: number): Observable<TerminationEmailPreview[]> {
+    return this.http.get<TerminationEmailPreview[]>(`${this.base(companyId)}/${employeeId}/termination-emails`);
+  }
+
+  sendTerminationEmail(companyId: number, employeeId: number, emailLogId: number, subject?: string, bodyText?: string): Observable<{ success: boolean; error: string | null }> {
+    return this.http.post<{ success: boolean; error: string | null }>(
+      `${this.base(companyId)}/${employeeId}/termination-emails/${emailLogId}/send`,
+      { subject, bodyText }
+    );
+  }
+
+  resetTerminationEmail(companyId: number, employeeId: number, emailLogId: number): Observable<void> {
+    return this.http.post<void>(`${this.base(companyId)}/${employeeId}/termination-emails/${emailLogId}/reset`, {});
   }
 }

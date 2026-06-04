@@ -1,4 +1,3 @@
-using Logistik.Application.Common.Interfaces;
 using Logistik.Application.Common.Models;
 using Logistik.Domain.Entities;
 using Logistik.Domain.Enums;
@@ -13,12 +12,10 @@ public record UpdateEmployeeCommand(int Id, int CompanyId, string FullName, stri
 public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Result>
 {
     private readonly IUnitOfWork _uow;
-    private readonly IEmailService _email;
 
-    public UpdateEmployeeCommandHandler(IUnitOfWork uow, IEmailService email)
+    public UpdateEmployeeCommandHandler(IUnitOfWork uow)
     {
         _uow = uow;
-        _email = email;
     }
 
     public async Task<Result> Handle(UpdateEmployeeCommand request, CancellationToken ct)
@@ -47,26 +44,53 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
 
         if (employmentEndDateAdded)
         {
+            var company = await _uow.Companies.GetByIdAsync(employee.CompanyId, ct);
+            var companyName = company?.Name ?? string.Empty;
+            var endDateStr = request.EmploymentEndDate!.Value.ToString("dd.MM.yyyy");
+
             var activeOrders = employee.EnforcementOrders
-                .Where(o => o.Status != Logistik.Domain.Enums.OrderStatus.Completed && o.Status != Logistik.Domain.Enums.OrderStatus.Archived)
+                .Where(o => o.Status != OrderStatus.Completed && o.Status != OrderStatus.Archived)
                 .ToList();
 
             foreach (var order in activeOrders)
             {
+                var subject = $"Известување за прекин на работен однос — {employee.FullName} — И.бр. {order.OrderNumber}";
+                var contentText =
+                    $"Лицето \"{employee.FullName}\" со ЕМБГ \"{employee.EMBG}\" вработено во \"{companyName}\" " +
+                    $"кое е во процес на извршување по извршно решение \"И.бр. {order.OrderNumber}\" " +
+                    $"го прекинало работниот однос на ден {endDateStr}. " +
+                    $"Вкупна сума: {order.TotalAmount:N2} ден. | " +
+                    $"Вкупно платено: {order.TotalPaid:N2} ден. | " +
+                    $"Преостанат износ: {order.RemainingAmount:N2} ден.";
+
+                var body = BuildHtmlBody(contentText);
+
                 var log = new EmailLog
                 {
                     RecipientEmail = order.ExecutorEmail,
-                    Subject = $"Obvestilo o prenehanju zaposlitve — {employee.FullName}",
-                    Body = $"Zaposleni {employee.FullName} (EMBG: {employee.EMBG}) ima datum prenehanja delovnega razmerja: {request.EmploymentEndDate}. " +
-                           $"Izvrsno resenje {order.OrderNumber} bo morda prizadeto.",
+                    Subject = subject,
+                    Body = body,
                     NotificationType = EmailNotificationType.EmploymentEnding,
-                    RelatedEntityType = "Employee",
-                    RelatedEntityId = employee.Id
+                    RelatedEntityType = "EnforcementOrder",
+                    RelatedEntityId = order.Id
                 };
-                await _email.QueueAsync(log, ct);
+                await _uow.EmailLogs.AddAsync(log, ct);
             }
+
+            if (activeOrders.Count > 0)
+                await _uow.SaveChangesAsync(ct);
         }
 
         return Result.Success();
     }
+
+    private static string BuildHtmlBody(string contentText) =>
+        $"""
+        <div style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;max-width:600px">
+          <p>Почитувани,</p>
+          <p>{System.Net.WebUtility.HtmlEncode(contentText)}</p>
+          <br/>
+          <p>Со почит,<br/><strong>Logistik систем</strong></p>
+        </div>
+        """;
 }
