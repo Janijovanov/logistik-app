@@ -184,27 +184,33 @@ export class EmployeeFormComponent implements OnInit {
     };
 
     const endDateNewlySet = this.isEdit && !this.hadEndDateOnLoad && !!payload.employmentEndDate;
+    const savedEmpId = this.employeeId;
+    const savedCompanyId = this.companyId;
 
     const onSuccess = () => {
+      this.saving.set(false);
       this.notifications.success(this.isEdit
         ? this.translate.instant('employees.editEmployee')
         : this.translate.instant('employees.addEmployee'));
 
-      if (endDateNewlySet && this.employeeId) {
-        // Check if there are termination notification emails to send
-        this.service.getTerminationEmails(this.companyId, this.employeeId).subscribe(emails => {
-          if (emails.length > 0) {
-            this.dialog.open(TerminationEmailsDialogComponent, {
-              width: '660px',
-              maxWidth: '96vw',
-              disableClose: false,
-              data: { companyId: this.companyId, employeeId: this.employeeId! }
-            });
-          }
+      if (endDateNewlySet && savedEmpId) {
+        // Navigate first, then open dialog once we know there are emails
+        this.goBack();
+        this.service.getTerminationEmails(savedCompanyId, savedEmpId).subscribe({
+          next: emails => {
+            if (emails.length > 0) {
+              this.dialog.open(TerminationEmailsDialogComponent, {
+                width: '660px',
+                maxWidth: '96vw',
+                data: { companyId: savedCompanyId, employeeId: savedEmpId }
+              });
+            }
+          },
+          error: () => { /* silently ignore — user already navigated back */ }
         });
+      } else {
+        this.goBack();
       }
-
-      this.goBack();
     };
 
     const onError = (err: any) => {
