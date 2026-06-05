@@ -110,6 +110,9 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                 </mat-button-toggle>
               </mat-button-toggle-group>
 
+            </div>
+
+            <div class="section-header-right">
               <!-- Active/inactive toggle -->
               <button mat-stroked-button
                 class="inactive-toggle"
@@ -117,14 +120,12 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                 (click)="showInactive.set(!showInactive())"
                 [matTooltip]="showInactive() ? 'Прикажи само активни вработени' : 'Прикажи ги сите вработени'">
                 <mat-icon>{{ showInactive() ? 'person_off' : 'people' }}</mat-icon>
-                {{ showInactive() ? 'Сите вработени' : 'Само активни' }}
+                {{ showInactive() ? 'Само активни' : 'Сите вработени' }}
                 @if (showInactive() && inactiveCount() > 0) {
                   <span class="inactive-badge">+{{ inactiveCount() }} одјавени</span>
                 }
               </button>
-            </div>
 
-            <div class="section-header-right">
               @if (viewMode() === 'orders' && ordersCount() > 0 && authService.canExportCompany(selectedCompany()!.id)) {
                 <button mat-stroked-button (click)="exportOrdersExcel()" class="export-btn">
                   <mat-icon>download</mat-icon>
