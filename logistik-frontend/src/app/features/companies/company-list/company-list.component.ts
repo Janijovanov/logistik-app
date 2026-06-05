@@ -24,6 +24,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialog/record-salary-dialog.component';
+import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dialog.component';
 
 @Component({
   selector: 'app-company-list',
@@ -33,7 +34,7 @@ import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialo
     MatSelectModule, MatFormFieldModule, MatButtonModule, MatButtonToggleModule,
     MatIconModule, MatTableModule, MatDialogModule, MatTooltipModule,
     MatProgressSpinnerModule, MatDatepickerModule, MatNativeDateModule, MatInputModule,
-    PageHeaderComponent, TranslateModule
+    PageHeaderComponent, TranslateModule, RehireDialogComponent
   ],
   template: `
     <app-page-header [title]="'companies.title' | translate" [subtitle]="'companies.subtitle' | translate">
@@ -108,6 +109,19 @@ import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialo
                   }
                 </mat-button-toggle>
               </mat-button-toggle-group>
+
+              <!-- Active/inactive toggle -->
+              <button mat-stroked-button
+                class="inactive-toggle"
+                [class.inactive-toggle-on]="showInactive()"
+                (click)="showInactive.set(!showInactive())"
+                [matTooltip]="showInactive() ? 'Сокриј одјавени' : 'Прикажи одјавени вработени'">
+                <mat-icon>{{ showInactive() ? 'person_off' : 'person_off' }}</mat-icon>
+                {{ showInactive() ? 'Одјавени вклучени' : 'Само активни' }}
+                @if (inactiveCount() > 0) {
+                  <span class="inactive-badge">{{ inactiveCount() }}</span>
+                }
+              </button>
             </div>
 
             <div class="section-header-right">
@@ -183,7 +197,14 @@ import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialo
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef></th>
                   <td mat-cell *matCellDef="let e" class="actions-cell" (click)="$event.stopPropagation()">
-                    @if (authService.canEditCompany(selectedCompany()!.id)) {
+                    @if (e.employmentEndDate && authService.canEditCompany(selectedCompany()!.id)) {
+                      <!-- Terminated employee: show re-hire button -->
+                      <button mat-stroked-button color="primary" (click)="rehireEmployee(e)"
+                        class="rehire-btn" matTooltip="Врати на работа со нов датум">
+                        <mat-icon>how_to_reg</mat-icon>
+                        Врати
+                      </button>
+                    } @else if (authService.canEditCompany(selectedCompany()!.id)) {
                       @if (e.recordedNetSalary !== null) {
                         <button mat-icon-button color="accent" (click)="editSalary(e)"
                           [matTooltip]="'employees.editRecordedSalary' | translate">
@@ -196,10 +217,12 @@ import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialo
                         </button>
                       }
                     }
-                    <button mat-icon-button (click)="goToEmployee(e, $event)" [matTooltip]="'employees.viewDetails' | translate">
-                      <mat-icon>visibility</mat-icon>
-                    </button>
-                    @if (authService.canEditCompany(selectedCompany()!.id)) {
+                    @if (!e.employmentEndDate) {
+                      <button mat-icon-button (click)="goToEmployee(e, $event)" [matTooltip]="'employees.viewDetails' | translate">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                    }
+                    @if (authService.canEditCompany(selectedCompany()!.id) && !e.employmentEndDate) {
                       <button mat-icon-button (click)="goToEmployeeEdit(e, $event)" [matTooltip]="'employees.editTooltip' | translate">
                         <mat-icon>edit</mat-icon>
                       </button>
@@ -376,7 +399,27 @@ import { RecordSalaryDialogComponent } from '../../employees/record-salary-dialo
     .amount-recorded { color: #c62828; font-weight: 700; }
     .text-muted { color: rgba(0,0,0,0.38); }
     :host ::ng-deep .salary-paid { background: #e8f5e9 !important; }
-    :host ::ng-deep .row-terminated { background: #ffebee !important; }
+    :host ::ng-deep .row-terminated { background: #fff3e0 !important; }
+    :host ::ng-deep .row-terminated td { color: rgba(0,0,0,0.5); font-style: italic; }
+
+    .inactive-toggle {
+      height: 36px; font-size: 12px; padding: 0 12px;
+      color: rgba(0,0,0,0.45); border-color: rgba(0,0,0,0.2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .inactive-toggle mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    .inactive-toggle-on {
+      color: #e65100 !important;
+      border-color: #e65100 !important;
+      background: #fff3e0 !important;
+    }
+    .inactive-badge {
+      background: #e65100; color: #fff;
+      border-radius: 10px; padding: 1px 7px;
+      font-size: 11px; font-weight: 700;
+      display: inline-flex; align-items: center; margin-left: 4px;
+    }
+    .rehire-btn { font-size: 12px; height: 30px; padding: 0 10px; }
 
     .no-selection {
       text-align: center; padding: 64px; color: rgba(0,0,0,0.38);
@@ -403,6 +446,7 @@ export class CompanyListComponent implements OnInit {
   monthlyData = signal<EmployeeMonthlySalary[]>([]);
   loadingEmployees = signal(false);
   viewMode = signal<'all' | 'orders'>('all');
+  showInactive = signal(false);
 
   companyCtrl = new FormControl<Company | null>(null);
   monthCtrl = new FormControl<Date | null>(this.currentMonth());
@@ -414,13 +458,17 @@ export class CompanyListComponent implements OnInit {
   private hasActiveOrderForMonth = (e: EmployeeMonthlySalary) =>
     e.salaryRecordId !== null && (e.deductionAmount ?? 0) > 0;
 
-  displayData = computed(() =>
-    this.viewMode() === 'orders'
-      ? this.monthlyData().filter(this.hasActiveOrderForMonth)
-      : this.monthlyData()
-  );
+  private isTerminated = (e: EmployeeMonthlySalary) => !!e.employmentEndDate;
+
+  displayData = computed(() => {
+    let data = this.monthlyData();
+    if (!this.showInactive()) data = data.filter(e => !this.isTerminated(e));
+    if (this.viewMode() === 'orders') data = data.filter(this.hasActiveOrderForMonth);
+    return data;
+  });
 
   ordersCount = computed(() => this.monthlyData().filter(this.hasActiveOrderForMonth).length);
+  inactiveCount = computed(() => this.monthlyData().filter(this.isTerminated).length);
 
   private currentMonth(): Date {
     const d = new Date();
@@ -518,6 +566,19 @@ export class CompanyListComponent implements OnInit {
     const month = this.monthCtrl.value ?? this.currentMonth();
     const start = new Date(emp.employmentStartDate);
     return month >= new Date(start.getFullYear(), start.getMonth(), 1);
+  }
+
+  rehireEmployee(emp: EmployeeMonthlySalary): void {
+    this.dialog.open(RehireDialogComponent, {
+      width: '460px',
+      maxWidth: '96vw',
+      data: { companyId: this.selectedCompany()!.id, employee: emp }
+    }).afterClosed().subscribe(success => {
+      if (success) {
+        this.notifications.success(`${emp.fullName} е вратен/а на работа.`);
+        this.loadMonthlyData();
+      }
+    });
   }
 
   deleteEmployee(emp: EmployeeMonthlySalary): void {
