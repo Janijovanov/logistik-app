@@ -113,13 +113,13 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
               <!-- Active/inactive toggle -->
               <button mat-stroked-button
                 class="inactive-toggle"
-                [class.inactive-toggle-on]="showInactive()"
+                [class.inactive-toggle-on]="!showInactive()"
                 (click)="showInactive.set(!showInactive())"
-                [matTooltip]="showInactive() ? 'Сокриј одјавени' : 'Прикажи одјавени вработени'">
-                <mat-icon>{{ showInactive() ? 'person_off' : 'person_off' }}</mat-icon>
-                {{ showInactive() ? 'Одјавени вклучени' : 'Само активни' }}
-                @if (inactiveCount() > 0) {
-                  <span class="inactive-badge">{{ inactiveCount() }}</span>
+                [matTooltip]="showInactive() ? 'Прикажи само активни вработени' : 'Прикажи ги сите вработени'">
+                <mat-icon>{{ showInactive() ? 'person_off' : 'people' }}</mat-icon>
+                {{ showInactive() ? 'Сите вработени' : 'Само активни' }}
+                @if (showInactive() && inactiveCount() > 0) {
+                  <span class="inactive-badge">+{{ inactiveCount() }} одјавени</span>
                 }
               </button>
             </div>
@@ -446,7 +446,7 @@ export class CompanyListComponent implements OnInit {
   monthlyData = signal<EmployeeMonthlySalary[]>([]);
   loadingEmployees = signal(false);
   viewMode = signal<'all' | 'orders'>('all');
-  showInactive = signal(false);
+  showInactive = signal(true);
 
   companyCtrl = new FormControl<Company | null>(null);
   monthCtrl = new FormControl<Date | null>(this.currentMonth());
