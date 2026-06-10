@@ -1,0 +1,1 @@
+import"./chunk-4CLCTAJ7.js";var o=[{path:"new",loadComponent:()=>import("./chunk-R2HQFNG4.js").then(e=>e.EmployeeFormComponent)},{path:":employeeId",loadComponent:()=>import("./chunk-BSWPQCBD.js").then(e=>e.EmployeeDetailComponent)},{path:":employeeId/edit",loadComponent:()=>import("./chunk-R2HQFNG4.js").then(e=>e.EmployeeFormComponent)}];export{o as employeesRoutes};

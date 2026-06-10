@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { timeout } from 'rxjs/operators';
+import { timeout, catchError } from 'rxjs/operators';
+import { interval, Subscription, of } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +14,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { EmployeesService } from '../employees.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -101,7 +104,8 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
             <button mat-stroked-button type="button" (click)="goBack()">{{ 'common.cancel' | translate }}</button>
             <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
               @if (saving()) { <mat-spinner diameter="18" /> }
-              {{ (isEdit ? 'common.saveChanges' : 'employees.addEmployee') | translate }}
+              @if (!saving()) { {{ (isEdit ? 'common.saveChanges' : 'employees.addEmployee') | translate }} }
+              @if (saving()) { {{ savingMsg() }} }
             </button>
           </div>
         </form>
@@ -114,7 +118,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
     mat-spinner { margin-right: 8px; display: inline-block; }
   `]
 })
-export class EmployeeFormComponent implements OnInit {
+export class EmployeeFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private service = inject(EmployeesService);
   private route = inject(ActivatedRoute);
@@ -122,12 +126,16 @@ export class EmployeeFormComponent implements OnInit {
   private notifications = inject(NotificationService);
   private translate = inject(TranslateService);
   private dialog = inject(MatDialog);
+  private http = inject(HttpClient);
 
   isEdit = false;
   companyId!: number;
   employeeId: number | null = null;
   saving = signal(false);
+  savingMsg = signal('Зачувувам...');
   private hadEndDateOnLoad = false;
+  private keepAliveSub?: Subscription;
+  private savingTimerSub?: Subscription;
 
   form = this.fb.group({
     fullName: ['', Validators.required],
@@ -158,6 +166,18 @@ export class EmployeeFormComponent implements OnInit {
         });
       });
     }
+
+    // Keep Railway warm: ping /health every 60 s while the form is open
+    this.keepAliveSub = interval(60_000).subscribe(() => {
+      this.http.get(`${environment.apiUrl.replace('/api', '')}/health`, { responseType: 'text' })
+        .pipe(catchError(() => of(null)))
+        .subscribe();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.keepAliveSub?.unsubscribe();
+    this.savingTimerSub?.unsubscribe();
   }
 
   goBack(): void {
@@ -195,6 +215,8 @@ export class EmployeeFormComponent implements OnInit {
 
     const onSuccess = () => {
       this.saving.set(false);
+      this.savingMsg.set('Зачувувам...');
+      this.savingTimerSub?.unsubscribe();
       this.notifications.success(this.isEdit
         ? this.translate.instant('employees.editEmployee')
         : this.translate.instant('employees.addEmployee'));
@@ -221,9 +243,11 @@ export class EmployeeFormComponent implements OnInit {
 
     const onError = (err: any) => {
       this.saving.set(false);
-      // TimeoutError — API did not respond within 30 s
+      this.savingMsg.set('Зачувувам...');
+      this.savingTimerSub?.unsubscribe();
+      // TimeoutError — API did not respond within 2 minutes
       if (err?.name === 'TimeoutError') {
-        this.notifications.error('Серверот не одговори. Обидете се повторно.');
+        this.notifications.error('Серверот не одговори по 2 минути. Обидете се повторно.');
         return;
       }
       const msg: string = err.error?.message ?? '';
@@ -258,14 +282,22 @@ export class EmployeeFormComponent implements OnInit {
       this.notifications.error(msg || this.translate.instant('errors.failedToLoad'));
     };
 
+    // Show progressively more helpful messages while waiting for slow Railway cold-starts
+    this.savingMsg.set('Зачувувам...');
+    this.savingTimerSub = interval(10_000).subscribe(tick => {
+      if (tick === 0) this.savingMsg.set('Серверот се стартува...');
+      if (tick === 3) this.savingMsg.set('Уште малку...');
+      if (tick >= 6) this.savingTimerSub?.unsubscribe();
+    });
+
     if (this.isEdit) {
       this.service.update(this.companyId, this.employeeId!, payload)
-        .pipe(timeout(30_000))
+        .pipe(timeout(120_000))
         .subscribe({ next: onSuccess, error: onError });
     } else {
       this.service.create(this.companyId, payload)
-        .pipe(timeout(30_000))
-        .subscribe({ next: onSuccess, error: onError });
+        .pipe(timeout(120_000))
+        .subscribe({ next: () => onSuccess(), error: onError });
     }
   }
 }
