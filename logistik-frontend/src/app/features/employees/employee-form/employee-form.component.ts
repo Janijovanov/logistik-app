@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { timeout } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -220,6 +221,11 @@ export class EmployeeFormComponent implements OnInit {
 
     const onError = (err: any) => {
       this.saving.set(false);
+      // TimeoutError — API did not respond within 30 s
+      if (err?.name === 'TimeoutError') {
+        this.notifications.error('Серверот не одговори. Обидете се повторно.');
+        return;
+      }
       const msg: string = err.error?.message ?? '';
 
       if (msg.startsWith('TERMINATED:')) {
@@ -253,9 +259,13 @@ export class EmployeeFormComponent implements OnInit {
     };
 
     if (this.isEdit) {
-      this.service.update(this.companyId, this.employeeId!, payload).subscribe({ next: onSuccess, error: onError });
+      this.service.update(this.companyId, this.employeeId!, payload)
+        .pipe(timeout(30_000))
+        .subscribe({ next: onSuccess, error: onError });
     } else {
-      this.service.create(this.companyId, payload).subscribe({ next: onSuccess, error: onError });
+      this.service.create(this.companyId, payload)
+        .pipe(timeout(30_000))
+        .subscribe({ next: onSuccess, error: onError });
     }
   }
 }
