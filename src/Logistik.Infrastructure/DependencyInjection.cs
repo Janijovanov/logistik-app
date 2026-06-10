@@ -6,6 +6,7 @@ using Logistik.Infrastructure.Persistence.Seeders;
 using Logistik.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,8 +18,11 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
 
+        // Use a fixed server version instead of AutoDetect to avoid opening
+        // an extra DB connection on every request just to detect MySQL version.
+        var serverVersion = new MySqlServerVersion(new Version(8, 0, 0));
         services.AddDbContext<AppDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            options.UseMySql(connectionString, serverVersion));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IJwtService, JwtService>();
