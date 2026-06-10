@@ -90,10 +90,7 @@ interface DialogData {
           <mat-form-field appearance="outline">
             <mat-label>Месечна задршка (МКД)</mat-label>
             <input matInput type="number" formControlName="monthlyDeduction" min="1" />
-            <mat-hint>Автоматски 1/5 = {{ data.netSalary / 5 | number:'1.0-0' }} ден. — можете да промените</mat-hint>
-            @if (form.get('monthlyDeduction')?.hasError('required') && form.get('monthlyDeduction')?.touched) {
-              <mat-error>Задршката е задолжителна</mat-error>
-            }
+            <mat-hint>Остави празно за автоматски 1/5 = {{ data.netSalary / 5 | number:'1.0-0' }} ден.</mat-hint>
             @if (form.get('monthlyDeduction')?.hasError('min') && form.get('monthlyDeduction')?.touched) {
               <mat-error>Задршката мора да биде > 0</mat-error>
             }
@@ -146,7 +143,7 @@ export class OrderFormDialogComponent implements OnInit {
     receivedDate: [new Date(), Validators.required],
     executorId: [null as number | null, Validators.required],
     totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
-    monthlyDeduction: [Math.round(this.data.netSalary / 5) as number | null, [Validators.required, Validators.min(1)]]
+    monthlyDeduction: [null as number | null, [Validators.min(1)]]
   });
 
   ngOnInit(): void {

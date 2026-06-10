@@ -7,6 +7,7 @@ using Logistik.Application.Features.Employees.Queries;
 using Logistik.Application.Features.Salaries.Commands;
 using Logistik.Application.Features.Salaries.DTOs;
 using Logistik.Application.Features.Salaries.Queries;
+using Logistik.Domain.Entities;
 using Logistik.Domain.Enums;
 using Logistik.Domain.Interfaces;
 using Logistik.Infrastructure.Persistence;
@@ -127,12 +128,45 @@ public class EmployeesController : ControllerBase
             ? $"{currentUser.FirstName} {currentUser.LastName}".Trim()
             : _currentUser.Username;
 
+        // Auto-create email logs for orders that don't have one yet
+        var endDateForLog = employee.EmploymentEndDate.HasValue
+            ? employee.EmploymentEndDate.Value.ToString("dd.MM.yyyy") : "—";
+        bool anyCreated = false;
+        foreach (var order in orders)
+        {
+            if (!emailLogs.Any(e => e.RelatedEntityId == order.Id))
+            {
+                var ct2 = employee.EmploymentEndDate.HasValue
+                    ? employee.EmploymentEndDate.Value.ToString("dd.MM.yyyy") : "—";
+                var body =
+                    $"Лицето \"{employee.FullName}\" со ЕМБГ \"{employee.EMBG}\" вработено во \"{companyName}\" " +
+                    $"кое е во процес на извршување по извршно решение \"И.бр. {order.OrderNumber}\" " +
+                    $"го прекинало работниот однос на ден {ct2}. " +
+                    $"Вкупна сума: {order.TotalAmount:N2} ден. | " +
+                    $"Вкупно платено: {order.TotalPaid:N2} ден. | " +
+                    $"Преостанат износ: {order.RemainingAmount:N2} ден.";
+                var newLog = new EmailLog
+                {
+                    RecipientEmail = order.ExecutorEmail,
+                    Subject = $"Известување за прекин на работен однос — {employee.FullName} — И.бр. {order.OrderNumber}",
+                    Body = BuildTerminationHtmlBody(body, senderName),
+                    NotificationType = EmailNotificationType.EmploymentEnding,
+                    RelatedEntityType = "EnforcementOrder",
+                    RelatedEntityId = order.Id
+                };
+                _db.EmailLogs.Add(newLog);
+                emailLogs.Add(newLog);
+                anyCreated = true;
+            }
+        }
+        if (anyCreated)
+            await _db.SaveChangesAsync(ct);
+
         var result = orders.Select(order =>
         {
             var log = emailLogs.FirstOrDefault(e => e.RelatedEntityId == order.Id);
             var endDateStr = employee.EmploymentEndDate.HasValue
-                ? employee.EmploymentEndDate.Value.ToString("dd.MM.yyyy")
-                : "—";
+                ? employee.EmploymentEndDate.Value.ToString("dd.MM.yyyy") : "—";
 
             var contentText =
                 $"Лицето \"{employee.FullName}\" со ЕМБГ \"{employee.EMBG}\" вработено во \"{companyName}\" " +
@@ -144,17 +178,17 @@ public class EmployeesController : ControllerBase
 
             return new
             {
-                emailLogId = log?.Id,
+                emailLogId = log!.Id,   // always set — auto-created above if missing
                 orderId = order.Id,
                 executorName = order.ExecutorName,
                 executorEmail = order.ExecutorEmail,
                 orderNumber = order.OrderNumber,
-                subject = log?.Subject ?? $"Известување за прекин на работен однос — {employee.FullName} — И.бр. {order.OrderNumber}",
+                subject = log.Subject,
                 contentText,
                 senderName,
-                isSent = log?.IsSent ?? false,
-                sentAt = log?.SentAt,
-                errorMessage = log?.ErrorMessage
+                isSent = log.IsSent,
+                sentAt = log.SentAt,
+                errorMessage = log.ErrorMessage
             };
         }).ToList();
 

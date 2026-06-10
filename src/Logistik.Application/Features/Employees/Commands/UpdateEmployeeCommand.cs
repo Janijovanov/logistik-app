@@ -26,7 +26,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         if (employee.CompanyId != request.CompanyId)
             return Result.Failure("Employee does not belong to this company.");
 
-        if (await _uow.Employees.EmbgExistsAsync(request.EMBG, request.Id, ct))
+        if (await _uow.Employees.EmbgExistsAsync(request.EMBG, request.CompanyId, request.Id, ct))
             return Result.Failure("EMBG already registered.");
 
         bool employmentEndDateAdded = employee.EmploymentEndDate is null && request.EmploymentEndDate.HasValue;

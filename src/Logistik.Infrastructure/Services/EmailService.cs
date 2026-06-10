@@ -38,6 +38,7 @@ public class EmailService : IEmailService
         var password = _config["EmailSettings:Password"]!;
 
         using var client = new SmtpClient();
+        client.Timeout = 15_000; // 15 s — don't hang forever if SMTP is unreachable
         // Port 587 uses STARTTLS; port 465 uses SSL
         var socketOption = port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
         await client.ConnectAsync(host, port, socketOption, ct);

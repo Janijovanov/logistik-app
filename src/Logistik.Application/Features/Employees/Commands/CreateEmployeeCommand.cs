@@ -19,7 +19,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
 
     public async Task<Result<int>> Handle(CreateEmployeeCommand request, CancellationToken ct)
     {
-        var existing = await _uow.Employees.GetByEmbgAsync(request.EMBG, ct);
+        var existing = await _uow.Employees.GetByEmbgAsync(request.EMBG, request.CompanyId, ct);
 
         if (existing is not null)
         {

@@ -24,7 +24,6 @@ import { EnforcementOrdersService } from '../../enforcement-orders/enforcement-o
 import { EnforcementOrder } from '../../../core/models/enforcement-order.models';
 import { RecordSalaryDialogComponent } from '../record-salary-dialog/record-salary-dialog.component';
 import { OrderFormDialogComponent } from '../../enforcement-orders/order-form-dialog/order-form-dialog.component';
-import { MarkPaidDialogComponent } from '../../enforcement-orders/mark-paid-dialog/mark-paid-dialog.component';
 import { ExecutorDialogComponent } from '../../enforcement-orders/executor-dialog/executor-dialog.component';
 import { EmailPreviewDialogComponent } from '../../enforcement-orders/email-preview-dialog/email-preview-dialog.component';
 import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/termination-emails-dialog.component';
@@ -270,11 +269,6 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef></th>
                 <td mat-cell *matCellDef="let o" class="actions-cell">
-                  @if ((o.status === 'Final' || o.statusColor === 'yellow') && !o.isArchived && authService.canEditCompany(companyId)) {
-                    <button mat-stroked-button color="primary" (click)="markPaid(o)" style="margin-right:4px">
-                      {{ 'orders.markPaid' | translate }}
-                    </button>
-                  }
                   <button mat-icon-button matTooltip="Испрати мејл" (click)="openEmailPreview(o)">
                     <mat-icon style="color:#3949ab">email</mat-icon>
                   </button>
@@ -512,15 +506,6 @@ export class EmployeeDetailComponent implements OnInit {
         },
         error: () => this.notifications.error('Грешка при бришење на налогот.')
       });
-    });
-  }
-
-  markPaid(order: EnforcementOrder): void {
-    this.dialog.open(MarkPaidDialogComponent, {
-      width: '480px',
-      data: { companyId: this.companyId, employeeId: this.employeeId, order }
-    }).afterClosed().subscribe(done => {
-      if (done) { this.notifications.success(this.translate.instant('orders.markPaid')); this.load(); }
     });
   }
 

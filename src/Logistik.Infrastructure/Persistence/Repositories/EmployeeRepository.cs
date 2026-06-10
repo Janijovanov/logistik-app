@@ -32,11 +32,13 @@ public class EmployeeRepository : BaseRepository<Employee>, IEmployeeRepository
     public async Task<IReadOnlyList<Employee>> GetEmployeesWithEndingEmploymentAsync(DateOnly from, DateOnly to, CancellationToken ct = default)
         => await _dbSet.Where(e => e.EmploymentEndDate.HasValue && e.EmploymentEndDate >= from && e.EmploymentEndDate <= to).ToListAsync(ct);
 
-    public async Task<bool> EmbgExistsAsync(string embg, int? excludeId = null, CancellationToken ct = default)
-        => await _dbSet.IgnoreQueryFilters().AnyAsync(e => e.EMBG == embg && (excludeId == null || e.Id != excludeId), ct);
+    public async Task<bool> EmbgExistsAsync(string embg, int companyId, int? excludeId = null, CancellationToken ct = default)
+        => await _dbSet.IgnoreQueryFilters()
+            .AnyAsync(e => e.EMBG == embg && e.CompanyId == companyId && (excludeId == null || e.Id != excludeId), ct);
 
-    public async Task<Employee?> GetByEmbgAsync(string embg, CancellationToken ct = default)
-        => await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.EMBG == embg && !e.IsDeleted, ct);
+    public async Task<Employee?> GetByEmbgAsync(string embg, int companyId, CancellationToken ct = default)
+        => await _dbSet.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(e => e.EMBG == embg && e.CompanyId == companyId && !e.IsDeleted, ct);
 
     public async Task<Employee?> GetWithHistoryAsync(int id, CancellationToken ct = default)
         => await _dbSet.IgnoreQueryFilters()

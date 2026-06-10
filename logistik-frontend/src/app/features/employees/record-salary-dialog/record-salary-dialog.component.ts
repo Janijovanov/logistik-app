@@ -227,6 +227,8 @@ export class RecordSalaryDialogComponent {
     }
 
     const d = v.salaryMonth as Date;
+    const salaryDateOnly = new Date(d.getFullYear(), d.getMonth(), 1);
+
     this.service.recordSalary(this.data.companyId, this.data.employeeId, {
       salaryMonth: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`,
       netSalary,
@@ -237,7 +239,15 @@ export class RecordSalaryDialogComponent {
           next: (orders) => {
             const active = orders.find(o => ['Active', 'LastInstallment', 'Final'].includes(o.status));
             if (active) {
-              this.calc.set({ order: active, monthlyDeduction: netSalary / 5 });
+              // Only show deduction summary when the salary month is on or after the order's received date.
+              // Otherwise the backend applied no deduction (order wasn't effective yet for this month).
+              const parts = active.receivedDate.split('-').map(Number);
+              const orderDateOnly = new Date(parts[0], parts[1] - 1, parts[2]);
+              if (salaryDateOnly >= orderDateOnly) {
+                this.calc.set({ order: active, monthlyDeduction: active.monthlyDeduction });
+              } else {
+                this.dialogRef.close(true);
+              }
             } else {
               this.dialogRef.close(true);
             }
