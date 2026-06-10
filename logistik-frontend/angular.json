@@ -31,6 +31,7 @@
           },
           "configurations": {
             "production": {
+              "baseHref": "/logistik-app/",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
