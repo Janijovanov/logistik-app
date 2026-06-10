@@ -50,14 +50,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// CORS
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+// CORS — allow any origin so Railway env-var overrides can't block the frontend.
+// JWT bearer tokens don't require AllowCredentials(); dropping it lets us use SetIsOriginAllowed.
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials()));
+              .AllowAnyMethod()));
 
 // Hangfire
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
