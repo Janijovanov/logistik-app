@@ -88,9 +88,15 @@ interface DialogData {
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>{{ 'orders.monthlyDeduction' | translate }}</mat-label>
-            <input matInput type="number" formControlName="monthlyDeduction" />
-            <mat-hint>{{ 'orders.monthlyDeductionHint' | translate: {amount: (data.netSalary / 5 | number:'1.2-2')} }}</mat-hint>
+            <mat-label>Месечна задршка (МКД)</mat-label>
+            <input matInput type="number" formControlName="monthlyDeduction" min="1" />
+            <mat-hint>Автоматски 1/5 = {{ data.netSalary / 5 | number:'1.0-0' }} ден. — можете да промените</mat-hint>
+            @if (form.get('monthlyDeduction')?.hasError('required') && form.get('monthlyDeduction')?.touched) {
+              <mat-error>Задршката е задолжителна</mat-error>
+            }
+            @if (form.get('monthlyDeduction')?.hasError('min') && form.get('monthlyDeduction')?.touched) {
+              <mat-error>Задршката мора да биде > 0</mat-error>
+            }
           </mat-form-field>
         </div>
       </form>
@@ -140,7 +146,7 @@ export class OrderFormDialogComponent implements OnInit {
     receivedDate: [new Date(), Validators.required],
     executorId: [null as number | null, Validators.required],
     totalAmount: [null as number | null, [Validators.required, Validators.min(1)]],
-    monthlyDeduction: [null as number | null]
+    monthlyDeduction: [Math.round(this.data.netSalary / 5) as number | null, [Validators.required, Validators.min(1)]]
   });
 
   ngOnInit(): void {
