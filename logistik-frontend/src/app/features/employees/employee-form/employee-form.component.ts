@@ -138,7 +138,12 @@ export class EmployeeFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.companyId = +this.route.snapshot.paramMap.get('companyId')!;
+    // companyId lives in the parent route (:companyId/employees), not in this child route
+    this.companyId = +(
+      this.route.snapshot.paramMap.get('companyId') ??
+      this.route.parent?.snapshot.paramMap.get('companyId') ??
+      this.route.snapshot.parent?.paramMap.get('companyId') ?? '0'
+    );
     const id = this.route.snapshot.paramMap.get('employeeId');
     if (id) {
       this.isEdit = true;

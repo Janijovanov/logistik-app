@@ -373,7 +373,11 @@ export class EmployeeDetailComponent implements OnInit {
   orderColumns = ['orderNumber', 'executor', 'receivedDate', 'total', 'remaining', 'status', 'actions'];
 
   ngOnInit(): void {
-    this.companyId = +this.route.snapshot.paramMap.get('companyId')!;
+    this.companyId = +(
+      this.route.snapshot.paramMap.get('companyId') ??
+      this.route.parent?.snapshot.paramMap.get('companyId') ??
+      this.route.snapshot.parent?.paramMap.get('companyId') ?? '0'
+    );
     this.employeeId = +this.route.snapshot.paramMap.get('employeeId')!;
     this.load();
   }
