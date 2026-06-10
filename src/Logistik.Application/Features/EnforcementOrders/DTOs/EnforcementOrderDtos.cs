@@ -16,7 +16,7 @@ public record EnforcementPaymentDto(
 
 public record CreateEnforcementOrderRequest(
     string OrderNumber, string ExecutorName, string ExecutorEmail, string ExecutorBankAccount,
-    decimal TotalAmount, decimal? MonthlyDeductionOverride, DateOnly ReceivedDate);
+    decimal TotalAmount, decimal? MonthlyDeduction, DateOnly ReceivedDate);
 
 public record UpdateEnforcementOrderRequest(
     string OrderNumber, string ExecutorName, string ExecutorEmail, string ExecutorBankAccount,

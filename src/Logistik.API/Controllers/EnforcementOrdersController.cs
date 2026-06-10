@@ -45,7 +45,7 @@ public class EnforcementOrdersController : ControllerBase
         var result = await _mediator.Send(new CreateEnforcementOrderCommand(
             employeeId, companyId,
             request.OrderNumber, request.ExecutorName, request.ExecutorEmail, request.ExecutorBankAccount,
-            request.TotalAmount, request.MonthlyDeductionOverride, request.ReceivedDate), ct);
+            request.TotalAmount, request.MonthlyDeduction, request.ReceivedDate), ct);
         if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
         return StatusCode(201, new { id = result.Value });
     }

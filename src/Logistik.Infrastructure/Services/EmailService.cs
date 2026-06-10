@@ -37,14 +37,14 @@ public class EmailService : IEmailService
         var username = _config["EmailSettings:Username"]!;
         var password = _config["EmailSettings:Password"]!;
 
+        // Use a dedicated CancellationToken so SMTP is never cancelled by the HTTP request lifecycle.
+        // SecureSocketOptions.Auto lets MailKit negotiate TLS automatically (works with both port 465 and 587).
+        using var smtpCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         using var client = new SmtpClient();
-        client.Timeout = 15_000; // 15 s — don't hang forever if SMTP is unreachable
-        // Port 587 uses STARTTLS; port 465 uses SSL
-        var socketOption = port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
-        await client.ConnectAsync(host, port, socketOption, ct);
-        await client.AuthenticateAsync(username, password, ct);
-        await client.SendAsync(message, ct);
-        await client.DisconnectAsync(true, ct);
+        await client.ConnectAsync(host, port, SecureSocketOptions.Auto, smtpCts.Token);
+        await client.AuthenticateAsync(username, password, smtpCts.Token);
+        await client.SendAsync(message, smtpCts.Token);
+        await client.DisconnectAsync(true, smtpCts.Token);
     }
 
     public async Task QueueAsync(EmailLog emailLog, CancellationToken ct = default)
