@@ -105,7 +105,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
               <div class="history-section">
                 <h4 class="history-title">
                   <mat-icon class="history-icon">history</mat-icon>
-                  Previous Employment Periods
+                  Претходни периоди на вработување
                 </h4>
                 <div class="history-list">
                   @for (h of employee()!.employmentHistories; track h.id) {

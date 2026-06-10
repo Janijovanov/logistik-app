@@ -226,9 +226,9 @@ export class EmployeeFormComponent implements OnInit {
 
         this.dialog.open(ConfirmDialogComponent, {
           data: {
-            title: 'Employee Previously Employed',
-            message: `"${fullName}" with this EMBG was previously employed and terminated on ${endDate}.\n\nWould you like to re-hire them? Their existing enforcement orders will be transferred to the new employment record.`,
-            confirmText: 'Re-hire',
+            title: 'Претходно вработен',
+            message: `„${fullName}" со овој ЕМБГ бил претходно вработен и одјавен на ${endDate}.\n\nДали сакате да го вратите на работа? Постојните извршни решенија ќе се пренесат на новиот работен период.`,
+            confirmText: 'Врати на работа',
             warn: false
           }
         }).afterClosed().subscribe((confirmed: boolean) => {
@@ -240,7 +240,7 @@ export class EmployeeFormComponent implements OnInit {
       }
 
       if (msg === 'EMBG_ACTIVE') {
-        this.notifications.error('An active employee with this EMBG is already registered.');
+        this.notifications.error('Вработен со овој ЕМБГ веќе постои и е активен.');
         return;
       }
 
