@@ -1,6 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
+import { catchError, switchMap, throwError, BehaviorSubject, filter, take, timeout } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
 import { NotificationService } from '../services/notification.service';
@@ -58,6 +58,7 @@ function handle401(
   refreshTokenSubject$.next(null);
 
   return authService.refreshToken().pipe(
+    timeout(15_000),   // 15 s — if Railway is cold-starting, don't block forever
     switchMap(response => {
       isRefreshing = false;
       refreshTokenSubject$.next(response.accessToken);
@@ -65,8 +66,9 @@ function handle401(
     }),
     catchError(err => {
       isRefreshing = false;
+      refreshTokenSubject$.next(null);  // unblock any queued requests so they also fail fast
       authService.logout();
-      notifications.error('Session expired. Please log in again.');
+      notifications.error('Сесијата истече. Најавете се повторно.');
       return throwError(() => err);
     })
   );
