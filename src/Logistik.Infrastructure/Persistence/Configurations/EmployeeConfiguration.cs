@@ -14,7 +14,8 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(e => e.BankAccount).HasMaxLength(50).IsRequired();
         builder.Property(e => e.NetSalary).HasPrecision(15, 2);
 
-        builder.HasIndex(e => e.EMBG).IsUnique();
+        // EMBG is unique per company — the same person can work at multiple companies
+        builder.HasIndex(e => new { e.EMBG, e.CompanyId }).IsUnique();
         builder.HasIndex(e => e.CompanyId);
         builder.HasIndex(e => e.IsDeleted);
 

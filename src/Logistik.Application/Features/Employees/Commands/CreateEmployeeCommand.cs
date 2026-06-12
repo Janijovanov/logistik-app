@@ -23,6 +23,22 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
 
         if (existing is not null)
         {
+            // Soft-deleted employee (deleted via the delete button) — just restore them in place
+            if (existing.IsDeleted)
+            {
+                existing.FullName = request.FullName;
+                existing.EmploymentStartDate = request.EmploymentStartDate;
+                existing.EmploymentEndDate = request.EmploymentEndDate;
+                existing.BankAccount = request.BankAccount;
+                existing.NetSalary = request.NetSalary;
+                existing.IsDeleted = false;
+                existing.DeletedAt = null;
+                existing.UpdatedAt = DateTime.UtcNow;
+                _uow.Employees.Update(existing);
+                await _uow.SaveChangesAsync(ct);
+                return Result<int>.Success(existing.Id);
+            }
+
             if (!existing.EmploymentEndDate.HasValue)
                 return Result<int>.Failure("EMBG_ACTIVE");
 

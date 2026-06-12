@@ -38,7 +38,7 @@ public class EmployeeRepository : BaseRepository<Employee>, IEmployeeRepository
 
     public async Task<Employee?> GetByEmbgAsync(string embg, int companyId, CancellationToken ct = default)
         => await _dbSet.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(e => e.EMBG == embg && e.CompanyId == companyId && !e.IsDeleted, ct);
+            .FirstOrDefaultAsync(e => e.EMBG == embg && e.CompanyId == companyId, ct); // includes soft-deleted
 
     public async Task<Employee?> GetWithHistoryAsync(int id, CancellationToken ct = default)
         => await _dbSet.IgnoreQueryFilters()
