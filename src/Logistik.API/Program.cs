@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Logistik.API.Middleware;
 using Logistik.Application;
 using Logistik.Infrastructure;
@@ -63,8 +64,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddHangfire(config =>
     config.UseSimpleAssemblyNameTypeSerializer()
           .UseRecommendedSerializerSettings()
-          .UseStorage(new Hangfire.MySql.MySqlStorage(connectionString,
-              new Hangfire.MySql.MySqlStorageOptions { TablesPrefix = "Hangfire_" })));
+          .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(connectionString)));
 builder.Services.AddHangfireServer();
 
 // OpenAPI (built-in .NET 10)
