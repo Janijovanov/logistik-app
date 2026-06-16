@@ -244,7 +244,9 @@ export class RecordSalaryDialogComponent {
               const parts = active.receivedDate.split('-').map(Number);
               const orderDateOnly = new Date(parts[0], parts[1] - 1, parts[2]);
               if (salaryDateOnly >= orderDateOnly) {
-                this.calc.set({ order: active, monthlyDeduction: active.monthlyDeduction });
+                // If monthlyDeduction is null (auto mode), compute 1/5 from the salary entered this month
+                const effectiveDeduction = active.monthlyDeduction ?? Math.round(netSalary / 5 * 100) / 100;
+                this.calc.set({ order: active, monthlyDeduction: effectiveDeduction });
               } else {
                 this.dialogRef.close(true);
               }

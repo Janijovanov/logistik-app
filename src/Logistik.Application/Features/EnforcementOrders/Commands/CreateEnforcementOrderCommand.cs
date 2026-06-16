@@ -37,8 +37,6 @@ public class CreateEnforcementOrderCommandHandler : IRequestHandler<CreateEnforc
         var activeOrder = await _uow.EnforcementOrders.GetActiveOrderForEmployeeAsync(request.EmployeeId, ct);
         var maxQueue = await _uow.EnforcementOrders.GetMaxQueuePositionAsync(request.EmployeeId, ct);
 
-        var monthlyDeduction = request.MonthlyDeductionOverride ?? Math.Round(employee.NetSalary / 5m, 2);
-
         var order = new EnforcementOrder
         {
             EmployeeId = request.EmployeeId,
@@ -47,7 +45,8 @@ public class CreateEnforcementOrderCommandHandler : IRequestHandler<CreateEnforc
             ExecutorEmail = request.ExecutorEmail,
             ExecutorBankAccount = request.ExecutorBankAccount,
             TotalAmount = request.TotalAmount,
-            MonthlyDeduction = monthlyDeduction,
+            // null = auto mode: deduction is 1/5 of the salary entered each month
+            MonthlyDeduction = request.MonthlyDeductionOverride,
             RemainingAmount = request.TotalAmount,
             ReceivedDate = request.ReceivedDate,
             CreatedByUserId = _currentUser.UserId

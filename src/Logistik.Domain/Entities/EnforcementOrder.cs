@@ -11,7 +11,7 @@ public class EnforcementOrder : BaseEntity
     public string ExecutorEmail { get; set; } = string.Empty;
     public string ExecutorBankAccount { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
-    public decimal MonthlyDeduction { get; set; }
+    public decimal? MonthlyDeduction { get; set; }
     public decimal TotalPaid { get; set; }
     public decimal RemainingAmount { get; set; }
     public OrderStatus Status { get; set; } = OrderStatus.Queued;
@@ -26,11 +26,12 @@ public class EnforcementOrder : BaseEntity
     public ICollection<EnforcementPayment> Payments { get; set; } = new List<EnforcementPayment>();
     public ICollection<EmployeeSalaryHistory> SalaryDeductions { get; set; } = new List<EmployeeSalaryHistory>();
 
-    public void RecalculateStatus()
+    public void RecalculateStatus(decimal? effectiveMonthlyDeduction = null)
     {
+        var monthly = effectiveMonthlyDeduction ?? MonthlyDeduction ?? 0m;
         if (RemainingAmount <= 0)
             Status = OrderStatus.Completed;
-        else if (RemainingAmount <= MonthlyDeduction)
+        else if (monthly > 0 && RemainingAmount <= monthly)
             Status = OrderStatus.Final;
         else if (Status != OrderStatus.Active && Status != OrderStatus.Queued)
             Status = OrderStatus.Active;

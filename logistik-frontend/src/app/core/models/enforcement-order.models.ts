@@ -10,7 +10,7 @@ export interface EnforcementOrder {
   executorEmail: string;
   executorBankAccount: string;
   totalAmount: number;
-  monthlyDeduction: number;
+  monthlyDeduction: number | null;
   totalPaid: number;
   remainingAmount: number;
   status: OrderStatus;

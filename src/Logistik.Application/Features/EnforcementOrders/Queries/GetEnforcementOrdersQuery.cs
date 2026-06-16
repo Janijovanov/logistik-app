@@ -27,9 +27,10 @@ public class GetEnforcementOrdersQueryHandler : IRequestHandler<GetEnforcementOr
 
     // Corrects stale LastInstallment status in DB without requiring a migration.
     // LastInstallment is only valid when remaining <= monthly; otherwise treat as Active.
+    // With nullable MonthlyDeduction (auto mode), we trust the stored status.
     private static OrderStatus NormalizeStatus(Domain.Entities.EnforcementOrder o)
     {
-        if (o.Status == OrderStatus.LastInstallment && o.RemainingAmount > o.MonthlyDeduction)
+        if (o.MonthlyDeduction.HasValue && o.Status == OrderStatus.LastInstallment && o.RemainingAmount > o.MonthlyDeduction.Value)
             return OrderStatus.Active;
         return o.Status;
     }
@@ -38,7 +39,7 @@ public class GetEnforcementOrdersQueryHandler : IRequestHandler<GetEnforcementOr
     {
         if (o.IsArchived || o.Status == OrderStatus.Completed || o.Status == OrderStatus.Archived)
             return "green";
-        if (o.RemainingAmount > 0 && o.RemainingAmount <= o.MonthlyDeduction)
+        if (o.RemainingAmount > 0 && o.MonthlyDeduction.HasValue && o.RemainingAmount <= o.MonthlyDeduction.Value)
             return "yellow";
         return "default";
     }

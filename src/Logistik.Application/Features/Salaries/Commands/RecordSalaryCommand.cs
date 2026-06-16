@@ -40,10 +40,10 @@ public class RecordSalaryCommandHandler : IRequestHandler<RecordSalaryCommand, R
 
         if (activeOrder is not null && request.SalaryMonth >= activeOrder.ReceivedDate)
         {
-            // Use the deduction stored on the order (set at creation time as either the
-            // user-specified override or 1/5 of salary).  Do NOT recalculate from the
-            // current salary – that would ignore the executor-agreed fixed instalment.
-            var monthlyDeduction = activeOrder.MonthlyDeduction;
+            // If a fixed monthly deduction was set on the order, use it.
+            // Otherwise (null = auto mode) calculate 1/5 from the salary entered for THIS month,
+            // so variable monthly salaries are correctly reflected in the deduction.
+            var monthlyDeduction = activeOrder.MonthlyDeduction ?? Math.Round(request.NetSalary / 5m, 2);
             deductionAmount = Math.Min(monthlyDeduction, activeOrder.RemainingAmount);
             orderId = activeOrder.Id;
 
@@ -74,7 +74,7 @@ public class RecordSalaryCommandHandler : IRequestHandler<RecordSalaryCommand, R
 
             activeOrder.TotalPaid += deductionAmount;
             activeOrder.RemainingAmount -= deductionAmount;
-            activeOrder.RecalculateStatus();
+            activeOrder.RecalculateStatus(monthlyDeduction);
             activeOrder.UpdatedAt = DateTime.UtcNow;
 
             if (activeOrder.RemainingAmount <= 0)

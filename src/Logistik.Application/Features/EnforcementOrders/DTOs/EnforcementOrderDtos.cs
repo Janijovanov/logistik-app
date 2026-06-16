@@ -5,7 +5,7 @@ namespace Logistik.Application.Features.EnforcementOrders.DTOs;
 public record EnforcementOrderDto(
     int Id, int EmployeeId, string OrderNumber,
     string ExecutorName, string ExecutorEmail, string ExecutorBankAccount,
-    decimal TotalAmount, decimal MonthlyDeduction, decimal TotalPaid, decimal RemainingAmount,
+    decimal TotalAmount, decimal? MonthlyDeduction, decimal TotalPaid, decimal RemainingAmount,
     OrderStatus Status, int QueuePosition,
     DateOnly ReceivedDate, DateOnly? CompletedDate, bool IsArchived,
     string StatusColor);
