@@ -71,7 +71,10 @@
     "addressRequired": "Адресата е задолжителна",
     "createCompany": "Креирај фирма",
     "noSelection": "Изберете фирма од паѓачката листа за да ги видите вработените",
-    "inactiveLabel": "Неактивна"
+    "inactiveLabel": "Неактивна",
+    "deleteCompany": "Избриши фирма",
+    "deleteCompanyTooltip": "Избриши фирма",
+    "deleteCompanyConfirm": "Дали сте сигурни дека сакате да ја избришете фирмата \"{{name}}\"? Сите вработени и податоци ќе бидат трајно избришани."
   },
   "employees": {
     "addEmployee": "Додади вработен",
@@ -197,6 +200,15 @@
     "failedToLoad": "Грешка при вчитување"
   },
   "users": {
+    "title": "Корисници",
+    "subtitle": "Управување со системски корисници и дозволи",
+    "addUser": "Додади корисник",
+    "searchUsers": "Пребарај корисници",
+    "role": "Улога",
+    "deactivate": "Деактивирај",
+    "deactivateUser": "Деактивирај корисник",
+    "deactivateConfirm": "Деактивирај го корисникот \"{{username}}\"?",
+    "noUsers": "Нема пронајдени корисници",
     "managePermissions": "Управувај со дозволи",
     "companies": "Компании",
     "canView": "Преглед",

@@ -71,7 +71,10 @@
     "addressRequired": "Address is required",
     "createCompany": "Create Company",
     "noSelection": "Select a company from the dropdown above to view its employees",
-    "inactiveLabel": "Inactive"
+    "inactiveLabel": "Inactive",
+    "deleteCompany": "Delete Company",
+    "deleteCompanyTooltip": "Delete company",
+    "deleteCompanyConfirm": "Are you sure you want to delete company \"{{name}}\"? All employees and data will be permanently deleted."
   },
   "employees": {
     "addEmployee": "Add Employee",
@@ -197,6 +200,15 @@
     "failedToLoad": "Failed to load"
   },
   "users": {
+    "title": "Users",
+    "subtitle": "Manage system users and permissions",
+    "addUser": "Add User",
+    "searchUsers": "Search users",
+    "role": "Role",
+    "deactivate": "Deactivate",
+    "deactivateUser": "Deactivate User",
+    "deactivateConfirm": "Deactivate user \"{{username}}\"?",
+    "noUsers": "No users found",
     "managePermissions": "Manage Permissions",
     "companies": "Companies",
     "canView": "View",

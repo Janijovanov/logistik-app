@@ -79,6 +79,10 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                 <mat-icon>edit</mat-icon>
                 {{ 'companies.editCompany' | translate }}
               </button>
+              <button mat-stroked-button color="warn" (click)="deleteCompany()" [matTooltip]="'companies.deleteCompanyTooltip' | translate">
+                <mat-icon>delete</mat-icon>
+                {{ 'companies.deleteCompany' | translate }}
+              </button>
             }
           </div>
         }
@@ -578,6 +582,32 @@ export class CompanyListComponent implements OnInit {
       if (success) {
         this.notifications.success(`${emp.fullName} е вратен/а на работа.`);
         this.loadMonthlyData();
+      }
+    });
+  }
+
+  deleteCompany(): void {
+    const company = this.selectedCompany();
+    if (!company) return;
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: this.translate.instant('companies.deleteCompany'),
+        message: this.translate.instant('companies.deleteCompanyConfirm', { name: company.name }),
+        confirmText: this.translate.instant('common.delete'),
+        warn: true
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.companiesService.delete(company.id).subscribe({
+          next: () => {
+            this.notifications.success(this.translate.instant('companies.deleteCompany'));
+            this.selectedCompany.set(null);
+            this.companyCtrl.setValue(null);
+            this.monthlyData.set([]);
+            this.companiesService.getAllForDropdown().subscribe(list => this.companies.set(list));
+          },
+          error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
+        });
       }
     });
   }

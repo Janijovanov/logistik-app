@@ -12,6 +12,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { UsersService } from '../users.service';
 import { User } from '../../../core/models/user.models';
 import { PaginatedResult } from '../../../core/models/pagination.models';
@@ -26,20 +27,20 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     CommonModule, RouterLink, ReactiveFormsModule,
     MatTableModule, MatButtonModule, MatIconModule, MatInputModule,
     MatFormFieldModule, MatPaginatorModule, MatTooltipModule,
-    MatProgressSpinnerModule, MatDialogModule, PageHeaderComponent
+    MatProgressSpinnerModule, MatDialogModule, PageHeaderComponent, TranslateModule
   ],
   template: `
-    <app-page-header title="Users" subtitle="Manage system users and permissions">
+    <app-page-header [title]="'users.title' | translate" [subtitle]="'users.subtitle' | translate">
       <button mat-flat-button color="primary" routerLink="new">
         <mat-icon>person_add</mat-icon>
-        Add User
+        {{ 'users.addUser' | translate }}
       </button>
     </app-page-header>
 
     <div class="page-card">
       <div class="table-toolbar">
         <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search users</mat-label>
+          <mat-label>{{ 'users.searchUsers' | translate }}</mat-label>
           <input matInput [formControl]="searchCtrl" />
           <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
@@ -50,7 +51,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       } @else {
         <table mat-table [dataSource]="result()?.items ?? []" class="mat-elevation-z0">
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | translate }}</th>
             <td mat-cell *matCellDef="let u">
               <strong>{{ u.firstName }} {{ u.lastName }}</strong><br />
               <span class="text-muted text-sm">{{ u.username }}</span>
@@ -58,27 +59,27 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </ng-container>
 
           <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.email' | translate }}</th>
             <td mat-cell *matCellDef="let u">{{ u.email }}</td>
           </ng-container>
 
           <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'users.role' | translate }}</th>
             <td mat-cell *matCellDef="let u">
               <span [class]="u.role === 'Admin' ? 'chip-admin' : 'chip-user'">{{ u.role }}</span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="companies">
-            <th mat-header-cell *matHeaderCellDef>Companies</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'users.companies' | translate }}</th>
             <td mat-cell *matCellDef="let u">{{ u.permissions?.length ?? 0 }}</td>
           </ng-container>
 
           <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let u">
               <span [class]="u.isActive ? 'chip-active' : 'chip-inactive'">
-                {{ u.isActive ? 'Active' : 'Inactive' }}
+                {{ (u.isActive ? 'common.active' : 'common.inactive') | translate }}
               </span>
             </td>
           </ng-container>
@@ -86,13 +87,13 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let u" class="actions-cell">
-              <button mat-icon-button [routerLink]="[u.id]" matTooltip="Manage permissions">
+              <button mat-icon-button [routerLink]="[u.id]" [matTooltip]="'users.managePermissions' | translate">
                 <mat-icon>manage_accounts</mat-icon>
               </button>
-              <button mat-icon-button [routerLink]="[u.id, 'edit']" matTooltip="Edit">
+              <button mat-icon-button [routerLink]="[u.id, 'edit']" [matTooltip]="'common.edit' | translate">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deactivate(u)" matTooltip="Deactivate">
+              <button mat-icon-button color="warn" (click)="deactivate(u)" [matTooltip]="'users.deactivate' | translate">
                 <mat-icon>person_off</mat-icon>
               </button>
             </td>
@@ -103,7 +104,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell empty-state" [attr.colspan]="columns.length">
               <mat-icon>people_outline</mat-icon>
-              <p>No users found</p>
+              <p>{{ 'users.noUsers' | translate }}</p>
             </td>
           </tr>
         </table>
@@ -136,6 +137,7 @@ export class UserListComponent implements OnInit {
   private service = inject(UsersService);
   private dialog = inject(MatDialog);
   private notifications = inject(NotificationService);
+  private translate = inject(TranslateService);
 
   columns = ['name', 'email', 'role', 'companies', 'status', 'actions'];
   searchCtrl = new FormControl('');
@@ -169,16 +171,16 @@ export class UserListComponent implements OnInit {
   deactivate(user: User): void {
     this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Deactivate User',
-        message: `Deactivate user "${user.username}"?`,
-        confirmText: 'Deactivate',
+        title: this.translate.instant('users.deactivateUser'),
+        message: this.translate.instant('users.deactivateConfirm', { username: user.username }),
+        confirmText: this.translate.instant('users.deactivate'),
         warn: true
       }
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.service.delete(user.id).subscribe({
-          next: () => { this.notifications.success('User deactivated.'); this.load(); },
-          error: (err: any) => this.notifications.error(err.error?.message ?? 'Failed to deactivate user.')
+          next: () => { this.notifications.success(this.translate.instant('users.deactivateUser')); this.load(); },
+          error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
         });
       }
     });
