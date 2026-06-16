@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: logistik-api
+    runtime: dotnet
+    buildCommand: dotnet publish src/Logistik.API/Logistik.API.csproj -c Release -o ./publish
+    startCommand: dotnet ./publish/Logistik.API.dll
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false   # set manually in Render dashboard
+      - key: JwtSettings__SecretKey
+        sync: false   # set manually in Render dashboard
