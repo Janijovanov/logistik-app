@@ -140,38 +140,40 @@ public class EmployeesController : ControllerBase
             ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = false }
         });
 
-        // Find "listaca" sheet (case-insensitive, also accept partial match)
-        DataTable? sheet = null;
-        foreach (DataTable t in dataSet.Tables)
-        {
-            var name = t.TableName.Trim().ToLowerInvariant();
-            if (name.Contains("listac") || name.Contains("листац") || name.Contains("listici") || name.Contains("листич"))
-            { sheet = t; break; }
-        }
-        // fallback: use first sheet if still not found
-        sheet ??= dataSet.Tables.Count > 0 ? dataSet.Tables[0] : null;
-        if (sheet is null) throw new Exception("Фајлот не содржи листови.");
+        if (dataSet.Tables.Count == 0) throw new Exception("Фајлот не содржи листови.");
 
-        // Find header row — first row where we can locate required columns
+        // Scan all sheets (prefer those with "list" in name) to find one with all required columns
+        var orderedSheets = dataSet.Tables.Cast<DataTable>()
+            .OrderByDescending(t => t.TableName.ToLowerInvariant().Contains("list"))
+            .ToList();
+
+        DataTable? sheet = null;
         int headerRow = -1;
         int colIme = -1, colPrezime = -1, colMatBr = -1, colNetoEfek = -1;
 
-        for (int r = 0; r < Math.Min(sheet.Rows.Count, 30); r++)
+        foreach (var candidate in orderedSheets)
         {
-            var cells = sheet.Rows[r].ItemArray.Select(c => c?.ToString()?.Trim().ToLowerInvariant() ?? "").ToArray();
-            int ime = FindCol(cells, "ime");
-            int prez = FindCol(cells, "prezime");
-            int mat = FindCol(cells, "mat_br", "matbr", "embg", "mat br");
-            int neto = FindCol(cells, "neto_efek", "netoefek", "neto efek", "neto");
-            if (ime >= 0 && prez >= 0 && mat >= 0 && neto >= 0)
+            for (int r = 0; r < Math.Min(candidate.Rows.Count, 30); r++)
             {
-                headerRow = r; colIme = ime; colPrezime = prez; colMatBr = mat; colNetoEfek = neto;
-                break;
+                var cells = candidate.Rows[r].ItemArray
+                    .Select(c => c?.ToString()?.Trim().ToLowerInvariant() ?? "").ToArray();
+                int ime  = FindCol(cells, "ime");
+                int prez = FindCol(cells, "prezime");
+                int mat  = FindCol(cells, "mat_br", "matbr", "embg", "mat br");
+                int neto = FindCol(cells, "neto_efek", "netoefek", "neto efek", "neto_efek_v", "neto efektiven");
+                if (ime >= 0 && prez >= 0 && mat >= 0 && neto >= 0)
+                {
+                    sheet = candidate; headerRow = r;
+                    colIme = ime; colPrezime = prez; colMatBr = mat; colNetoEfek = neto;
+                    break;
+                }
             }
+            if (sheet is not null) break;
         }
 
         var sheetNames = string.Join(", ", dataSet.Tables.Cast<DataTable>().Select(t => t.TableName));
-        if (headerRow < 0) throw new Exception($"Не се пронајдени колоните: ime, prezime, mat_br, neto_efek. Листови во фајлот: {sheetNames}. Проверете ги имињата на колоните.");
+        if (sheet is null || headerRow < 0)
+            throw new Exception($"Не се пронајдени колоните: ime, prezime, mat_br, neto_efek. Листови во фајлот: {sheetNames}. Проверете ги имињата на колоните.");
 
         var rows = new List<ExcelSalaryRow>();
         for (int r = headerRow + 1; r < sheet.Rows.Count; r++)
