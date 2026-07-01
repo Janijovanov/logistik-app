@@ -245,7 +245,7 @@ export class ExpensesPageComponent implements OnInit {
     this.loading.set(true);
     this.service.getForYear(this.year()).subscribe({
       next: d => { this.data.set(d); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.notifications.error('Грешка при вчитување на трошоците.'); }
+      error: () => { this.loading.set(false); }
     });
   }
 
@@ -257,7 +257,7 @@ export class ExpensesPageComponent implements OnInit {
 
   openCategoryManager(): void {
     this.dialog.open(CategoryManagerComponent, { width: '600px', maxWidth: '96vw' })
-      .afterClosed().subscribe(changed => { if (changed) this.load(); });
+      .afterClosed().subscribe(() => this.load());
   }
 
   // ── Computed totals ────────────────────────────────────────────────────────
@@ -315,13 +315,15 @@ export class ExpensesPageComponent implements OnInit {
     this.editingCell.set({ subId, month });
     setTimeout(() => {
       const input = document.querySelector('.cell-input') as HTMLInputElement;
-      input?.select();
+      input?.focus();
     });
   }
 
   cancelEdit(): void { this.editingCell.set(null); }
 
   saveEntry(event: Event, sub: ExpenseSubcategoryDto, month: number): void {
+    const current = this.editingCell();
+    if (!current || current.subId !== sub.id || current.month !== month) return;
     const input = event.target as HTMLInputElement;
     const amount = parseFloat(input.value) || 0;
     this.editingCell.set(null);
@@ -340,11 +342,12 @@ export class ExpensesPageComponent implements OnInit {
     this.editingPlanSubId.set(sub.id);
     setTimeout(() => {
       const input = document.querySelector('.cell-input') as HTMLInputElement;
-      input?.select();
+      input?.focus();
     });
   }
 
   savePlan(event: Event, sub: ExpenseSubcategoryDto): void {
+    if (this.editingPlanSubId() !== sub.id) return;
     const input = event.target as HTMLInputElement;
     const plan = parseFloat(input.value) || 0;
     this.editingPlanSubId.set(null);

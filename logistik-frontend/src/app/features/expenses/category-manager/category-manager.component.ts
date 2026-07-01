@@ -150,8 +150,9 @@ export class CategoryManagerComponent implements OnInit {
   ngOnInit(): void { this.load(); }
 
   private load(): void {
-    this.service.getForYear(new Date().getFullYear()).subscribe(data => {
-      this.categories.set(data.categories);
+    this.service.getForYear(new Date().getFullYear()).subscribe({
+      next: data => this.categories.set(data.categories),
+      error: () => {}
     });
   }
 
