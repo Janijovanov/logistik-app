@@ -32,6 +32,7 @@ export interface CreateEmployeeRequest {
 
 export interface UpdateEmployeeRequest extends CreateEmployeeRequest {
   employmentEndDate: string | null;
+  code?: string | null;
 }
 
 export interface SalaryHistory {

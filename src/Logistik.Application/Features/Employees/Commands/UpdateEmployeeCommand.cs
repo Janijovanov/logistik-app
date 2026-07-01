@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Logistik.Application.Features.Employees.Commands;
 
-public record UpdateEmployeeCommand(int Id, int CompanyId, string FullName, string EMBG, DateOnly EmploymentStartDate, DateOnly? EmploymentEndDate, string BankAccount, decimal NetSalary) : IRequest<Result>;
+public record UpdateEmployeeCommand(int Id, int CompanyId, string FullName, string EMBG, DateOnly EmploymentStartDate, DateOnly? EmploymentEndDate, string BankAccount, decimal NetSalary, string? Code = null) : IRequest<Result>;
 
 public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Result>
 {
@@ -37,6 +37,7 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         employee.EmploymentEndDate = request.EmploymentEndDate;
         employee.BankAccount = request.BankAccount;
         employee.NetSalary = request.NetSalary;
+        if (request.Code is not null) employee.Code = request.Code;
         employee.UpdatedAt = DateTime.UtcNow;
 
         _uow.Employees.Update(employee);

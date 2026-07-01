@@ -19,7 +19,8 @@ public record CreateEmployeeRequest(
 public record UpdateEmployeeRequest(
     string FullName, string EMBG,
     DateOnly EmploymentStartDate, DateOnly? EmploymentEndDate,
-    string BankAccount, decimal NetSalary);
+    string BankAccount, decimal NetSalary,
+    string? Code = null);
 
 public record EmployeeMonthlySalaryDto(
     int Id, int CompanyId, string FullName, string EMBG,

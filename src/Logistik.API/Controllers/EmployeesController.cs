@@ -64,7 +64,7 @@ public class EmployeesController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult> Update(int companyId, int id, [FromBody] UpdateEmployeeRequest request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new UpdateEmployeeCommand(id, companyId, request.FullName, request.EMBG, request.EmploymentStartDate, request.EmploymentEndDate, request.BankAccount, request.NetSalary), ct);
+        var result = await _mediator.Send(new UpdateEmployeeCommand(id, companyId, request.FullName, request.EMBG, request.EmploymentStartDate, request.EmploymentEndDate, request.BankAccount, request.NetSalary, request.Code), ct);
         if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
         return NoContent();
     }
