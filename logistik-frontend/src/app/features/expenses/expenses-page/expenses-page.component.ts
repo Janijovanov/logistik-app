@@ -47,6 +47,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
         <table class="expense-table">
           <thead>
             <tr>
+              <th class="no-col">Бр.</th>
               <th class="name-col">Назив</th>
               @for (m of months; track m) {
                 <th class="month-col">{{ m }}</th>
@@ -61,34 +62,37 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
           <tbody>
             <!-- Grand total row -->
             <tr class="grand-total-row">
+              <td class="no-cell"></td>
               <td class="name-col">ВКУПНО</td>
               @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
                 <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0' }}</td>
               }
               <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0' }}</td>
-              <td class="pct-cell">{{ grandTotalPct() }}%</td>
+              <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
               <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
               <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
               <td class="no-cell">{{ grandMonthCount() }}</td>
             </tr>
 
-            @for (cat of data()!.categories; track cat.id) {
+            @for (cat of data()!.categories; track cat.id; let catIdx = $index) {
               <!-- Category header row -->
               <tr class="cat-row">
+                <td class="no-cell cat-no">{{ catIdx + 1 }}</td>
                 <td class="name-col cat-name">{{ cat.name }}</td>
                 @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
                   <td class="amount-cell cat-amount">{{ catMonthTotal(cat, m) || '' | number:'1.0-0' }}</td>
                 }
                 <td class="sum-cell cat-amount">{{ catVkupno(cat) | number:'1.0-0' }}</td>
-                <td class="pct-cell cat-pct">{{ catPct(cat) }}%</td>
+                <td class="pct-cell cat-pct">{{ pctOfTotal(catVkupno(cat)) }}%</td>
                 <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0' }}</td>
                 <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0' }}</td>
                 <td class="no-cell"></td>
               </tr>
 
-              @for (sub of cat.subcategories; track sub.id) {
+              @for (sub of cat.subcategories; track sub.id; let subIdx = $index) {
                 <!-- Subcategory row -->
                 <tr class="sub-row">
+                  <td class="no-cell sub-no">{{ catIdx + 1 }}.{{ subIdx + 1 }}</td>
                   <td class="name-col sub-name">{{ sub.name }}</td>
                   @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
                     <td
@@ -113,7 +117,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
                     </td>
                   }
                   <td class="sum-cell">{{ subVkupno(sub) | number:'1.0-0' }}</td>
-                  <td class="pct-cell">{{ subPct(sub) }}%</td>
+                  <td class="pct-cell">{{ pctOfTotal(subVkupno(sub)) }}%</td>
                   <td class="plan-cell">{{ (sub.annualPlan / 12) | number:'1.0-0' }}</td>
                   <td
                     class="plan-cell editable"
@@ -212,6 +216,8 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
     .sub-row td { background: white; }
     .sub-row:hover td { background: #f5f5f5; }
     .sub-name { padding-left: 16px !important; }
+    .cat-no { font-weight: 700; }
+    .sub-no { padding-left: 16px !important; color: rgba(0,0,0,0.5); font-size: 12px; }
 
     .cell-input {
       width: 100%;
@@ -261,6 +267,12 @@ export class ExpensesPageComponent implements OnInit {
   }
 
   // ── Computed totals ────────────────────────────────────────────────────────
+
+  pctOfTotal(amount: number): string {
+    const total = this.grandTotalVkupno();
+    if (!total) return '0.00';
+    return ((amount / total) * 100).toFixed(2);
+  }
 
   catMonthTotal(cat: ExpenseCategoryDto, month: number): number {
     return cat.subcategories.reduce((s, sub) => s + (sub.amounts[month] ?? 0), 0);
