@@ -43,8 +43,8 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
     <mat-card class="form-card">
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="submit()">
-          <div class="form-row">
-            <mat-form-field appearance="outline" style="max-width:160px">
+          <div class="form-row" style="grid-template-columns: 200px 1fr 1fr">
+            <mat-form-field appearance="outline">
               <mat-label>{{ 'employees.code' | translate }}</mat-label>
               <input matInput formControlName="code" />
             </mat-form-field>
