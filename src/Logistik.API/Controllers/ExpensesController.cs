@@ -20,8 +20,11 @@ public class ExpensesController : ControllerBase
     {
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
+        // Use Include without OrderBy, then filter entries via ThenInclude.
+        // Combining OrderBy inside Include with a filtered ThenInclude breaks
+        // EF Core's type resolution (IOrderedEnumerable vs IEnumerable mismatch).
         var categories = await _db.ExpenseCategories
-            .Include(c => c.Subcategories.OrderBy(s => s.Order))
+            .Include(c => c.Subcategories)
                 .ThenInclude(s => s.Entries.Where(e => e.Year == year))
             .OrderBy(c => c.Order)
             .ToListAsync(ct);
@@ -31,15 +34,17 @@ public class ExpensesController : ControllerBase
             c.Id,
             c.Name,
             c.Order,
-            subcategories = c.Subcategories.Select(s => new
-            {
-                s.Id,
-                s.CategoryId,
-                s.Name,
-                s.Order,
-                s.AnnualPlan,
-                amounts = s.Entries.ToDictionary(e => e.Month, e => e.Amount)
-            })
+            subcategories = c.Subcategories
+                .OrderBy(s => s.Order)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.CategoryId,
+                    s.Name,
+                    s.Order,
+                    s.AnnualPlan,
+                    amounts = s.Entries.ToDictionary(e => e.Month, e => e.Amount)
+                })
         });
 
         return Ok(new { year, categories = result });
