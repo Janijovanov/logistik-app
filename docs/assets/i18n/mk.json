@@ -218,6 +218,16 @@
     "assignCompany": "Додели компанија",
     "savePermissions": "Зачувај дозволи"
   },
+  "import": {
+    "importExcel": "Увези Excel",
+    "importing": "Увозување...",
+    "confirmTitle": "Увоз на плати од Excel",
+    "confirmMessage": "Фајл: {{file}}\nМесец: {{month}}\nФирма: {{company}}\n\nДали сте сигурни дека сакате да увезете плати?",
+    "resultTitle": "Резултат од увозот",
+    "resultImported": "✅ Успешно увезени: {{count}} вработени",
+    "resultAlready": "⚠️ Веќе евидентирани: {{count}} вработени",
+    "resultNotFound": "❌ Не се пронајдени во системот ({{count}}):"
+  },
   "dashboard": {
     "title": "Контролна табла",
     "welcome": "Добредојдовте, {{name}}",

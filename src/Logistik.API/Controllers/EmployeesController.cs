@@ -1,3 +1,4 @@
+using ExcelDataReader;
 using Logistik.API.Filters;
 using Logistik.Application.Common.Interfaces;
 using Logistik.Application.Common.Models;
@@ -15,6 +16,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Logistik.API.Controllers;
 
@@ -93,6 +95,90 @@ public class EmployeesController : ControllerBase
         var result = await _mediator.Send(new UpdateSalaryCommand(recordId, id, companyId, request.NetSalary, request.Notes), ct);
         if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
         return NoContent();
+    }
+
+    [HttpPost("salary-import")]
+    public async Task<ActionResult> ImportSalaries(int companyId, IFormFile file, [FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { message = "Фајлот е празен." });
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext is not ".xls" and not ".xlsx")
+            return BadRequest(new { message = "Дозволени се само .xls и .xlsx фајлови." });
+
+        List<ExcelSalaryRow> rows;
+        try { rows = ParseExcelFile(file, ext); }
+        catch (Exception ex) { return BadRequest(new { message = $"Грешка при читање на фајлот: {ex.Message}" }); }
+
+        if (rows.Count == 0)
+            return BadRequest(new { message = "Не се пронајдени записи во листот 'listaca'." });
+
+        var salaryMonth = new DateOnly(year, month, 1);
+        var result = await _mediator.Send(new ImportSalariesCommand(companyId, salaryMonth, rows), ct);
+        if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
+
+        return Ok(result.Value);
+    }
+
+    private static List<ExcelSalaryRow> ParseExcelFile(IFormFile file, string ext)
+    {
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+        using var stream = file.OpenReadStream();
+        using var reader = ext == ".xls"
+            ? ExcelReaderFactory.CreateBinaryReader(stream)
+            : ExcelReaderFactory.CreateOpenXmlReader(stream);
+
+        var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
+        {
+            ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = false }
+        });
+
+        // Find "listaca" sheet (case-insensitive)
+        DataTable? sheet = null;
+        foreach (DataTable t in dataSet.Tables)
+        {
+            if (t.TableName.Trim().Equals("listaca", StringComparison.OrdinalIgnoreCase))
+            { sheet = t; break; }
+        }
+        if (sheet is null) throw new Exception("Листот 'listaca' не е пронајден во фајлот.");
+
+        // Find header row — first row where we can locate all required columns
+        int headerRow = -1;
+        int colIme = -1, colPrezime = -1, colMatBr = -1, colNetoEfek = -1;
+
+        for (int r = 0; r < Math.Min(sheet.Rows.Count, 20); r++)
+        {
+            var cells = sheet.Rows[r].ItemArray.Select(c => c?.ToString()?.Trim().ToLowerInvariant() ?? "").ToArray();
+            int ime = Array.IndexOf(cells, "ime");
+            int prez = Array.IndexOf(cells, "prezime");
+            int mat = Array.IndexOf(cells, "mat_br");
+            int neto = Array.IndexOf(cells, "neto_efek");
+            if (ime >= 0 && prez >= 0 && mat >= 0 && neto >= 0)
+            {
+                headerRow = r; colIme = ime; colPrezime = prez; colMatBr = mat; colNetoEfek = neto;
+                break;
+            }
+        }
+        if (headerRow < 0) throw new Exception("Не се пронајдени колоните: ime, prezime, mat_br, neto_efek во листот 'listaca'.");
+
+        var rows = new List<ExcelSalaryRow>();
+        for (int r = headerRow + 1; r < sheet.Rows.Count; r++)
+        {
+            var row = sheet.Rows[r];
+            var embg = row[colMatBr]?.ToString()?.Trim() ?? "";
+            var ime = row[colIme]?.ToString()?.Trim() ?? "";
+            var prez = row[colPrezime]?.ToString()?.Trim() ?? "";
+            var netoStr = row[colNetoEfek]?.ToString()?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(embg)) continue;
+            if (!decimal.TryParse(netoStr, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var neto) || neto <= 0) continue;
+
+            rows.Add(new ExcelSalaryRow(embg, $"{prez} {ime}".Trim(), neto));
+        }
+        return rows;
     }
 
     // ── Termination email notifications ──────────────────────────────────

@@ -8,6 +8,7 @@ export interface ConfirmDialogData {
   confirmText?: string;
   cancelText?: string;
   warn?: boolean;
+  hideCancel?: boolean;
 }
 
 @Component({
@@ -17,12 +18,14 @@ export interface ConfirmDialogData {
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>
-      <p>{{ data.message }}</p>
+      <p style="white-space: pre-line">{{ data.message }}</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button [mat-dialog-close]="false">{{ data.cancelText ?? 'Cancel' }}</button>
+      @if (!data.hideCancel) {
+        <button mat-button [mat-dialog-close]="false">{{ data.cancelText ?? 'Откажи' }}</button>
+      }
       <button mat-flat-button [color]="data.warn ? 'warn' : 'primary'" [mat-dialog-close]="true">
-        {{ data.confirmText ?? 'Confirm' }}
+        {{ data.confirmText ?? 'Потврди' }}
       </button>
     </mat-dialog-actions>
   `

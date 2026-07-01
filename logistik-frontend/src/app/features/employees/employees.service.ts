@@ -5,6 +5,12 @@ import { environment } from '../../../environments/environment';
 import { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, SalaryHistory, RecordSalaryRequest, EmployeeMonthlySalary } from '../../core/models/employee.models';
 import { PaginatedResult } from '../../core/models/pagination.models';
 
+export interface ImportSalariesResult {
+  imported: number;
+  alreadyRecorded: number;
+  notFound: string[];
+}
+
 export interface TerminationEmailPreview {
   emailLogId: number | null;
   orderId: number;
@@ -91,6 +97,13 @@ export class EmployeesService {
     const params = overflow ? '?overflow=true' : '';
     return this.http.get(`${environment.apiUrl}/reports/salary-history/${salaryRecordId}/payment-order${params}`,
       { responseType: 'blob' });
+  }
+
+  importSalaries(companyId: number, year: number, month: number, file: File): Observable<ImportSalariesResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const params = new HttpParams().set('year', year).set('month', month);
+    return this.http.post<ImportSalariesResult>(`${this.base(companyId)}/salary-import`, formData, { params });
   }
 
   getTerminationEmails(companyId: number, employeeId: number): Observable<TerminationEmailPreview[]> {

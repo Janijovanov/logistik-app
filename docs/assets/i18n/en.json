@@ -218,6 +218,16 @@
     "assignCompany": "Assign Company",
     "savePermissions": "Save Permissions"
   },
+  "import": {
+    "importExcel": "Import Excel",
+    "importing": "Importing...",
+    "confirmTitle": "Import Salaries from Excel",
+    "confirmMessage": "File: {{file}}\nMonth: {{month}}\nCompany: {{company}}\n\nAre you sure you want to import salaries?",
+    "resultTitle": "Import Result",
+    "resultImported": "✅ Successfully imported: {{count}} employees",
+    "resultAlready": "⚠️ Already recorded: {{count}} employees",
+    "resultNotFound": "❌ Not found in system ({{count}}):"
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back, {{name}}",

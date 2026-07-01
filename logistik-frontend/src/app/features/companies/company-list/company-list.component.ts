@@ -16,7 +16,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CompaniesService } from '../companies.service';
-import { EmployeesService } from '../../employees/employees.service';
+import { EmployeesService, ImportSalariesResult } from '../../employees/employees.service';
 import { Company } from '../../../core/models/company.models';
 import { EmployeeMonthlySalary } from '../../../core/models/employee.models';
 import { AuthService } from '../../../core/services/auth.service';
@@ -137,6 +137,11 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                 </button>
               }
               @if (authService.canEditCompany(selectedCompany()!.id)) {
+                <button mat-stroked-button (click)="fileInput.click()" [disabled]="importing()" class="import-btn">
+                  <mat-icon>upload_file</mat-icon>
+                  {{ importing() ? ('import.importing' | translate) : ('import.importExcel' | translate) }}
+                </button>
+                <input #fileInput type="file" accept=".xls,.xlsx" style="display:none" (change)="onFileSelected($event)" />
                 <button mat-flat-button color="primary"
                   [routerLink]="[selectedCompany()!.id, 'employees', 'new']">
                   <mat-icon>person_add</mat-icon>
@@ -450,6 +455,7 @@ export class CompanyListComponent implements OnInit {
   selectedCompany = signal<Company | null>(null);
   monthlyData = signal<EmployeeMonthlySalary[]>([]);
   loadingEmployees = signal(false);
+  importing = signal(false);
   viewMode = signal<'all' | 'orders'>('all');
   showInactive = signal(true);
 
@@ -582,6 +588,63 @@ export class CompanyListComponent implements OnInit {
       if (success) {
         this.notifications.success(`${emp.fullName} е вратен/а на работа.`);
         this.loadMonthlyData();
+      }
+    });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+
+    const company = this.selectedCompany();
+    if (!company) return;
+    const m = this.monthCtrl.value ?? this.currentMonth();
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: this.translate.instant('import.confirmTitle'),
+        message: this.translate.instant('import.confirmMessage', {
+          file: file.name,
+          month: m.toLocaleDateString('mk-MK', { month: 'long', year: 'numeric' }),
+          company: company.name
+        }),
+        confirmText: this.translate.instant('import.importExcel'),
+        warn: false
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      this.importing.set(true);
+      this.employeesService.importSalaries(company.id, m.getFullYear(), m.getMonth() + 1, file).subscribe({
+        next: (result: ImportSalariesResult) => {
+          this.importing.set(false);
+          this.showImportResult(result);
+          this.loadMonthlyData();
+        },
+        error: (err: any) => {
+          this.importing.set(false);
+          this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'));
+        }
+      });
+    });
+  }
+
+  private showImportResult(result: ImportSalariesResult): void {
+    let msg = this.translate.instant('import.resultImported', { count: result.imported });
+    if (result.alreadyRecorded > 0)
+      msg += '\n' + this.translate.instant('import.resultAlready', { count: result.alreadyRecorded });
+    if (result.notFound.length > 0)
+      msg += '\n' + this.translate.instant('import.resultNotFound', { count: result.notFound.length }) +
+             '\n' + result.notFound.join('\n');
+
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: this.translate.instant('import.resultTitle'),
+        message: msg,
+        confirmText: this.translate.instant('common.close'),
+        warn: result.notFound.length > 0,
+        hideCancel: true
       }
     });
   }
