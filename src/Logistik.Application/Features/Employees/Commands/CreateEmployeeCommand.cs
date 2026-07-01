@@ -9,7 +9,8 @@ public record CreateEmployeeCommand(
     int CompanyId, string FullName, string EMBG,
     DateOnly EmploymentStartDate, DateOnly? EmploymentEndDate,
     string BankAccount, decimal NetSalary,
-    int? TransferFromEmployeeId = null) : IRequest<Result<int>>;
+    int? TransferFromEmployeeId = null,
+    string? Code = null) : IRequest<Result<int>>;
 
 public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Result<int>>
 {
@@ -31,6 +32,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
                 existing.EmploymentEndDate = request.EmploymentEndDate;
                 existing.BankAccount = request.BankAccount;
                 existing.NetSalary = request.NetSalary;
+                if (request.Code is not null) existing.Code = request.Code;
                 existing.IsDeleted = false;
                 existing.DeletedAt = null;
                 existing.UpdatedAt = DateTime.UtcNow;
@@ -72,6 +74,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         var employee = new Employee
         {
             CompanyId = request.CompanyId,
+            Code = request.Code,
             FullName = request.FullName,
             EMBG = request.EMBG,
             EmploymentStartDate = request.EmploymentStartDate,

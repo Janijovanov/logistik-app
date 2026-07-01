@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Logistik.Application.Features.Salaries.Commands;
 
-public record ExcelSalaryRow(string EMBG, string FullName, decimal NetSalary);
+public record ExcelSalaryRow(string EMBG, string FullName, decimal NetSalary, string? Code = null);
 
 public record ImportSalariesResult(int Imported, int AlreadyRecorded, List<string> NotFound);
 
@@ -41,6 +41,14 @@ public class ImportSalariesCommandHandler : IRequestHandler<ImportSalariesComman
             {
                 notFound.Add(row.FullName.Trim().Length > 0 ? $"{row.FullName} (ЕМБГ: {row.EMBG})" : row.EMBG);
                 continue;
+            }
+
+            // Set code from Excel if employee doesn't have one yet
+            if (row.Code is not null && employee.Code is null)
+            {
+                employee.Code = row.Code;
+                _uow.Employees.Update(employee);
+                await _uow.SaveChangesAsync(ct);
             }
 
             var existing = await _uow.SalaryHistories.GetByEmployeeAndMonthAsync(employee.Id, request.SalaryMonth, ct);

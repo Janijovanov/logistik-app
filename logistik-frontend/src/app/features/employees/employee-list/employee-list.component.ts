@@ -60,6 +60,11 @@ import { EmbgMaskPipe } from '../../../shared/pipes/embg-mask.pipe';
         <div class="table-loading"><mat-spinner diameter="36" /></div>
       } @else {
         <table mat-table [dataSource]="result()?.items ?? []" class="mat-elevation-z0">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Шифра</th>
+            <td mat-cell *matCellDef="let e">{{ e.code ?? '—' }}</td>
+          </ng-container>
+
           <ng-container matColumnDef="fullName">
             <th mat-header-cell *matHeaderCellDef>Full Name</th>
             <td mat-cell *matCellDef="let e"><strong>{{ e.fullName }}</strong></td>
@@ -157,7 +162,7 @@ export class EmployeeListComponent implements OnInit, OnChanges {
   private notifications = inject(NotificationService);
   authService = inject(AuthService);
 
-  columns = ['fullName', 'embg', 'startDate', 'endDate', 'netSalary', 'actions'];
+  columns = ['code', 'fullName', 'embg', 'startDate', 'endDate', 'netSalary', 'actions'];
   searchCtrl = new FormControl('');
   loading = signal(true);
   result = signal<PaginatedResult<Employee> | null>(null);

@@ -21,7 +21,7 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, Pagin
         return new PaginatedResult<EmployeeDto>
         {
             Items = items.Select(e => new EmployeeDto(e.Id, e.CompanyId, e.FullName, e.EMBG,
-                e.EmploymentStartDate, e.EmploymentEndDate, e.BankAccount, e.NetSalary, e.IsDeleted)).ToList(),
+                e.EmploymentStartDate, e.EmploymentEndDate, e.BankAccount, e.NetSalary, e.IsDeleted, Code: e.Code)).ToList(),
             TotalCount = total,
             Page = request.Page,
             PageSize = request.PageSize

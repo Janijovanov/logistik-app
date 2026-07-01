@@ -37,7 +37,8 @@ public class GetEmployeesMonthlySalaryQueryHandler : IRequestHandler<GetEmployee
                     e.EmploymentStartDate, e.EmploymentEndDate,
                     e.BankAccount, e.NetSalary,
                     sal?.Id, sal?.NetSalary, sal?.DeductionAmount,
-                    order?.ExecutorName, order?.ExecutorBankAccount, order?.OrderNumber);
+                    order?.ExecutorName, order?.ExecutorBankAccount, order?.OrderNumber,
+                    Code: e.Code);
             }).ToList();
     }
 }

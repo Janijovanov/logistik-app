@@ -7,6 +7,7 @@ export interface EmploymentHistory {
 export interface Employee {
   id: number;
   companyId: number;
+  code: string | null;
   fullName: string;
   embg: string;
   employmentStartDate: string;
@@ -21,6 +22,7 @@ export interface Employee {
 export interface CreateEmployeeRequest {
   fullName: string;
   embg: string;
+  code?: string | null;
   employmentStartDate: string;
   employmentEndDate: string | null;
   bankAccount: string;
@@ -61,6 +63,7 @@ export interface RecordSalaryRequest {
 export interface EmployeeMonthlySalary {
   id: number;
   companyId: number;
+  code: string | null;
   fullName: string;
   embg: string;
   employmentStartDate: string;

@@ -77,6 +77,7 @@
     "deleteCompanyConfirm": "Are you sure you want to delete company \"{{name}}\"? All employees and data will be permanently deleted."
   },
   "employees": {
+    "code": "Code",
     "addEmployee": "Add Employee",
     "editEmployee": "Edit Employee",
     "newEmployee": "New Employee",

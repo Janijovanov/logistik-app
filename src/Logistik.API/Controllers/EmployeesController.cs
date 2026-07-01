@@ -56,7 +56,7 @@ public class EmployeesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Create(int companyId, [FromBody] CreateEmployeeRequest request, CancellationToken ct)
     {
-        var result = await _mediator.Send(new CreateEmployeeCommand(companyId, request.FullName, request.EMBG, request.EmploymentStartDate, request.EmploymentEndDate, request.BankAccount, request.NetSalary, request.TransferFromEmployeeId), ct);
+        var result = await _mediator.Send(new CreateEmployeeCommand(companyId, request.FullName, request.EMBG, request.EmploymentStartDate, request.EmploymentEndDate, request.BankAccount, request.NetSalary, request.TransferFromEmployeeId, request.Code), ct);
         if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
         return StatusCode(201, new { id = result.Value });
     }
@@ -149,7 +149,7 @@ public class EmployeesController : ControllerBase
 
         DataTable? sheet = null;
         int headerRow = -1;
-        int colIme = -1, colPrezime = -1, colMatBr = -1, colNetoEfek = -1;
+        int colIme = -1, colPrezime = -1, colMatBr = -1, colNetoEfek = -1, colSifRab = -1;
 
         foreach (var candidate in orderedSheets)
         {
@@ -165,6 +165,7 @@ public class EmployeesController : ControllerBase
                 {
                     sheet = candidate; headerRow = r;
                     colIme = ime; colPrezime = prez; colMatBr = mat; colNetoEfek = neto;
+                    colSifRab = FindCol(cells, "sif_rab", "sifrab", "sif rab", "šifra", "sifra", "kod");
                     break;
                 }
             }
@@ -183,12 +184,16 @@ public class EmployeesController : ControllerBase
             var ime = row[colIme]?.ToString()?.Trim() ?? "";
             var prez = row[colPrezime]?.ToString()?.Trim() ?? "";
             var netoStr = row[colNetoEfek]?.ToString()?.Trim() ?? "";
+            var sifRaw = colSifRab >= 0 ? row[colSifRab]?.ToString()?.Trim() : null;
+            // SIF_RAB is often a number like 1, 5, 14 — store as-is, strip trailing .0
+            var sif = string.IsNullOrWhiteSpace(sifRaw) ? null
+                : (decimal.TryParse(sifRaw, out var sifNum) ? ((int)sifNum).ToString() : sifRaw);
 
             if (string.IsNullOrWhiteSpace(embg)) continue;
             if (!decimal.TryParse(netoStr, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var neto) || neto <= 0) continue;
 
-            rows.Add(new ExcelSalaryRow(embg, $"{prez} {ime}".Trim(), neto));
+            rows.Add(new ExcelSalaryRow(embg, $"{prez} {ime}".Trim(), neto, sif));
         }
         return rows;
     }

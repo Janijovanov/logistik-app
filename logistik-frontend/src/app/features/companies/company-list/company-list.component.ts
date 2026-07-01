@@ -159,6 +159,11 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
             @if (viewMode() === 'all') {
               <table mat-table [dataSource]="displayData()" class="mat-elevation-z0">
 
+                <ng-container matColumnDef="code">
+                  <th mat-header-cell *matHeaderCellDef>{{ 'employees.code' | translate }}</th>
+                  <td mat-cell *matCellDef="let e">{{ e.code ?? '—' }}</td>
+                </ng-container>
+
                 <ng-container matColumnDef="fullName">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.fullName' | translate }}</th>
                   <td mat-cell *matCellDef="let e">
@@ -463,7 +468,7 @@ export class CompanyListComponent implements OnInit {
   monthCtrl = new FormControl<Date | null>(this.currentMonth());
   maxMonth = new Date();
 
-  allColumns = ['fullName', 'embg', 'bankAccount', 'netSalary', 'startDate', 'endDate', 'actions'];
+  allColumns = ['code', 'fullName', 'embg', 'bankAccount', 'netSalary', 'startDate', 'endDate', 'actions'];
   ordersColumns = ['fullName', 'executorName', 'executorBankAccount', 'orderNumber', 'deductionAmount', 'actions'];
 
   private hasActiveOrderForMonth = (e: EmployeeMonthlySalary) =>

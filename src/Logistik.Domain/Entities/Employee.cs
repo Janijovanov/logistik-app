@@ -5,6 +5,7 @@ namespace Logistik.Domain.Entities;
 public class Employee : SoftDeletableEntity
 {
     public int CompanyId { get; set; }
+    public string? Code { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string EMBG { get; set; } = string.Empty;
     public DateOnly EmploymentStartDate { get; set; }

@@ -44,6 +44,13 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
       <mat-card-content>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="form-row">
+            @if (!isEdit) {
+              <mat-form-field appearance="outline" style="max-width:160px">
+                <mat-label>{{ 'employees.code' | translate }}</mat-label>
+                <input matInput formControlName="code" />
+              </mat-form-field>
+            }
+
             <mat-form-field appearance="outline">
               <mat-label>{{ 'employees.fullName' | translate }}</mat-label>
               <input matInput formControlName="fullName" />
@@ -138,6 +145,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   private savingTimerSub?: Subscription;
 
   form = this.fb.group({
+    code: [null as string | null],
     fullName: ['', Validators.required],
     embg: ['', [Validators.required, Validators.minLength(13), Validators.maxLength(13)]],
     employmentStartDate: [null as Date | null, Validators.required],
@@ -206,6 +214,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       employmentEndDate: v.employmentEndDate ? toDateOnly(v.employmentEndDate) : null,
       bankAccount: v.bankAccount!,
       netSalary: v.netSalary!,
+      ...(!this.isEdit && v.code ? { code: v.code } : {}),
       ...(transferFromEmployeeId ? { transferFromEmployeeId } : {})
     };
 
