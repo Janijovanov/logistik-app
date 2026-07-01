@@ -48,11 +48,15 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                 @if (editingSubId() === sub.id) {
                   <mat-form-field appearance="outline" class="inline-field sub-name-field">
                     <mat-label>Назив</mat-label>
-                    <input matInput [(ngModel)]="editSubName" (keydown.escape)="editingSubId.set(null)" />
+                    <input matInput [(ngModel)]="editSubName"
+                      (keydown.enter)="saveSub(cat, sub)"
+                      (keydown.escape)="editingSubId.set(null)" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="inline-field plan-field">
                     <mat-label>Годишен план</mat-label>
-                    <input matInput type="number" [(ngModel)]="editSubPlan" (keydown.escape)="editingSubId.set(null)" />
+                    <input matInput type="number" [(ngModel)]="editSubPlan"
+                      (keydown.enter)="saveSub(cat, sub)"
+                      (keydown.escape)="editingSubId.set(null)" />
                   </mat-form-field>
                   <button mat-icon-button color="primary" (click)="saveSub(cat, sub)"><mat-icon>check</mat-icon></button>
                   <button mat-icon-button (click)="editingSubId.set(null)"><mat-icon>close</mat-icon></button>
@@ -70,11 +74,15 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
               <div class="sub-row add-row">
                 <mat-form-field appearance="outline" class="inline-field sub-name-field">
                   <mat-label>Назив на поткатегорија</mat-label>
-                  <input matInput [(ngModel)]="newSubName" (keydown.escape)="addingSubForCatId.set(null)" />
+                  <input matInput [(ngModel)]="newSubName"
+                    (keydown.enter)="confirmAddSub(cat)"
+                    (keydown.escape)="addingSubForCatId.set(null)" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="inline-field plan-field">
                   <mat-label>Годишен план (ден.)</mat-label>
-                  <input matInput type="number" [(ngModel)]="newSubPlan" />
+                  <input matInput type="number" [(ngModel)]="newSubPlan"
+                    (keydown.enter)="confirmAddSub(cat)"
+                    (keydown.escape)="addingSubForCatId.set(null)" />
                 </mat-form-field>
                 <button mat-icon-button color="primary" (click)="confirmAddSub(cat)"><mat-icon>check</mat-icon></button>
                 <button mat-icon-button (click)="addingSubForCatId.set(null)"><mat-icon>close</mat-icon></button>
