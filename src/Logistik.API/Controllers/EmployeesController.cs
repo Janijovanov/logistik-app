@@ -98,21 +98,26 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpPost("salary-import")]
-    public async Task<ActionResult> ImportSalaries(int companyId, IFormFile file, [FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult> ImportSalaries(int companyId, [FromQuery] int year, [FromQuery] int month, CancellationToken ct)
     {
+        var file = Request.Form.Files.GetFile("file");
         if (file is null || file.Length == 0)
-            return BadRequest(new { message = "Фајлот е празен." });
+            return BadRequest(new { message = "Фајлот е празен или не е прикачен." });
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (ext is not ".xls" and not ".xlsx")
             return BadRequest(new { message = "Дозволени се само .xls и .xlsx фајлови." });
+
+        if (year < 2000 || year > 2100 || month < 1 || month > 12)
+            return BadRequest(new { message = "Невалиден месец или година." });
 
         List<ExcelSalaryRow> rows;
         try { rows = ParseExcelFile(file, ext); }
         catch (Exception ex) { return BadRequest(new { message = $"Грешка при читање на фајлот: {ex.Message}" }); }
 
         if (rows.Count == 0)
-            return BadRequest(new { message = "Не се пронајдени записи во листот 'listaca'." });
+            return BadRequest(new { message = "Не се пронајдени записи во листот 'listaca' или нема валидни редови." });
 
         var salaryMonth = new DateOnly(year, month, 1);
         var result = await _mediator.Send(new ImportSalariesCommand(companyId, salaryMonth, rows), ct);
@@ -135,33 +140,38 @@ public class EmployeesController : ControllerBase
             ConfigureDataTable = _ => new ExcelDataTableConfiguration { UseHeaderRow = false }
         });
 
-        // Find "listaca" sheet (case-insensitive)
+        // Find "listaca" sheet (case-insensitive, also accept partial match)
         DataTable? sheet = null;
         foreach (DataTable t in dataSet.Tables)
         {
-            if (t.TableName.Trim().Equals("listaca", StringComparison.OrdinalIgnoreCase))
+            var name = t.TableName.Trim().ToLowerInvariant();
+            if (name.Contains("listac") || name.Contains("листац") || name.Contains("listici") || name.Contains("листич"))
             { sheet = t; break; }
         }
-        if (sheet is null) throw new Exception("Листот 'listaca' не е пронајден во фајлот.");
+        // fallback: use first sheet if still not found
+        sheet ??= dataSet.Tables.Count > 0 ? dataSet.Tables[0] : null;
+        if (sheet is null) throw new Exception("Фајлот не содржи листови.");
 
-        // Find header row — first row where we can locate all required columns
+        // Find header row — first row where we can locate required columns
         int headerRow = -1;
         int colIme = -1, colPrezime = -1, colMatBr = -1, colNetoEfek = -1;
 
-        for (int r = 0; r < Math.Min(sheet.Rows.Count, 20); r++)
+        for (int r = 0; r < Math.Min(sheet.Rows.Count, 30); r++)
         {
             var cells = sheet.Rows[r].ItemArray.Select(c => c?.ToString()?.Trim().ToLowerInvariant() ?? "").ToArray();
-            int ime = Array.IndexOf(cells, "ime");
-            int prez = Array.IndexOf(cells, "prezime");
-            int mat = Array.IndexOf(cells, "mat_br");
-            int neto = Array.IndexOf(cells, "neto_efek");
+            int ime = FindCol(cells, "ime");
+            int prez = FindCol(cells, "prezime");
+            int mat = FindCol(cells, "mat_br", "matbr", "embg", "mat br");
+            int neto = FindCol(cells, "neto_efek", "netoefek", "neto efek", "neto");
             if (ime >= 0 && prez >= 0 && mat >= 0 && neto >= 0)
             {
                 headerRow = r; colIme = ime; colPrezime = prez; colMatBr = mat; colNetoEfek = neto;
                 break;
             }
         }
-        if (headerRow < 0) throw new Exception("Не се пронајдени колоните: ime, prezime, mat_br, neto_efek во листот 'listaca'.");
+
+        var sheetNames = string.Join(", ", dataSet.Tables.Cast<DataTable>().Select(t => t.TableName));
+        if (headerRow < 0) throw new Exception($"Не се пронајдени колоните: ime, prezime, mat_br, neto_efek. Листови во фајлот: {sheetNames}. Проверете ги имињата на колоните.");
 
         var rows = new List<ExcelSalaryRow>();
         for (int r = headerRow + 1; r < sheet.Rows.Count; r++)
@@ -317,6 +327,16 @@ public class EmployeesController : ControllerBase
         _db.EmailLogs.Update(log);
         await _db.SaveChangesAsync(ct);
         return NoContent();
+    }
+
+    private static int FindCol(string[] cells, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var idx = Array.FindIndex(cells, c => c == name || c.Replace(" ", "_") == name || c.Replace("_", " ") == name);
+            if (idx >= 0) return idx;
+        }
+        return -1;
     }
 
     private static string BuildTerminationHtmlBody(string contentText, string senderName) =>

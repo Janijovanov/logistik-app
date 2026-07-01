@@ -624,7 +624,9 @@ export class CompanyListComponent implements OnInit {
         },
         error: (err: any) => {
           this.importing.set(false);
-          this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'));
+          const msg = err.error?.message || err.error?.title || err.message
+            || `HTTP ${err.status || '?'}: ${err.statusText || 'Грешка'}`;
+          this.notifications.error(msg);
         }
       });
     });
