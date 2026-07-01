@@ -20,6 +20,9 @@ public class AppDbContext : DbContext
     public DbSet<Executor> Executors => Set<Executor>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<EmploymentHistory> EmploymentHistories => Set<EmploymentHistory>();
+    public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
+    public DbSet<ExpenseSubcategory> ExpenseSubcategories => Set<ExpenseSubcategory>();
+    public DbSet<ExpenseEntry> ExpenseEntries => Set<ExpenseEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

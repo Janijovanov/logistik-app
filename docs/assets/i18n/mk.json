@@ -4,7 +4,8 @@
     "users": "Корисници",
     "dashboard": "Контролна табла",
     "logout": "Одјава",
-    "adminPanel": "Админ панел"
+    "adminPanel": "Админ панел",
+    "expenses": "Трошоци"
   },
   "auth": {
     "title": "Logistik",

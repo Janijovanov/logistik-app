@@ -4,7 +4,8 @@
     "users": "Users",
     "dashboard": "Dashboard",
     "logout": "Sign out",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "expenses": "Expenses"
   },
   "auth": {
     "title": "Logistik",
