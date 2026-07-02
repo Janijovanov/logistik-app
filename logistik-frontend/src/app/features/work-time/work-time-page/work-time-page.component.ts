@@ -106,8 +106,17 @@ interface RowState {
               <mat-icon>inbox</mat-icon>
               <p>{{ 'workTime.noEntries' | translate }}</p>
             </div>
-            <div class="company-total">
-              <table class="wt-table">
+            <div class="company-total month-block">
+              <table class="wt-table aligned">
+                <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                    <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                    <th class="notes-col"></th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr class="grand-total-row month-total-row">
                     <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
@@ -123,7 +132,8 @@ interface RowState {
               <div class="user-group">
                 <h3 class="group-title">{{ group.userName }}</h3>
                 <div class="table-wrapper">
-                  <table class="wt-table">
+                  <table class="wt-table aligned">
+                    <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
                     <thead>
                       <tr>
                         <th>{{ 'workTime.docType' | translate }}</th>
@@ -153,9 +163,18 @@ interface RowState {
               </div>
             }
 
-            <!-- Grand total across all workers for this company -->
+            <!-- Day total across all workers for this company -->
             <div class="company-total">
-              <table class="wt-table">
+              <table class="wt-table aligned">
+                <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                    <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                    <th class="notes-col"></th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr class="grand-total-row">
                     <td><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
@@ -163,6 +182,15 @@ interface RowState {
                     <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
                     <td class="notes-col"></td>
                   </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Month total, visually separated from the day total -->
+            <div class="company-total month-block">
+              <table class="wt-table aligned">
+                <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+                <tbody>
                   <tr class="grand-total-row month-total-row">
                     <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
                     <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
@@ -366,6 +394,12 @@ interface RowState {
     }
     .admin-summary { display: flex; flex-direction: column; gap: 16px; }
     .company-total { margin-top: 8px; }
+    .month-block { margin-top: 0; }
+    /* Fixed layout so every admin table shares identical column widths */
+    .wt-table.aligned { table-layout: fixed; width: 100%; }
+    .aligned .col-num { width: 110px; }
+    .aligned .col-notes { width: 32%; }
+    .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
     .grand-total-row td {
       background: #e8eaf6 !important;
       font-weight: 700;
