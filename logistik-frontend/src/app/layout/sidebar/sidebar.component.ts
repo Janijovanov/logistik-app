@@ -96,9 +96,10 @@ interface NavItem {
     }
     .logo-text {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 600;
       color: white;
       letter-spacing: 0.3px;
+      font-family: 'Martel', 'Georgia', serif;
     }
     .logo-sub {
       font-size: 9.5px;
