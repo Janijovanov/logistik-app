@@ -70,11 +70,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="companies">
-            <th mat-header-cell *matHeaderCellDef>{{ 'users.companies' | translate }}</th>
-            <td mat-cell *matCellDef="let u">{{ u.permissions?.length ?? 0 }}</td>
-          </ng-container>
-
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
             <td mat-cell *matCellDef="let u">
@@ -139,7 +134,7 @@ export class UserListComponent implements OnInit {
   private notifications = inject(NotificationService);
   private translate = inject(TranslateService);
 
-  columns = ['name', 'email', 'role', 'companies', 'status', 'actions'];
+  columns = ['name', 'email', 'role', 'status', 'actions'];
   searchCtrl = new FormControl('');
   loading = signal(true);
   result = signal<PaginatedResult<User> | null>(null);
