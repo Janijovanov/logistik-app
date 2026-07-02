@@ -218,7 +218,19 @@
     "canExport": "Export",
     "noPermissions": "No companies assigned",
     "assignCompany": "Assign Company",
-    "savePermissions": "Save Permissions"
+    "savePermissions": "Save Permissions",
+    "userInfo": "User Info",
+    "userPermissions": "User Permissions",
+    "backToUsers": "Back to Users",
+    "companyPermissions": "Company Permissions",
+    "company": "Company",
+    "assign": "Assign",
+    "revokeAccess": "Revoke Access",
+    "revokeConfirm": "Remove access to \"{{companyName}}\"?",
+    "revoke": "Revoke",
+    "companyAssigned": "Company assigned.",
+    "accessRevoked": "Access revoked.",
+    "permissionUpdated": "Permission updated."
   },
   "import": {
     "importExcel": "Import Excel",

@@ -218,7 +218,19 @@
     "canExport": "Извоз",
     "noPermissions": "Нема доделени компании",
     "assignCompany": "Додели компанија",
-    "savePermissions": "Зачувај дозволи"
+    "savePermissions": "Зачувај дозволи",
+    "userInfo": "Кориснички информации",
+    "userPermissions": "Кориснички дозволи",
+    "backToUsers": "Назад кон корисници",
+    "companyPermissions": "Дозволи за компании",
+    "company": "Компанија",
+    "assign": "Додели",
+    "revokeAccess": "Откажи пристап",
+    "revokeConfirm": "Откажи го пристапот до \"{{companyName}}\"?",
+    "revoke": "Откажи",
+    "companyAssigned": "Компанијата е доделена.",
+    "accessRevoked": "Пристапот е откажан.",
+    "permissionUpdated": "Дозволата е ажурирана."
   },
   "import": {
     "importExcel": "Увези Excel",

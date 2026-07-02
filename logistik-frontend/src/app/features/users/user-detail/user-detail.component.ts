@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { UsersService } from '../users.service';
 import { CompaniesService } from '../../companies/companies.service';
 import { User, UserCompanyPermission } from '../../../core/models/user.models';
@@ -27,7 +28,8 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     CommonModule, RouterLink, ReactiveFormsModule,
     MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
     MatCheckboxModule, MatSelectModule, MatFormFieldModule,
-    MatProgressSpinnerModule, MatDialogModule, PageHeaderComponent
+    MatProgressSpinnerModule, MatDialogModule, PageHeaderComponent,
+    TranslateModule
   ],
   template: `
     @if (loading()) {
@@ -36,31 +38,31 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       <div class="loading-wrap">
         <mat-icon color="warn">error_outline</mat-icon>
         <p>{{ loadError() }}</p>
-        <button mat-stroked-button routerLink="/users">Back to Users</button>
+        <button mat-stroked-button routerLink="/users">{{ 'users.backToUsers' | translate }}</button>
       </div>
     } @else if (user()) {
-      <app-page-header [title]="user()!.firstName + ' ' + user()!.lastName" subtitle="User Permissions">
+      <app-page-header [title]="user()!.firstName + ' ' + user()!.lastName" [subtitle]="'users.userPermissions' | translate">
         <button mat-stroked-button routerLink="/users">
           <mat-icon>arrow_back</mat-icon>
-          Back
+          {{ 'common.back' | translate }}
         </button>
         <button mat-stroked-button [routerLink]="['/users', userId, 'edit']">
           <mat-icon>edit</mat-icon>
-          Edit
+          {{ 'common.edit' | translate }}
         </button>
       </app-page-header>
 
       <div class="content-grid">
         <mat-card class="info-card">
-          <mat-card-header><mat-card-title>User Info</mat-card-title></mat-card-header>
+          <mat-card-header><mat-card-title>{{ 'users.userInfo' | translate }}</mat-card-title></mat-card-header>
           <mat-card-content>
-            <div class="info-row"><span>Username:</span><strong>{{ user()!.username }}</strong></div>
-            <div class="info-row"><span>Email:</span><strong>{{ user()!.email }}</strong></div>
-            <div class="info-row"><span>Role:</span><strong>{{ user()!.role }}</strong></div>
+            <div class="info-row"><span>{{ 'auth.username' | translate }}:</span><strong>{{ user()!.username }}</strong></div>
+            <div class="info-row"><span>{{ 'common.email' | translate }}:</span><strong>{{ user()!.email }}</strong></div>
+            <div class="info-row"><span>{{ 'users.role' | translate }}:</span><strong>{{ user()!.role }}</strong></div>
             <div class="info-row">
-              <span>Status:</span>
+              <span>{{ 'common.status' | translate }}:</span>
               <span [class]="user()!.isActive ? 'chip-active' : 'chip-inactive'">
-                {{ user()!.isActive ? 'Active' : 'Inactive' }}
+                {{ (user()!.isActive ? 'common.active' : 'common.inactive') | translate }}
               </span>
             </div>
           </mat-card-content>
@@ -68,12 +70,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
         <mat-card class="permissions-card">
           <mat-card-header>
-            <mat-card-title>Company Permissions</mat-card-title>
+            <mat-card-title>{{ 'users.companyPermissions' | translate }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div class="assign-form">
               <mat-form-field appearance="outline">
-                <mat-label>Add Company</mat-label>
+                <mat-label>{{ 'companies.addCompany' | translate }}</mat-label>
                 <mat-select [formControl]="companySelectCtrl">
                   @for (c of availableCompanies(); track c.id) {
                     <mat-option [value]="c.id">{{ c.name }}</mat-option>
@@ -81,29 +83,29 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 </mat-select>
               </mat-form-field>
               <button mat-flat-button color="primary" (click)="assignCompany()" [disabled]="!companySelectCtrl.value">
-                Assign
+                {{ 'users.assign' | translate }}
               </button>
             </div>
 
             <table mat-table [dataSource]="user()!.permissions ?? []" class="mat-elevation-z0">
               <ng-container matColumnDef="company">
-                <th mat-header-cell *matHeaderCellDef>Company</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'users.company' | translate }}</th>
                 <td mat-cell *matCellDef="let p">{{ p.companyName }}</td>
               </ng-container>
               <ng-container matColumnDef="canView">
-                <th mat-header-cell *matHeaderCellDef>View</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'users.canView' | translate }}</th>
                 <td mat-cell *matCellDef="let p">
                   <mat-checkbox [checked]="p.canView" (change)="updatePerm(p, 'canView', $event.checked)" />
                 </td>
               </ng-container>
               <ng-container matColumnDef="canEdit">
-                <th mat-header-cell *matHeaderCellDef>Edit</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'users.canEdit' | translate }}</th>
                 <td mat-cell *matCellDef="let p">
                   <mat-checkbox [checked]="p.canEdit" (change)="updatePerm(p, 'canEdit', $event.checked)" />
                 </td>
               </ng-container>
               <ng-container matColumnDef="canExport">
-                <th mat-header-cell *matHeaderCellDef>Export</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'users.canExport' | translate }}</th>
                 <td mat-cell *matCellDef="let p">
                   <mat-checkbox [checked]="p.canExport" (change)="updatePerm(p, 'canExport', $event.checked)" />
                 </td>
@@ -119,7 +121,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               <tr mat-header-row *matHeaderRowDef="permCols"></tr>
               <tr mat-row *matRowDef="let row; columns: permCols;"></tr>
               <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell empty-state" [attr.colspan]="permCols.length">No companies assigned</td>
+                <td class="mat-cell empty-state" [attr.colspan]="permCols.length">{{ 'users.noPermissions' | translate }}</td>
               </tr>
             </table>
           </mat-card-content>
@@ -143,6 +145,7 @@ export class UserDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private dialog = inject(MatDialog);
   private notifications = inject(NotificationService);
+  private translate = inject(TranslateService);
   private fb = inject(FormBuilder);
 
   user = signal<User | null>(null);
@@ -197,8 +200,12 @@ export class UserDetailComponent implements OnInit {
     const cId = this.companySelectCtrl.value;
     if (!cId) return;
     this.service.assignPermission(this.userId, { companyId: cId, canView: true, canEdit: false, canExport: false }).subscribe({
-      next: () => { this.notifications.success('Company assigned.'); this.companySelectCtrl.reset(); this.loadAll(); },
-      error: (err: any) => this.notifications.error(err.error?.message ?? 'Failed to assign company.')
+      next: () => {
+        this.notifications.success(this.translate.instant('users.companyAssigned'));
+        this.companySelectCtrl.reset();
+        this.loadAll();
+      },
+      error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
     });
   }
 
@@ -209,24 +216,27 @@ export class UserDetailComponent implements OnInit {
       canEdit: updated.canEdit,
       canExport: updated.canExport
     }).subscribe({
-      next: () => this.notifications.success('Permission updated.'),
-      error: (err: any) => this.notifications.error(err.error?.message ?? 'Failed to update permission.')
+      next: () => this.notifications.success(this.translate.instant('users.permissionUpdated')),
+      error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
     });
   }
 
   revokeCompany(perm: UserCompanyPermission): void {
     this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Revoke Access',
-        message: `Remove access to "${perm.companyName}"?`,
-        confirmText: 'Revoke',
+        title: this.translate.instant('users.revokeAccess'),
+        message: this.translate.instant('users.revokeConfirm', { companyName: perm.companyName }),
+        confirmText: this.translate.instant('users.revoke'),
         warn: true
       }
     }).afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.service.revokePermission(this.userId, perm.companyId).subscribe({
-          next: () => { this.notifications.success('Access revoked.'); this.loadAll(); },
-          error: (err: any) => this.notifications.error(err.error?.message ?? 'Failed to revoke access.')
+          next: () => {
+            this.notifications.success(this.translate.instant('users.accessRevoked'));
+            this.loadAll();
+          },
+          error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
         });
       }
     });
