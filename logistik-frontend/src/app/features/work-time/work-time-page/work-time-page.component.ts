@@ -8,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -34,6 +36,7 @@ interface RowState {
     CommonModule, FormsModule,
     MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule,
     MatInputModule, MatProgressSpinnerModule, MatTooltipModule,
+    MatDatepickerModule, MatNativeDateModule,
     MatDialogModule, TranslateModule
   ],
   template: `
@@ -59,7 +62,10 @@ interface RowState {
     <div class="filters-row">
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>{{ 'common.date' | translate }}</mat-label>
-        <input matInput type="date" [(ngModel)]="selectedDate" (change)="onFilterChange()" />
+        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateObj"
+          (dateChange)="onDateChange()" readonly (click)="picker.open()" />
+        <mat-datepicker-toggle matIconSuffix [for]="picker" />
+        <mat-datepicker #picker />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
@@ -338,13 +344,22 @@ export class WorkTimePageComponent implements OnInit {
   rows = signal<RowState[]>([]);
   loading = signal(false);
 
-  selectedDate = new Date().toISOString().substring(0, 10);
+  selectedDateObj: Date = new Date();
   selectedCompanyId: number | null = null;
   selectedUserId: number | null = null;
 
-  totalDocs = computed(() => this.rows().reduce((s, r) => s + (r.documentCount || 0), 0));
-  totalMinutes = computed(() => this.rows().reduce((s, r) => s + (r.minutes || 0), 0));
-  hasDirty = computed(() => this.rows().some(r => r.dirty));
+  get selectedDate(): string {
+    const d = this.selectedDateObj;
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+  }
+
+  // Plain methods, not computed(): rows are mutated in place so the
+  // rows() signal never fires — computed values would stay stale.
+  totalDocs(): number { return this.rows().reduce((s, r) => s + (+r.documentCount || 0), 0); }
+  totalMinutes(): number { return this.rows().reduce((s, r) => s + (+r.minutes || 0), 0); }
+  hasDirty(): boolean { return this.rows().some(r => r.dirty); }
 
   adminGroups = computed(() => {
     const map = new Map<number, { userId: number; userName: string; entries: WorkTimeEntryDto[] }>();
@@ -361,6 +376,10 @@ export class WorkTimePageComponent implements OnInit {
     if (this.isAdmin()) {
       this.svc.getUsers().subscribe(u => this.users.set(u));
     }
+  }
+
+  onDateChange(): void {
+    this.onFilterChange();
   }
 
   onFilterChange(): void {
