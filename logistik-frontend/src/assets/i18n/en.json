@@ -5,7 +5,8 @@
     "dashboard": "Dashboard",
     "logout": "Sign out",
     "adminPanel": "Admin Panel",
-    "expenses": "Expenses"
+    "expenses": "Expenses",
+    "brandTag": "Accountant"
   },
   "auth": {
     "title": "Logistik",

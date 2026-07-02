@@ -26,7 +26,7 @@ interface NavItem {
         </div>
         <div class="logo-names">
           <span class="logo-text">Logistik</span>
-          <span class="logo-sub">Accountant</span>
+          <span class="logo-sub">{{ 'nav.brandTag' | translate }}</span>
         </div>
       </div>
 
@@ -101,11 +101,11 @@ interface NavItem {
       letter-spacing: 0.3px;
     }
     .logo-sub {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 400;
-      color: rgba(255,255,255,0.6);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.5px;
+      font-family: 'Martel', 'Georgia', serif;
     }
     .nav-list {
       flex: 1;

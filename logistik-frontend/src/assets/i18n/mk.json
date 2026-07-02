@@ -5,7 +5,8 @@
     "dashboard": "Контролна табла",
     "logout": "Одјава",
     "adminPanel": "Админ панел",
-    "expenses": "Трошоци"
+    "expenses": "Трошоци",
+    "brandTag": "Сметководствено биро"
   },
   "auth": {
     "title": "Logistik",
