@@ -230,7 +230,16 @@
     "revoke": "Revoke",
     "companyAssigned": "Company assigned.",
     "accessRevoked": "Access revoked.",
-    "permissionUpdated": "Permission updated."
+    "permissionUpdated": "Permission updated.",
+    "editUser": "Edit User",
+    "newUser": "New User",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "roleAdmin": "Admin",
+    "roleUser": "User",
+    "createUser": "Create User",
+    "userUpdated": "User updated successfully.",
+    "userCreated": "User created successfully."
   },
   "import": {
     "importExcel": "Import Excel",

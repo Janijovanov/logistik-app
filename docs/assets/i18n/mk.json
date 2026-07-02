@@ -230,7 +230,16 @@
     "revoke": "Откажи",
     "companyAssigned": "Компанијата е доделена.",
     "accessRevoked": "Пристапот е откажан.",
-    "permissionUpdated": "Дозволата е ажурирана."
+    "permissionUpdated": "Дозволата е ажурирана.",
+    "editUser": "Измени корисник",
+    "newUser": "Нов корисник",
+    "firstName": "Ime",
+    "lastName": "Презиме",
+    "roleAdmin": "Администратор",
+    "roleUser": "Корисник",
+    "createUser": "Креирај корисник",
+    "userUpdated": "Корисникот е успешно ажуриран.",
+    "userCreated": "Корисникот е успешно креиран."
   },
   "import": {
     "importExcel": "Увези Excel",
