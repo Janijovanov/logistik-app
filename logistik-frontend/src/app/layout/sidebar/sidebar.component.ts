@@ -25,7 +25,7 @@ interface NavItem {
           <img src="assets/logistik_white_background.png" alt="Logistik" class="logo-img" />
         </div>
         <div class="logo-names">
-          <span class="logo-text">Logistik</span>
+          <span class="logo-text">{{ 'nav.brandName' | translate }}</span>
           <span class="logo-sub">{{ 'nav.brandTag' | translate }}</span>
         </div>
       </div>

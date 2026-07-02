@@ -6,7 +6,8 @@
     "logout": "Одјава",
     "adminPanel": "Админ панел",
     "expenses": "Трошоци",
-    "brandTag": "Сметководствено биро"
+    "brandTag": "Сметководствено биро",
+    "brandName": "Логистик"
   },
   "auth": {
     "title": "Logistik",

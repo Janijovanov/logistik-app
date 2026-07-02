@@ -6,7 +6,8 @@
     "logout": "Sign out",
     "adminPanel": "Admin Panel",
     "expenses": "Expenses",
-    "brandTag": "Accountant"
+    "brandTag": "Accountant",
+    "brandName": "Logistik"
   },
   "auth": {
     "title": "Logistik",
