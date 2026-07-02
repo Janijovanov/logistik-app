@@ -331,7 +331,7 @@ interface RowState {
       tr:hover td { background: #fafafa; }
     }
     .order-col { width: 40px; text-align: center; color: rgba(0,0,0,0.45); }
-    .num-col { width: 90px; text-align: center; }
+    .num-col { text-align: center !important; }
     .notes-col { min-width: 160px; }
     .action-col { width: 48px; text-align: center; }
     .type-name { font-weight: 500; }
@@ -369,16 +369,17 @@ interface RowState {
     }
     .company-total { margin-top: 8px; }
     /* Fixed layout so every admin table shares identical column widths.
-       Name column is fixed so the numbers sit left and notes get the rest. */
+       Name gets ~40% so there is visible distance before the numbers,
+       numbers are two narrow centered columns, notes take the rest. */
     .wt-table.aligned { table-layout: fixed; width: 100%; }
-    .aligned .col-name { width: 320px; }
-    .aligned .col-num { width: 110px; }
+    .aligned .col-name { width: 40%; }
+    .aligned .col-num { width: 120px; }
     .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
     /* Editable table: same fixed layout so header, inputs and totals line up */
     .editable-table { table-layout: fixed; width: 100%; }
     .editable-table .col-order { width: 48px; }
-    .editable-table .col-name { width: 300px; }
-    .editable-table .col-num { width: 110px; }
+    .editable-table .col-name { width: 38%; }
+    .editable-table .col-num { width: 120px; }
     .editable-table .col-action { width: 56px; }
     .grand-total-row td {
       background: #e8eaf6 !important;
