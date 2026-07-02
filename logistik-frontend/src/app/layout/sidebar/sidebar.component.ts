@@ -12,6 +12,7 @@ interface NavItem {
   icon: string;
   route: string;
   adminOnly?: boolean;
+  needsCompanies?: boolean;
 }
 
 @Component({
@@ -140,15 +141,19 @@ export class SidebarComponent {
   authService = inject(AuthService);
 
   private navItems: NavItem[] = [
-    { labelKey: 'nav.companies', icon: 'business', route: '/companies' },
+    { labelKey: 'nav.companies', icon: 'business', route: '/companies', needsCompanies: true },
     { labelKey: 'nav.workTime', icon: 'schedule', route: '/work-time' },
     { labelKey: 'nav.users', icon: 'manage_accounts', route: '/users', adminOnly: true },
     { labelKey: 'nav.expenses', icon: 'receipt_long', route: '/expenses', adminOnly: true },
   ];
 
   get visibleItems(): NavItem[] {
-    return this.navItems.filter(item =>
-      !item.adminOnly || this.authService.isAdmin()
-    );
+    const isAdmin = this.authService.isAdmin();
+    const hasCompanies = (this.authService.currentUser()?.assignedCompanyIds?.length ?? 0) > 0;
+    return this.navItems.filter(item => {
+      if (item.adminOnly && !isAdmin) return false;
+      if (item.needsCompanies && !isAdmin && !hasCompanies) return false;
+      return true;
+    });
   }
 }

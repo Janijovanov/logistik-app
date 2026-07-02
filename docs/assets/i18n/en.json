@@ -264,6 +264,7 @@
     "minutes": "Minutes",
     "notesOptional": "Notes (optional)",
     "total": "Total",
+    "companyTotal": "Company total (all workers)",
     "saveAll": "Save All",
     "saved": "Saved successfully.",
     "deleted": "Deleted successfully.",

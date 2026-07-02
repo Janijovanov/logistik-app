@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { companiesAccessGuard } from './core/guards/companies-access.guard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'companies',
+        canActivate: [companiesAccessGuard],
         loadChildren: () => import('./features/companies/companies.routes').then(m => m.companiesRoutes)
       },
       {

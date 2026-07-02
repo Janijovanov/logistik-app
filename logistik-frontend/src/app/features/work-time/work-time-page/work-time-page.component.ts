@@ -140,6 +140,20 @@ interface RowState {
                 </div>
               </div>
             }
+
+            <!-- Grand total across all workers for this company -->
+            <div class="company-total">
+              <table class="wt-table">
+                <tbody>
+                  <tr class="grand-total-row">
+                    <td><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
+                    <td class="num-col"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
+                    <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
+                    <td class="notes-col"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           }
         </div>
       } @else {
@@ -326,6 +340,14 @@ interface RowState {
       color: #3949ab;
     }
     .admin-summary { display: flex; flex-direction: column; gap: 16px; }
+    .company-total { margin-top: 8px; }
+    .grand-total-row td {
+      background: #e8eaf6 !important;
+      font-weight: 700;
+      font-size: 14px;
+      border-top: 2px solid #3949ab;
+      color: #1a237e;
+    }
   `]
 })
 export class WorkTimePageComponent implements OnInit {
