@@ -191,7 +191,7 @@ interface RowState {
                 </colgroup>
                 <thead>
                   <tr>
-                    <th class="order-col">Ð‘Ñ€.</th>
+                    <th class="order-col">Бр.</th>
                     <th>{{ 'workTime.docType' | translate }}</th>
                     <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                     <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
@@ -421,8 +421,8 @@ export class WorkTimePageComponent implements OnInit {
   };
 
   private static readonly MK_MONTHS = [
-    'ÐˆÐ°Ð½ÑƒÐ°Ñ€Ð¸', 'Ð¤ÐµÐ²Ñ€ÑƒÐ°Ñ€Ð¸', 'ÐœÐ°Ñ€Ñ‚', 'ÐÐ¿Ñ€Ð¸Ð»', 'ÐœÐ°Ñ˜', 'ÐˆÑƒÐ½Ð¸',
-    'ÐˆÑƒÐ»Ð¸', 'ÐÐ²Ð³ÑƒÑÑ‚', 'Ð¡ÐµÐ¿Ñ‚ÐµÐ¼Ð²Ñ€Ð¸', 'ÐžÐºÑ‚Ð¾Ð¼Ð²Ñ€Ð¸', 'ÐÐ¾ÐµÐ¼Ð²Ñ€Ð¸', 'Ð”ÐµÐºÐµÐ¼Ð²Ñ€Ð¸'
+    'Јануари', 'Февруари', 'Март', 'Април', 'Мај', 'Јуни',
+    'Јули', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
   ];
 
   monthLabel(): string {
