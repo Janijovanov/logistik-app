@@ -180,6 +180,40 @@ public class WorkTimeController : ControllerBase
         return Ok(entries);
     }
 
+    [HttpGet("monthly-total")]
+    public async Task<IActionResult> GetMonthlyTotal(
+        [FromQuery] string date,
+        [FromQuery] int companyId,
+        [FromQuery] int? userId,
+        CancellationToken ct)
+    {
+        if (!DateOnly.TryParse(date, out var parsedDate))
+            return BadRequest(new { message = "Невалиден датум." });
+
+        var monthStart = new DateOnly(parsedDate.Year, parsedDate.Month, 1);
+        var monthEnd = monthStart.AddMonths(1);
+
+        var query = _db.WorkTimeEntries
+            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= monthStart && e.Date < monthEnd);
+
+        if (_currentUser.IsAdmin)
+        {
+            if (userId.HasValue)
+                query = query.Where(e => e.UserId == userId.Value);
+        }
+        else
+        {
+            query = query.Where(e => e.UserId == _currentUser.UserId);
+        }
+
+        var totals = await query
+            .GroupBy(_ => 1)
+            .Select(g => new { documentCount = g.Sum(e => e.DocumentCount), minutes = g.Sum(e => e.Minutes) })
+            .FirstOrDefaultAsync(ct);
+
+        return Ok(totals ?? new { documentCount = 0, minutes = 0 });
+    }
+
     [HttpPost("entries")]
     public async Task<IActionResult> UpsertEntry([FromBody] WorkTimeEntryRequest req, CancellationToken ct)
     {

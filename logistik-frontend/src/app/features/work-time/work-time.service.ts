@@ -59,6 +59,12 @@ export class WorkTimeService {
     return this.http.post<void>(`${this.base}/entries`, payload);
   }
 
+  getMonthlyTotal(date: string, companyId: number, userId?: number): Observable<{ documentCount: number; minutes: number }> {
+    let url = `${this.base}/monthly-total?date=${date}&companyId=${companyId}`;
+    if (userId) url += `&userId=${userId}`;
+    return this.http.get<{ documentCount: number; minutes: number }>(url);
+  }
+
   deleteEntry(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/entries/${id}`);
   }

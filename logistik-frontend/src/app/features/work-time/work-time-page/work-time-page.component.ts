@@ -106,6 +106,18 @@ interface RowState {
               <mat-icon>inbox</mat-icon>
               <p>{{ 'workTime.noEntries' | translate }}</p>
             </div>
+            <div class="company-total">
+              <table class="wt-table">
+                <tbody>
+                  <tr class="grand-total-row month-total-row">
+                    <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                    <td class="notes-col"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           } @else {
             @for (group of adminGroups(); track group.userId) {
               <div class="user-group">
@@ -149,6 +161,12 @@ interface RowState {
                     <td><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
                     <td class="num-col"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
                     <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
+                    <td class="notes-col"></td>
+                  </tr>
+                  <tr class="grand-total-row month-total-row">
+                    <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
                     <td class="notes-col"></td>
                   </tr>
                 </tbody>
@@ -235,6 +253,13 @@ interface RowState {
                     <td><strong>{{ 'workTime.total' | translate }}</strong></td>
                     <td class="num-col"><strong>{{ totalDocs() }}</strong></td>
                     <td class="num-col"><strong>{{ totalMinutes() }}</strong></td>
+                    <td colspan="2"></td>
+                  </tr>
+                  <tr class="totals-row month-total-row">
+                    <td></td>
+                    <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                    <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
                     <td colspan="2"></td>
                   </tr>
                 </tfoot>
@@ -348,6 +373,11 @@ interface RowState {
       border-top: 2px solid #3949ab;
       color: #1a237e;
     }
+    .month-total-row td {
+      background: #fff8e1 !important;
+      color: #795548;
+      border-top: 1px solid #ffb300;
+    }
   `]
 })
 export class WorkTimePageComponent implements OnInit {
@@ -365,6 +395,17 @@ export class WorkTimePageComponent implements OnInit {
   entries = signal<WorkTimeEntryDto[]>([]);
   rows = signal<RowState[]>([]);
   loading = signal(false);
+  monthlyTotal = signal<{ documentCount: number; minutes: number }>({ documentCount: 0, minutes: 0 });
+
+  private static readonly MK_MONTHS = [
+    'Јануари', 'Февруари', 'Март', 'Април', 'Мај', 'Јуни',
+    'Јули', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
+  ];
+
+  monthLabel(): string {
+    const d = this.selectedDateObj;
+    return `${WorkTimePageComponent.MK_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
 
   selectedDateObj: Date = new Date();
   selectedCompanyId: number | null = null;
@@ -423,6 +464,11 @@ export class WorkTimePageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
+    });
+
+    this.svc.getMonthlyTotal(this.selectedDate, this.selectedCompanyId, userId ?? undefined).subscribe({
+      next: total => this.monthlyTotal.set(total),
+      error: () => this.monthlyTotal.set({ documentCount: 0, minutes: 0 })
     });
   }
 
