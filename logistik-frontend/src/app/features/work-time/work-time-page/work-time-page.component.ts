@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+﻿import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -112,7 +112,7 @@ interface RowState {
                 <h3 class="group-title">{{ group.userName }}</h3>
                 <div class="table-wrapper">
                   <table class="wt-table aligned">
-                    <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+                    <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
                     <thead>
                       <tr>
                         <th>{{ 'workTime.docType' | translate }}</th>
@@ -146,7 +146,7 @@ interface RowState {
           <!-- Day + month totals for the company -->
           <div class="company-total">
             <table class="wt-table aligned">
-              <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
               <thead>
                 <tr>
                   <th></th>
@@ -186,12 +186,12 @@ interface RowState {
             <div class="table-wrapper">
               <table class="wt-table editable-table">
                 <colgroup>
-                  <col class="col-order" /><col /><col class="col-num" />
-                  <col class="col-num" /><col class="col-notes" /><col class="col-action" />
+                  <col class="col-order" /><col class="col-name" /><col class="col-num" />
+                  <col class="col-num" /><col /><col class="col-action" />
                 </colgroup>
                 <thead>
                   <tr>
-                    <th class="order-col">Бр.</th>
+                    <th class="order-col">Ð‘Ñ€.</th>
                     <th>{{ 'workTime.docType' | translate }}</th>
                     <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                     <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
@@ -368,16 +368,17 @@ interface RowState {
       color: #3949ab;
     }
     .company-total { margin-top: 8px; }
-    /* Fixed layout so every admin table shares identical column widths */
+    /* Fixed layout so every admin table shares identical column widths.
+       Name column is fixed so the numbers sit left and notes get the rest. */
     .wt-table.aligned { table-layout: fixed; width: 100%; }
+    .aligned .col-name { width: 320px; }
     .aligned .col-num { width: 110px; }
-    .aligned .col-notes { width: 32%; }
     .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
     /* Editable table: same fixed layout so header, inputs and totals line up */
     .editable-table { table-layout: fixed; width: 100%; }
     .editable-table .col-order { width: 48px; }
+    .editable-table .col-name { width: 300px; }
     .editable-table .col-num { width: 110px; }
-    .editable-table .col-notes { width: 30%; }
     .editable-table .col-action { width: 56px; }
     .grand-total-row td {
       background: #e8eaf6 !important;
@@ -419,8 +420,8 @@ export class WorkTimePageComponent implements OnInit {
   };
 
   private static readonly MK_MONTHS = [
-    'Јануари', 'Февруари', 'Март', 'Април', 'Мај', 'Јуни',
-    'Јули', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
+    'ÐˆÐ°Ð½ÑƒÐ°Ñ€Ð¸', 'Ð¤ÐµÐ²Ñ€ÑƒÐ°Ñ€Ð¸', 'ÐœÐ°Ñ€Ñ‚', 'ÐÐ¿Ñ€Ð¸Ð»', 'ÐœÐ°Ñ˜', 'ÐˆÑƒÐ½Ð¸',
+    'ÐˆÑƒÐ»Ð¸', 'ÐÐ²Ð³ÑƒÑÑ‚', 'Ð¡ÐµÐ¿Ñ‚ÐµÐ¼Ð²Ñ€Ð¸', 'ÐžÐºÑ‚Ð¾Ð¼Ð²Ñ€Ð¸', 'ÐÐ¾ÐµÐ¼Ð²Ñ€Ð¸', 'Ð”ÐµÐºÐµÐ¼Ð²Ñ€Ð¸'
   ];
 
   monthLabel(): string {
@@ -440,7 +441,7 @@ export class WorkTimePageComponent implements OnInit {
   }
 
   // Plain methods, not computed(): rows are mutated in place so the
-  // rows() signal never fires — computed values would stay stale.
+  // rows() signal never fires â€” computed values would stay stale.
   totalDocs(): number { return this.rows().reduce((s, r) => s + (+r.documentCount || 0), 0); }
   totalMinutes(): number { return this.rows().reduce((s, r) => s + (+r.minutes || 0), 0); }
   hasDirty(): boolean { return this.rows().some(r => r.dirty); }
