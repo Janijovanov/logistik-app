@@ -22,11 +22,11 @@ interface NavItem {
     <div class="sidebar">
       <div class="sidebar-logo">
         <div class="logo-icon">
-          <mat-icon>local_shipping</mat-icon>
+          <img src="assets/logistik_white_background.png" alt="Logistik" class="logo-img" />
         </div>
         <div class="logo-names">
           <span class="logo-text">Logistik</span>
-          <span class="logo-sub">Management</span>
+          <span class="logo-sub">Accountant</span>
         </div>
       </div>
 
@@ -81,7 +81,12 @@ interface NavItem {
       border-radius: 10px;
       flex-shrink: 0;
 
-      mat-icon { color: white; font-size: 22px; width: 22px; height: 22px; }
+    }
+    .logo-img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 4px;
     }
     .logo-names {
       display: flex;
