@@ -6,6 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "build:prod": "ng build --configuration production",
+    "build:pages": "ng build --configuration production && node -e \"require('fs').copyFileSync('dist/logistik-frontend/browser/index.html','dist/logistik-frontend/browser/404.html')\"",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
