@@ -21,8 +21,13 @@ interface NavItem {
   template: `
     <div class="sidebar">
       <div class="sidebar-logo">
-        <img src="assets/logistik_white_background.png" alt="Logistik" class="logo-img" />
-        <span class="logo-text">Logistik</span>
+        <div class="logo-icon">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <div class="logo-names">
+          <span class="logo-text">Logistik</span>
+          <span class="logo-sub">Management</span>
+        </div>
       </div>
 
       <mat-divider />
@@ -62,19 +67,40 @@ interface NavItem {
     .sidebar-logo {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 20px 16px;
+      gap: 14px;
+      padding: 22px 20px;
+      background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
     }
-    .logo-img {
-      width: 36px;
-      height: 36px;
-      object-fit: contain;
-      border-radius: 6px;
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      flex-shrink: 0;
+
+      mat-icon { color: white; font-size: 22px; width: 22px; height: 22px; }
+    }
+    .logo-names {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+      gap: 3px;
     }
     .logo-text {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
-      color: #3949ab;
+      color: white;
+      letter-spacing: 0.3px;
+    }
+    .logo-sub {
+      font-size: 10px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
     }
     .nav-list {
       flex: 1;
