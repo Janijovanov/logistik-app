@@ -26,6 +26,10 @@ export const routes: Routes = [
         canActivate: [roleGuard('Admin')],
         loadChildren: () => import('./features/expenses/expenses.routes').then(m => m.expensesRoutes)
       },
+      {
+        path: 'work-time',
+        loadChildren: () => import('./features/work-time/work-time.routes').then(m => m.workTimeRoutes)
+      },
       { path: '', redirectTo: 'companies', pathMatch: 'full' }
     ]
   },

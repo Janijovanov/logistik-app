@@ -1,0 +1,467 @@
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { WorkTimeService } from '../work-time.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeEntryDto, WorkTimeUserDto } from '../../../core/models/work-time.models';
+import { WorkTimeManagerDialogComponent } from '../work-time-manager-dialog/work-time-manager-dialog.component';
+
+interface RowState {
+  docType: WorkDocumentTypeDto;
+  documentCount: number;
+  minutes: number;
+  notes: string;
+  entryId: number | null;
+  dirty: boolean;
+  saving: boolean;
+}
+
+@Component({
+  selector: 'app-work-time-page',
+  standalone: true,
+  imports: [
+    CommonModule, FormsModule,
+    MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule,
+    MatInputModule, MatProgressSpinnerModule, MatTooltipModule,
+    MatDialogModule, TranslateModule
+  ],
+  template: `
+    <div class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">{{ 'workTime.title' | translate }}</h1>
+      </div>
+      @if (isAdmin()) {
+        <div class="header-actions">
+          <button mat-stroked-button (click)="openManager('companies')">
+            <mat-icon>business</mat-icon>
+            {{ 'workTime.manageCompanies' | translate }}
+          </button>
+          <button mat-stroked-button (click)="openManager('docTypes')">
+            <mat-icon>description</mat-icon>
+            {{ 'workTime.manageDocTypes' | translate }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>{{ 'common.date' | translate }}</mat-label>
+        <input matInput type="date" [(ngModel)]="selectedDate" (change)="onFilterChange()" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>{{ 'workTime.company' | translate }}</mat-label>
+        <mat-select [(ngModel)]="selectedCompanyId" (selectionChange)="onFilterChange()">
+          @for (c of companies(); track c.id) {
+            <mat-option [value]="c.id">{{ c.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (isAdmin()) {
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>{{ 'workTime.worker' | translate }}</mat-label>
+          <mat-select [(ngModel)]="selectedUserId" (selectionChange)="onFilterChange()">
+            <mat-option [value]="null">{{ 'workTime.allWorkers' | translate }}</mat-option>
+            @for (u of users(); track u.id) {
+              <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+    </div>
+
+    @if (!selectedCompanyId) {
+      <div class="empty-state">
+        <mat-icon>business</mat-icon>
+        <p>{{ 'workTime.selectCompany' | translate }}</p>
+      </div>
+    } @else if (loading()) {
+      <div class="loading"><mat-spinner diameter="40" /></div>
+    } @else {
+      <!-- Admin: showing all users grouped -->
+      @if (isAdmin() && !selectedUserId) {
+        <div class="admin-summary">
+          @if (adminGroups().length === 0) {
+            <div class="empty-state">
+              <mat-icon>inbox</mat-icon>
+              <p>{{ 'workTime.noEntries' | translate }}</p>
+            </div>
+          } @else {
+            @for (group of adminGroups(); track group.userId) {
+              <div class="user-group">
+                <h3 class="group-title">{{ group.userName }}</h3>
+                <div class="table-wrapper">
+                  <table class="wt-table">
+                    <thead>
+                      <tr>
+                        <th>{{ 'workTime.docType' | translate }}</th>
+                        <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                        <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                        <th class="notes-col">{{ 'common.notes' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (entry of group.entries; track entry.id) {
+                        <tr>
+                          <td>{{ entry.documentTypeName }}</td>
+                          <td class="num-col">{{ entry.documentCount }}</td>
+                          <td class="num-col">{{ entry.minutes }}</td>
+                          <td class="notes-col">{{ entry.notes || '' }}</td>
+                        </tr>
+                      }
+                      <tr class="totals-row">
+                        <td><strong>{{ 'workTime.total' | translate }}</strong></td>
+                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
+                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      } @else {
+        <!-- User entry form (own data, or admin filtered to one user) -->
+        <div class="entry-form">
+          @if (rows().length === 0) {
+            <div class="empty-state">
+              <mat-icon>inbox</mat-icon>
+              <p>{{ 'workTime.noDocTypes' | translate }}</p>
+            </div>
+          } @else {
+            <div class="table-wrapper">
+              <table class="wt-table editable-table">
+                <thead>
+                  <tr>
+                    <th class="order-col">Бр.</th>
+                    <th>{{ 'workTime.docType' | translate }}</th>
+                    <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                    <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                    <th class="notes-col">{{ 'common.notes' | translate }}</th>
+                    <th class="action-col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows(); track row.docType.id; let i = $index) {
+                    <tr [class.has-data]="row.documentCount > 0 || row.minutes > 0">
+                      <td class="order-col">{{ row.docType.order }}</td>
+                      <td class="type-name">{{ row.docType.name }}</td>
+                      <td class="num-col">
+                        <input
+                          type="number"
+                          class="num-input"
+                          [(ngModel)]="row.documentCount"
+                          (ngModelChange)="row.dirty = true"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td class="num-col">
+                        <input
+                          type="number"
+                          class="num-input"
+                          [(ngModel)]="row.minutes"
+                          (ngModelChange)="row.dirty = true"
+                          min="0"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td class="notes-col">
+                        <input
+                          type="text"
+                          class="notes-input"
+                          [(ngModel)]="row.notes"
+                          (ngModelChange)="row.dirty = true"
+                          placeholder="{{ 'workTime.notesOptional' | translate }}"
+                        />
+                      </td>
+                      <td class="action-col">
+                        @if (row.saving) {
+                          <mat-spinner diameter="18" />
+                        } @else if (row.dirty) {
+                          <button mat-icon-button color="primary" (click)="saveRow(row)"
+                            [matTooltip]="'common.save' | translate">
+                            <mat-icon>save</mat-icon>
+                          </button>
+                        } @else if (row.entryId) {
+                          <button mat-icon-button color="warn" (click)="deleteRow(row)"
+                            [matTooltip]="'common.delete' | translate">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="totals-row">
+                    <td></td>
+                    <td><strong>{{ 'workTime.total' | translate }}</strong></td>
+                    <td class="num-col"><strong>{{ totalDocs() }}</strong></td>
+                    <td class="num-col"><strong>{{ totalMinutes() }}</strong></td>
+                    <td colspan="2"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="save-all-row">
+              <button mat-flat-button color="primary" (click)="saveAll()" [disabled]="!hasDirty()">
+                <mat-icon>save</mat-icon>
+                {{ 'workTime.saveAll' | translate }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    }
+  `,
+  styles: [`
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .page-title { font-size: 24px; font-weight: 500; margin: 0; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filters-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .filter-field { min-width: 200px; }
+    .loading { display: flex; justify-content: center; padding: 40px; }
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px;
+      color: rgba(0,0,0,0.38);
+      gap: 8px;
+      mat-icon { font-size: 48px; width: 48px; height: 48px; }
+      p { font-size: 16px; margin: 0; }
+    }
+    .table-wrapper { overflow-x: auto; }
+    .wt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      th {
+        background: #f5f5f5;
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #e0e0e0;
+        white-space: nowrap;
+      }
+      td {
+        padding: 6px 12px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+      }
+      tr:hover td { background: #fafafa; }
+    }
+    .order-col { width: 40px; text-align: center; color: rgba(0,0,0,0.45); }
+    .num-col { width: 90px; text-align: right; }
+    .notes-col { min-width: 160px; }
+    .action-col { width: 48px; text-align: center; }
+    .type-name { font-weight: 500; }
+    .has-data td { background: #f0f7ff; }
+    .has-data:hover td { background: #e8f4fe; }
+    .totals-row td {
+      background: #eeeeee !important;
+      font-weight: 600;
+      border-top: 2px solid #ddd;
+    }
+    .num-input, .notes-input {
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 13px;
+      background: transparent;
+      transition: border-color 0.2s, background 0.2s;
+      &:focus { outline: none; border-color: #3949ab; background: white; }
+      &:hover { border-color: #bdbdbd; }
+    }
+    .num-input { width: 70px; text-align: right; }
+    .notes-input { width: 100%; box-sizing: border-box; }
+    .save-all-row {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .user-group {
+      margin-bottom: 24px;
+    }
+    .group-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: #3949ab;
+    }
+    .admin-summary { display: flex; flex-direction: column; gap: 16px; }
+  `]
+})
+export class WorkTimePageComponent implements OnInit {
+  private svc = inject(WorkTimeService);
+  private auth = inject(AuthService);
+  private notify = inject(NotificationService);
+  private dialog = inject(MatDialog);
+  private translate = inject(TranslateService);
+
+  isAdmin = computed(() => this.auth.currentUser()?.role === 'Admin');
+
+  companies = signal<WorkTimeCompanyDto[]>([]);
+  docTypes = signal<WorkDocumentTypeDto[]>([]);
+  users = signal<WorkTimeUserDto[]>([]);
+  entries = signal<WorkTimeEntryDto[]>([]);
+  rows = signal<RowState[]>([]);
+  loading = signal(false);
+
+  selectedDate = new Date().toISOString().substring(0, 10);
+  selectedCompanyId: number | null = null;
+  selectedUserId: number | null = null;
+
+  totalDocs = computed(() => this.rows().reduce((s, r) => s + (r.documentCount || 0), 0));
+  totalMinutes = computed(() => this.rows().reduce((s, r) => s + (r.minutes || 0), 0));
+  hasDirty = computed(() => this.rows().some(r => r.dirty));
+
+  adminGroups = computed(() => {
+    const map = new Map<number, { userId: number; userName: string; entries: WorkTimeEntryDto[] }>();
+    for (const e of this.entries()) {
+      if (!map.has(e.userId)) map.set(e.userId, { userId: e.userId, userName: e.userName, entries: [] });
+      map.get(e.userId)!.entries.push(e);
+    }
+    return Array.from(map.values()).sort((a, b) => a.userName.localeCompare(b.userName));
+  });
+
+  ngOnInit(): void {
+    this.svc.getCompanies().subscribe(c => this.companies.set(c));
+    this.svc.getDocumentTypes().subscribe(t => this.docTypes.set(t));
+    if (this.isAdmin()) {
+      this.svc.getUsers().subscribe(u => this.users.set(u));
+    }
+  }
+
+  onFilterChange(): void {
+    if (!this.selectedCompanyId) return;
+    this.loadEntries();
+  }
+
+  private loadEntries(): void {
+    if (!this.selectedCompanyId) return;
+    this.loading.set(true);
+
+    const userId = this.isAdmin() ? this.selectedUserId ?? undefined : undefined;
+    this.svc.getEntries(this.selectedDate, this.selectedCompanyId, userId ?? undefined).subscribe({
+      next: entries => {
+        this.entries.set(entries);
+        if (!this.isAdmin() || this.selectedUserId !== null) {
+          this.buildRows(entries);
+        }
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  private buildRows(entries: WorkTimeEntryDto[]): void {
+    const entryMap = new Map<number, WorkTimeEntryDto>(entries.map(e => [e.workDocumentTypeId, e]));
+    const newRows: RowState[] = this.docTypes().map(dt => {
+      const existing = entryMap.get(dt.id);
+      return {
+        docType: dt,
+        documentCount: existing?.documentCount ?? 0,
+        minutes: existing?.minutes ?? 0,
+        notes: existing?.notes ?? '',
+        entryId: existing?.id ?? null,
+        dirty: false,
+        saving: false
+      };
+    });
+    this.rows.set(newRows);
+  }
+
+  saveRow(row: RowState): void {
+    if (!this.selectedCompanyId) return;
+    row.saving = true;
+
+    this.svc.upsertEntry({
+      date: this.selectedDate,
+      companyId: this.selectedCompanyId,
+      documentTypeId: row.docType.id,
+      documentCount: row.documentCount || 0,
+      minutes: row.minutes || 0,
+      notes: row.notes || null,
+      userId: this.isAdmin() && this.selectedUserId ? this.selectedUserId : undefined
+    }).subscribe({
+      next: () => {
+        row.dirty = false;
+        row.saving = false;
+        this.notify.success(this.translate.instant('workTime.saved'));
+        this.loadEntries();
+      },
+      error: () => {
+        row.saving = false;
+        this.notify.error(this.translate.instant('errors.failedToLoad'));
+      }
+    });
+  }
+
+  saveAll(): void {
+    const dirty = this.rows().filter(r => r.dirty);
+    dirty.forEach(r => this.saveRow(r));
+  }
+
+  deleteRow(row: RowState): void {
+    if (!row.entryId) return;
+    this.svc.deleteEntry(row.entryId).subscribe({
+      next: () => {
+        this.notify.success(this.translate.instant('workTime.deleted'));
+        this.loadEntries();
+      },
+      error: () => this.notify.error(this.translate.instant('errors.failedToLoad'))
+    });
+  }
+
+  groupTotal(entries: WorkTimeEntryDto[], field: 'documentCount' | 'minutes'): number {
+    return entries.reduce((s, e) => s + e[field], 0);
+  }
+
+  openManager(type: 'companies' | 'docTypes'): void {
+    const ref = this.dialog.open(WorkTimeManagerDialogComponent, {
+      width: '520px',
+      data: { type }
+    });
+    ref.afterClosed().subscribe(() => {
+      if (type === 'companies') {
+        this.svc.getCompanies().subscribe(c => this.companies.set(c));
+      } else {
+        this.svc.getDocumentTypes().subscribe(t => {
+          this.docTypes.set(t);
+          if (this.selectedCompanyId) this.loadEntries();
+        });
+      }
+    });
+  }
+}

@@ -141,6 +141,7 @@ export class SidebarComponent {
 
   private navItems: NavItem[] = [
     { labelKey: 'nav.companies', icon: 'business', route: '/companies' },
+    { labelKey: 'nav.workTime', icon: 'schedule', route: '/work-time' },
     { labelKey: 'nav.users', icon: 'manage_accounts', route: '/users', adminOnly: true },
     { labelKey: 'nav.expenses', icon: 'receipt_long', route: '/expenses', adminOnly: true },
   ];

@@ -6,6 +6,7 @@
     "logout": "Sign out",
     "adminPanel": "Admin Panel",
     "expenses": "Expenses",
+    "workTime": "Work Time",
     "brandTag": "Accountant",
     "brandName": "Logistik"
   },
@@ -252,6 +253,26 @@
     "resultImported": "✅ Successfully imported: {{count}} employees",
     "resultAlready": "⚠️ Already recorded: {{count}} employees",
     "resultNotFound": "❌ Not found in system ({{count}}):"
+  },
+  "workTime": {
+    "title": "Work Time",
+    "company": "Company",
+    "worker": "Worker",
+    "allWorkers": "All workers",
+    "docType": "Document Type",
+    "docCount": "Documents",
+    "minutes": "Minutes",
+    "notesOptional": "Notes (optional)",
+    "total": "Total",
+    "saveAll": "Save All",
+    "saved": "Saved successfully.",
+    "deleted": "Deleted successfully.",
+    "noEntries": "No entries for this day.",
+    "noDocTypes": "No document types available.",
+    "noItems": "No items.",
+    "selectCompany": "Select a company to view records.",
+    "manageCompanies": "Manage Companies",
+    "manageDocTypes": "Manage Doc Types"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -23,6 +23,7 @@ public class DatabaseSeeder
         await _context.Database.MigrateAsync();
         await SeedRolesAsync();
         await SeedAdminUserAsync();
+        await SeedWorkDocumentTypesAsync();
     }
 
     private async Task SeedRolesAsync()
@@ -56,5 +57,48 @@ public class DatabaseSeeder
         _context.Users.Add(adminUser);
         await _context.SaveChangesAsync();
         _logger.LogInformation("Admin user seeded.");
+    }
+
+    private async Task SeedWorkDocumentTypesAsync()
+    {
+        if (await _context.WorkDocumentTypes.AnyAsync()) return;
+
+        var types = new[]
+        {
+            "ВФ за трошоци",
+            "ВФ за тргoвија на големо-дома",
+            "ВФ за тргoвија на големо-увоз",
+            "ИФ за трг. на големо-дома",
+            "ИФ за трг. на големо-извоз",
+            "КАЛ. на мало од магацин",
+            "ПР. по попис",
+            "Сметка во продавница",
+            "ИФ во продавница",
+            "ПОВР. Од продавница",
+            "ИС. во пр-во",
+            "ПР. во пр-во",
+            "ИС. За премин во магацин",
+            "ИФ за услуга-извоз",
+            "ИФ за лон",
+            "КАСА-прими",
+            "КАСА-исплати",
+            "ДНЕВ. На благајна",
+            "ПАТНИ налози",
+            "ПД евиденција",
+            "ГК. налози"
+        };
+
+        for (int i = 0; i < types.Length; i++)
+        {
+            _context.WorkDocumentTypes.Add(new WorkDocumentType
+            {
+                Name = types[i],
+                Order = i + 1,
+                IsActive = true
+            });
+        }
+
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Work document types seeded.");
     }
 }

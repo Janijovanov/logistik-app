@@ -23,6 +23,9 @@ public class AppDbContext : DbContext
     public DbSet<ExpenseCategory> ExpenseCategories => Set<ExpenseCategory>();
     public DbSet<ExpenseSubcategory> ExpenseSubcategories => Set<ExpenseSubcategory>();
     public DbSet<ExpenseEntry> ExpenseEntries => Set<ExpenseEntry>();
+    public DbSet<WorkTimeCompany> WorkTimeCompanies => Set<WorkTimeCompany>();
+    public DbSet<WorkDocumentType> WorkDocumentTypes => Set<WorkDocumentType>();
+    public DbSet<WorkTimeEntry> WorkTimeEntries => Set<WorkTimeEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
