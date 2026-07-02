@@ -265,6 +265,7 @@
     "notesOptional": "Notes (optional)",
     "total": "Total",
     "companyTotal": "Day total (all workers)",
+    "dayTotal": "Day total",
     "monthTotal": "Month total",
     "saveAll": "Save All",
     "saved": "Saved successfully.",

@@ -185,6 +185,10 @@ interface RowState {
           } @else {
             <div class="table-wrapper">
               <table class="wt-table editable-table">
+                <colgroup>
+                  <col class="col-order" /><col /><col class="col-num" />
+                  <col class="col-num" /><col class="col-notes" /><col class="col-action" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th class="order-col">Бр.</th>
@@ -248,14 +252,14 @@ interface RowState {
                   }
                 </tbody>
                 <tfoot>
-                  <tr class="totals-row">
+                  <tr class="grand-total-row">
                     <td></td>
-                    <td><strong>{{ 'workTime.total' | translate }}</strong></td>
+                    <td><strong>{{ 'workTime.dayTotal' | translate }}</strong></td>
                     <td class="num-col"><strong>{{ totalDocs() }}</strong></td>
                     <td class="num-col"><strong>{{ totalMinutes() }}</strong></td>
                     <td colspan="2"></td>
                   </tr>
-                  <tr class="totals-row month-total-row">
+                  <tr class="grand-total-row month-total-row">
                     <td></td>
                     <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
                     <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
@@ -369,6 +373,12 @@ interface RowState {
     .aligned .col-num { width: 110px; }
     .aligned .col-notes { width: 32%; }
     .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
+    /* Editable table: same fixed layout so header, inputs and totals line up */
+    .editable-table { table-layout: fixed; width: 100%; }
+    .editable-table .col-order { width: 48px; }
+    .editable-table .col-num { width: 110px; }
+    .editable-table .col-notes { width: 30%; }
+    .editable-table .col-action { width: 56px; }
     .grand-total-row td {
       background: #e8eaf6 !important;
       font-weight: 700;
