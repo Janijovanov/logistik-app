@@ -59,6 +59,12 @@ export class WorkTimeService {
     return this.http.post<void>(`${this.base}/entries`, payload);
   }
 
+  getEntryDates(companyId: number, userId?: number): Observable<string[]> {
+    let url = `${this.base}/entry-dates?companyId=${companyId}`;
+    if (userId) url += `&userId=${userId}`;
+    return this.http.get<string[]>(url);
+  }
+
   getMonthlyTotal(date: string, companyId: number, userId?: number): Observable<{ documentCount: number; minutes: number }> {
     let url = `${this.base}/monthly-total?date=${date}&companyId=${companyId}`;
     if (userId) url += `&userId=${userId}`;

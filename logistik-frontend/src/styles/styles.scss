@@ -169,3 +169,13 @@ body {
   width: 120px;
   text-align: right;
 }
+
+// Work-time datepicker: mark days that already have entries
+.wt-has-entries .mat-calendar-body-cell-content {
+  background: #c8e6c9;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.wt-has-entries .mat-calendar-body-cell-content.mat-calendar-body-selected {
+  background: var(--mat-datepicker-calendar-date-selected-state-background-color, #3949ab);
+}

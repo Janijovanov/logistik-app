@@ -180,6 +180,33 @@ public class WorkTimeController : ControllerBase
         return Ok(entries);
     }
 
+    [HttpGet("entry-dates")]
+    public async Task<IActionResult> GetEntryDates(
+        [FromQuery] int companyId,
+        [FromQuery] int? userId,
+        CancellationToken ct)
+    {
+        var query = _db.WorkTimeEntries.Where(e => e.WorkTimeCompanyId == companyId);
+
+        if (_currentUser.IsAdmin)
+        {
+            if (userId.HasValue)
+                query = query.Where(e => e.UserId == userId.Value);
+        }
+        else
+        {
+            query = query.Where(e => e.UserId == _currentUser.UserId);
+        }
+
+        var dates = await query
+            .Select(e => e.Date)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToListAsync(ct);
+
+        return Ok(dates.Select(d => d.ToString("yyyy-MM-dd")));
+    }
+
     [HttpGet("monthly-total")]
     public async Task<IActionResult> GetMonthlyTotal(
         [FromQuery] string date,

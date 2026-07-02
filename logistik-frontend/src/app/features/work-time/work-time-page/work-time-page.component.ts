@@ -65,7 +65,7 @@ interface RowState {
         <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateObj"
           (dateChange)="onDateChange()" readonly (click)="picker.open()" />
         <mat-datepicker-toggle matIconSuffix [for]="picker" />
-        <mat-datepicker #picker />
+        <mat-datepicker #picker [dateClass]="dateClass" />
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="filter-field">
@@ -396,6 +396,14 @@ export class WorkTimePageComponent implements OnInit {
   rows = signal<RowState[]>([]);
   loading = signal(false);
   monthlyTotal = signal<{ documentCount: number; minutes: number }>({ documentCount: 0, minutes: 0 });
+  private entryDates = new Set<string>();
+
+  // Highlights calendar days that already have entries for the selected company/worker.
+  dateClass = (d: Date): string => {
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return this.entryDates.has(`${d.getFullYear()}-${m}-${day}`) ? 'wt-has-entries' : '';
+  };
 
   private static readonly MK_MONTHS = [
     'Јануари', 'Февруари', 'Март', 'Април', 'Мај', 'Јуни',
@@ -469,6 +477,11 @@ export class WorkTimePageComponent implements OnInit {
     this.svc.getMonthlyTotal(this.selectedDate, this.selectedCompanyId, userId ?? undefined).subscribe({
       next: total => this.monthlyTotal.set(total),
       error: () => this.monthlyTotal.set({ documentCount: 0, minutes: 0 })
+    });
+
+    this.svc.getEntryDates(this.selectedCompanyId, userId ?? undefined).subscribe({
+      next: dates => this.entryDates = new Set(dates),
+      error: () => this.entryDates.clear()
     });
   }
 
