@@ -101,55 +101,74 @@ interface RowState {
       <!-- Admin: showing all users grouped -->
       @if (isAdmin() && !selectedUserId) {
         <div class="admin-summary">
-          <!-- Single table for all workers + totals so every column lines up -->
-          <div class="table-wrapper">
+          @if (adminGroups().length === 0) {
+            <div class="empty-state">
+              <mat-icon>inbox</mat-icon>
+              <p>{{ 'workTime.noEntries' | translate }}</p>
+            </div>
+          } @else {
+            @for (group of adminGroups(); track group.userId) {
+              <div class="user-group">
+                <h3 class="group-title">{{ group.userName }}</h3>
+                <div class="table-wrapper">
+                  <table class="wt-table aligned">
+                    <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
+                    <thead>
+                      <tr>
+                        <th>{{ 'workTime.docType' | translate }}</th>
+                        <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                        <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                        <th class="notes-col">{{ 'common.notes' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (entry of group.entries; track entry.id) {
+                        <tr>
+                          <td>{{ entry.documentTypeName }}</td>
+                          <td class="num-col">{{ entry.documentCount }}</td>
+                          <td class="num-col">{{ entry.minutes }}</td>
+                          <td class="notes-col">{{ entry.notes || '' }}</td>
+                        </tr>
+                      }
+                      <tr class="totals-row">
+                        <td><strong>{{ 'workTime.total' | translate }}</strong></td>
+                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
+                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- Day + month totals for the company -->
+          <div class="company-total">
             <table class="wt-table aligned">
               <colgroup><col /><col class="col-num" /><col class="col-num" /><col class="col-notes" /></colgroup>
               <thead>
                 <tr>
-                  <th>{{ 'workTime.docType' | translate }}</th>
+                  <th></th>
                   <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                   <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
-                  <th class="notes-col">{{ 'common.notes' | translate }}</th>
+                  <th class="notes-col"></th>
                 </tr>
               </thead>
               <tbody>
-                @if (adminGroups().length === 0) {
-                  <tr>
-                    <td colspan="4" class="empty-cell">{{ 'workTime.noEntries' | translate }}</td>
-                  </tr>
-                } @else {
-                  @for (group of adminGroups(); track group.userId) {
-                    <tr class="user-header-row">
-                      <td colspan="4">{{ group.userName }}</td>
-                    </tr>
-                    @for (entry of group.entries; track entry.id) {
-                      <tr>
-                        <td class="entry-name">{{ entry.documentTypeName }}</td>
-                        <td class="num-col">{{ entry.documentCount }}</td>
-                        <td class="num-col">{{ entry.minutes }}</td>
-                        <td class="notes-col">{{ entry.notes || '' }}</td>
-                      </tr>
-                    }
-                    <tr class="totals-row">
-                      <td><strong>{{ 'workTime.total' | translate }} — {{ group.userName }}</strong></td>
-                      <td class="num-col"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
-                      <td class="num-col"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
-                      <td></td>
-                    </tr>
-                  }
+                @if (adminGroups().length > 0) {
                   <tr class="grand-total-row">
                     <td><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
                     <td class="num-col"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
                     <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
-                    <td></td>
+                    <td class="notes-col"></td>
                   </tr>
                 }
                 <tr class="grand-total-row month-total-row">
                   <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
                   <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
                   <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
-                  <td></td>
+                  <td class="notes-col"></td>
                 </tr>
               </tbody>
             </table>
@@ -308,7 +327,7 @@ interface RowState {
       tr:hover td { background: #fafafa; }
     }
     .order-col { width: 40px; text-align: center; color: rgba(0,0,0,0.45); }
-    .num-col { width: 90px; text-align: right; }
+    .num-col { width: 90px; text-align: center; }
     .notes-col { min-width: 160px; }
     .action-col { width: 48px; text-align: center; }
     .type-name { font-weight: 500; }
@@ -329,7 +348,7 @@ interface RowState {
       &:focus { outline: none; border-color: #3949ab; background: white; }
       &:hover { border-color: #bdbdbd; }
     }
-    .num-input { width: 70px; text-align: right; }
+    .num-input { width: 70px; text-align: center; }
     .notes-input { width: 100%; box-sizing: border-box; }
     .save-all-row {
       margin-top: 16px;
@@ -337,25 +356,19 @@ interface RowState {
       justify-content: flex-end;
     }
     .admin-summary { display: flex; flex-direction: column; gap: 16px; }
-    /* Fixed layout keeps every column at the same position for all rows */
+    .user-group { margin-bottom: 8px; }
+    .group-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: #3949ab;
+    }
+    .company-total { margin-top: 8px; }
+    /* Fixed layout so every admin table shares identical column widths */
     .wt-table.aligned { table-layout: fixed; width: 100%; }
     .aligned .col-num { width: 110px; }
     .aligned .col-notes { width: 32%; }
     .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
-    .user-header-row td {
-      background: #e8eaf6 !important;
-      color: #3949ab;
-      font-weight: 700;
-      font-size: 14px;
-      padding-top: 10px;
-      padding-bottom: 10px;
-    }
-    .entry-name { padding-left: 28px !important; }
-    .empty-cell {
-      text-align: center;
-      color: rgba(0,0,0,0.38);
-      padding: 24px !important;
-    }
     .grand-total-row td {
       background: #e8eaf6 !important;
       font-weight: 700;
