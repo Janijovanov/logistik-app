@@ -35,9 +35,9 @@ import { NotificationService } from '../../../core/services/notification.service
       <mat-card class="login-card">
         <mat-card-header>
           <div class="login-logo">
-            <img src="assets/logistik_white_background.png" alt="Logistik" />
-            <h1>Logistik</h1>
-            <p class="text-muted">{{ 'auth.subtitle' | translate }}</p>
+            <img src="assets/logistik_emblem.png" alt="Logistik" />
+            <h1>{{ 'nav.brandName' | translate }}</h1>
+            <p class="brand-tag">{{ 'nav.brandTag' | translate }}</p>
           </div>
         </mat-card-header>
 
@@ -134,19 +134,25 @@ import { NotificationService } from '../../../core/services/notification.service
       width: 100%;
 
       img {
-        width: 72px;
-        height: 72px;
+        width: 170px;
+        height: auto;
         object-fit: contain;
-        border-radius: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
       }
       h1 {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
         color: #3949ab;
         margin: 0;
+        letter-spacing: 0.5px;
       }
-      p { margin: 4px 0 0; }
+      .brand-tag {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: rgba(0,0,0,0.55);
+        font-family: 'Martel', 'Georgia', serif;
+        letter-spacing: 0.5px;
+      }
     }
     .login-form {
       display: flex;
