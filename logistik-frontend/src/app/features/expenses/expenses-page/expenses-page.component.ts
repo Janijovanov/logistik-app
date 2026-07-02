@@ -60,20 +60,6 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
             </tr>
           </thead>
           <tbody>
-            <!-- Grand total row -->
-            <tr class="grand-total-row">
-              <td class="no-cell"></td>
-              <td class="name-col">ВКУПНО</td>
-              @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
-                <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0' }}</td>
-              }
-              <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0' }}</td>
-              <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
-              <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
-              <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
-              <td class="no-cell">{{ grandMonthCount() }}</td>
-            </tr>
-
             @for (cat of data()!.categories; track cat.id; let catIdx = $index) {
               <!-- Category header row -->
               <tr class="cat-row">
@@ -142,6 +128,20 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
                 </tr>
               }
             }
+
+            <!-- Grand total row -->
+            <tr class="grand-total-row">
+              <td class="no-cell"></td>
+              <td class="name-col">ВКУПНО</td>
+              @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
+                <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0' }}</td>
+              }
+              <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0' }}</td>
+              <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
+              <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
+              <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
+              <td class="no-cell">{{ grandMonthCount() }}</td>
+            </tr>
           </tbody>
         </table>
       </div>
