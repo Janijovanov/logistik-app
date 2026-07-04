@@ -339,6 +339,15 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
     .entry-dates { font-size: 14px; font-weight: 500; color: rgba(0,0,0,0.7); }
     .entry-arrow { margin: 0 6px; color: rgba(0,0,0,0.38); }
     .entry-duration { font-size: 12px; color: rgba(0,0,0,0.45); margin-left: 4px; }
+
+    @media (max-width: 768px) {
+      .tab-content { padding: 16px 0; }
+      .tab-header { justify-content: stretch; flex-wrap: wrap; gap: 8px; }
+      .tab-header > button { flex: 1 1 auto; }
+      .termination-notice { flex-wrap: wrap; }
+      .term-notify-btn { width: 100%; }
+      .history-entry { flex-wrap: wrap; }
+    }
   `]
 })
 export class EmployeeDetailComponent implements OnInit {

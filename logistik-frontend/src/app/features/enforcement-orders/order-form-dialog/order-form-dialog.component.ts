@@ -107,9 +107,12 @@ interface DialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; min-width: 480px; }
+    .dialog-form { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; min-width: min(480px, 82vw); }
     .full-width { width: 100%; }
     .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) {
+      .form-row-2 { grid-template-columns: 1fr; }
+    }
     .executor-card {
       background: #f5f5f5;
       border-radius: 8px;

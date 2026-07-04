@@ -116,6 +116,10 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   styles: [`
     .table-toolbar { padding: 16px 16px 0; }
     .search-field { width: 320px; }
+    @media (max-width: 768px) {
+      .table-toolbar { padding: 12px 12px 0; }
+      .search-field { width: 100%; }
+    }
     .table-loading { display: flex; justify-content: center; padding: 48px; }
     .actions-cell { text-align: right; white-space: nowrap; }
     .chip-admin { background: #e8eaf6; color: #283593; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }

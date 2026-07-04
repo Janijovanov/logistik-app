@@ -360,6 +360,17 @@ interface RowState {
       justify-content: flex-end;
     }
     .admin-summary { display: flex; flex-direction: column; gap: 16px; }
+    @media (max-width: 768px) {
+      .header-actions { width: 100%; }
+      .header-actions > button { flex: 1 1 auto; }
+      .filter-field { width: 100%; min-width: 0; }
+      /* Tables scroll sideways instead of crushing the fixed columns */
+      .table-wrapper, .company-total { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .wt-table { min-width: 680px; }
+      .aligned .col-name { width: 220px; }
+      .editable-table .col-name { width: 200px; }
+      .save-all-row button { width: 100%; }
+    }
     .user-group { margin-bottom: 8px; }
     .group-title {
       font-size: 16px;

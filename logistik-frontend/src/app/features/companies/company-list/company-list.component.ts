@@ -445,6 +445,18 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
       text-align: center; padding: 48px; color: rgba(0,0,0,0.38);
       mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 8px; }
     }
+
+    @media (max-width: 768px) {
+      .selector-row { padding: 12px 12px 0; }
+      .company-select, .month-select { width: 100%; min-width: 0; }
+      .company-actions { width: 100%; flex-wrap: wrap; }
+      .company-actions > button { flex: 1 1 auto; }
+      .section-header { padding: 16px 12px 8px; }
+      .view-toggle { width: 100%; }
+      .view-toggle .toggle-btn { flex: 1; }
+      .inactive-toggle, .import-btn, .export-btn { flex: 1 1 auto; }
+      .no-selection { padding: 40px 16px; }
+    }
   `]
 })
 export class CompanyListComponent implements OnInit {

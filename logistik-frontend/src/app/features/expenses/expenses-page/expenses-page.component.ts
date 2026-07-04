@@ -159,6 +159,10 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
       gap: 12px;
     }
     .header-left { display: flex; align-items: center; gap: 16px; }
+    @media (max-width: 768px) {
+      .header-left { width: 100%; justify-content: space-between; }
+      .page-header > button { width: 100%; }
+    }
     .page-title { font-size: 22px; font-weight: 700; margin: 0; }
     .year-nav { display: flex; align-items: center; gap: 4px; }
     .year-label { font-size: 18px; font-weight: 600; min-width: 52px; text-align: center; }

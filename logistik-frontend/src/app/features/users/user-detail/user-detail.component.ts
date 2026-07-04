@@ -131,6 +131,11 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   `,
   styles: [`
     .content-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .assign-form { flex-wrap: wrap; }
+      .assign-form button { width: 100%; }
+    }
     .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
     .assign-form { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; mat-form-field { flex: 1; } }
     .chip-active { background: #e8f5e9; color: #2e7d32; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }

@@ -179,3 +179,61 @@ body {
 .wt-has-entries .mat-calendar-body-cell-content.mat-calendar-body-selected {
   background: var(--mat-datepicker-calendar-date-selected-state-background-color, #3949ab);
 }
+
+// ============================================================
+// Responsive layer - mobile & small tablets
+// ============================================================
+@media (max-width: 768px) {
+  // Tables keep their natural width and scroll horizontally
+  // instead of squishing columns into unreadable slivers.
+  .page-card,
+  .mat-mdc-tab-body-content,
+  .mat-mdc-card-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table.mat-mdc-table { min-width: 720px; }
+
+  // Page headers: title on top, action buttons in a full-width wrapping row
+  .page-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .page-header .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    > button { flex: 1 1 auto; }
+  }
+
+  // Filter/selector form fields expand to full width
+  .selector-row mat-form-field,
+  .filters-row mat-form-field,
+  .filters-row .filter-field {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .selector-row, .filters-row { gap: 8px !important; }
+
+  // Dialogs use nearly the whole viewport
+  .cdk-overlay-pane.mat-mdc-dialog-panel {
+    max-width: 96vw !important;
+    width: 96vw !important;
+  }
+
+  // Section headers inside cards stack and wrap
+  .section-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .section-header-left,
+  .section-header-right {
+    width: 100%;
+    flex-wrap: wrap !important;
+  }
+  .section-header-right > button { flex: 1 1 auto; }
+}
+
+@media (max-width: 480px) {
+  // Tighter typography on phones
+  .page-title { font-size: 20px !important; }
+}

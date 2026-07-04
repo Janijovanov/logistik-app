@@ -49,6 +49,9 @@ import { NavbarComponent } from '../navbar/navbar.component';
       padding: 24px;
       overflow-y: auto;
     }
+    @media (max-width: 768px) {
+      .page-content { padding: 12px; }
+    }
   `]
 })
 export class ShellComponent {
