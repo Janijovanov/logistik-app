@@ -157,33 +157,33 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
 
             <!-- ALL EMPLOYEES VIEW -->
             @if (viewMode() === 'all') {
-              <table mat-table [dataSource]="displayData()" class="mat-elevation-z0">
+              <table mat-table [dataSource]="displayData()" class="mat-elevation-z0 stacked-mobile">
 
                 <ng-container matColumnDef="code">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.code' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">{{ e.code ?? '—' }}</td>
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.code' | translate">{{ e.code ?? '—' }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="fullName">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.fullName' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.fullName' | translate">
                     <span class="employee-link" (click)="goToEmployee(e, $event)">{{ e.fullName }}</span>
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="embg">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.embg' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">{{ e.embg }}</td>
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.embg' | translate">{{ e.embg }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="bankAccount">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.bankAccount' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">{{ e.bankAccount }}</td>
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.bankAccount' | translate">{{ e.bankAccount }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="netSalary">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.netSalary' | translate }} ({{ monthCtrl.value | date:'MMM yyyy' }})</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.netSalary' | translate">
                     @if (e.recordedNetSalary !== null) {
                       <span class="salary-recorded">
                         {{ e.recordedNetSalary | number:'1.0-0' }} ден.
@@ -199,12 +199,12 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
 
                 <ng-container matColumnDef="startDate">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.startDate' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">{{ e.employmentStartDate | date:'dd.MM.yyyy' }}</td>
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.startDate' | translate">{{ e.employmentStartDate | date:'dd.MM.yyyy' }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="endDate">
                   <th mat-header-cell *matHeaderCellDef>{{ 'employees.endDate' | translate }}</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" [attr.data-label]="'employees.endDate' | translate">
                     {{ e.employmentEndDate ? (e.employmentEndDate | date:'dd.MM.yyyy') : '—' }}
                   </td>
                 </ng-container>
@@ -263,35 +263,35 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
 
             <!-- ENFORCEMENT ORDERS VIEW -->
             @if (viewMode() === 'orders') {
-              <table mat-table [dataSource]="displayData()" class="mat-elevation-z0">
+              <table mat-table [dataSource]="displayData()" class="mat-elevation-z0 stacked-mobile">
 
                 <ng-container matColumnDef="fullName">
                   <th mat-header-cell *matHeaderCellDef>Вработен</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" data-label="Вработен">
                     <span class="employee-link" (click)="goToEmployee(e, $event)">{{ e.fullName }}</span>
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="executorName">
                   <th mat-header-cell *matHeaderCellDef>Извршител</th>
-                  <td mat-cell *matCellDef="let e">{{ e.executorName }}</td>
+                  <td mat-cell *matCellDef="let e" data-label="Извршител">{{ e.executorName }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="executorBankAccount">
                   <th mat-header-cell *matHeaderCellDef>Трансакциска сметка</th>
-                  <td mat-cell *matCellDef="let e" class="bank-cell">{{ e.executorBankAccount }}</td>
+                  <td mat-cell *matCellDef="let e" class="bank-cell" data-label="Тр. сметка">{{ e.executorBankAccount }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="orderNumber">
                   <th mat-header-cell *matHeaderCellDef>И.бр.</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" data-label="И.бр.">
                     <span class="order-number">{{ e.orderNumber }}</span>
                   </td>
                 </ng-container>
 
                 <ng-container matColumnDef="deductionAmount">
                   <th mat-header-cell *matHeaderCellDef>Износ 1/5</th>
-                  <td mat-cell *matCellDef="let e">
+                  <td mat-cell *matCellDef="let e" data-label="Износ 1/5">
                     @if (e.deductionAmount !== null && e.deductionAmount > 0) {
                       <span class="amount-recorded">{{ e.deductionAmount | number:'1.0-0' }} ден.</span>
                     } @else {

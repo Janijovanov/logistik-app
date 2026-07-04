@@ -124,17 +124,17 @@ interface RowState {
                     <tbody>
                       @for (entry of group.entries; track entry.id) {
                         <tr>
-                          <td>{{ entry.documentTypeName }}</td>
-                          <td class="num-col">{{ entry.documentCount }}</td>
-                          <td class="num-col">{{ entry.minutes }}</td>
-                          <td class="notes-col">{{ entry.notes || '' }}</td>
+                          <td class="name-cell">{{ entry.documentTypeName }}</td>
+                          <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ entry.documentCount }}</td>
+                          <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ entry.minutes }}</td>
+                          <td class="notes-col" [attr.data-label]="'common.notes' | translate">{{ entry.notes || '—' }}</td>
                         </tr>
                       }
                       <tr class="totals-row">
-                        <td><strong>{{ 'workTime.total' | translate }}</strong></td>
-                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
-                        <td class="num-col"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
-                        <td></td>
+                        <td class="name-cell"><strong>{{ 'workTime.total' | translate }}</strong></td>
+                        <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
+                        <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
+                        <td class="ghost-cell"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -158,17 +158,17 @@ interface RowState {
               <tbody>
                 @if (adminGroups().length > 0) {
                   <tr class="grand-total-row">
-                    <td><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
-                    <td class="num-col"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
-                    <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
-                    <td class="notes-col"></td>
+                    <td class="name-cell"><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
+                    <td class="ghost-cell notes-col"></td>
                   </tr>
                 }
                 <tr class="grand-total-row month-total-row">
-                  <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
-                  <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
-                  <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
-                  <td class="notes-col"></td>
+                  <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                  <td class="ghost-cell notes-col"></td>
                 </tr>
               </tbody>
             </table>
@@ -204,7 +204,7 @@ interface RowState {
                     <tr [class.has-data]="row.documentCount > 0 || row.minutes > 0">
                       <td class="order-col">{{ row.docType.order }}</td>
                       <td class="type-name">{{ row.docType.name }}</td>
-                      <td class="num-col">
+                      <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">
                         <input
                           type="number"
                           class="num-input"
@@ -214,7 +214,7 @@ interface RowState {
                           placeholder="0"
                         />
                       </td>
-                      <td class="num-col">
+                      <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">
                         <input
                           type="number"
                           class="num-input"
@@ -224,7 +224,7 @@ interface RowState {
                           placeholder="0"
                         />
                       </td>
-                      <td class="notes-col">
+                      <td class="notes-col" [attr.data-label]="'common.notes' | translate">
                         <input
                           type="text"
                           class="notes-input"
@@ -253,18 +253,18 @@ interface RowState {
                 </tbody>
                 <tfoot>
                   <tr class="grand-total-row">
-                    <td></td>
-                    <td><strong>{{ 'workTime.dayTotal' | translate }}</strong></td>
-                    <td class="num-col"><strong>{{ totalDocs() }}</strong></td>
-                    <td class="num-col"><strong>{{ totalMinutes() }}</strong></td>
-                    <td colspan="2"></td>
+                    <td class="ghost-cell"></td>
+                    <td class="name-cell"><strong>{{ 'workTime.dayTotal' | translate }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ totalDocs() }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ totalMinutes() }}</strong></td>
+                    <td colspan="2" class="ghost-cell"></td>
                   </tr>
                   <tr class="grand-total-row month-total-row">
-                    <td></td>
-                    <td><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
-                    <td class="num-col"><strong>{{ monthlyTotal().documentCount }}</strong></td>
-                    <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td>
-                    <td colspan="2"></td>
+                    <td class="ghost-cell"></td>
+                    <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                    <td colspan="2" class="ghost-cell"></td>
                   </tr>
                 </tfoot>
               </table>
@@ -364,12 +364,48 @@ interface RowState {
       .header-actions { width: 100%; }
       .header-actions > button { flex: 1 1 auto; }
       .filter-field { width: 100%; min-width: 0; }
-      /* Tables scroll sideways instead of crushing the fixed columns */
-      .table-wrapper, .company-total { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .wt-table { min-width: 680px; }
-      .aligned .col-name { width: 220px; }
-      .editable-table .col-name { width: 200px; }
       .save-all-row button { width: 100%; }
+
+      /* Stacked cards: each row becomes a small card with label/value lines */
+      .wt-table { table-layout: auto; min-width: 0; }
+      .wt-table colgroup, .wt-table thead { display: none; }
+      .wt-table tr {
+        display: block;
+        padding: 8px 0;
+        border-bottom: 6px solid #f0f2f5;
+      }
+      .wt-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        border-bottom: none;
+        padding: 4px 14px;
+        text-align: right;
+        width: auto;
+      }
+      .wt-table td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 12px;
+        color: rgba(0,0,0,0.54);
+        flex-shrink: 0;
+        text-align: left;
+      }
+      /* Doc-type name acts as the card title */
+      .wt-table td.name-cell, .wt-table td.type-name {
+        justify-content: flex-start;
+        text-align: left;
+        font-weight: 600;
+        padding-top: 6px;
+      }
+      /* Row number folds next to nothing - hide it, and hide filler cells */
+      .wt-table td.order-col, .wt-table td.ghost-cell { display: none; }
+      /* Action buttons right-aligned */
+      .wt-table td.action-col { justify-content: flex-end; min-height: 36px; }
+      /* Inputs sized for touch */
+      .num-input { width: 96px; border-color: #d0d0d0; background: white; padding: 8px; }
+      .notes-input { max-width: 65%; border-color: #d0d0d0; background: white; padding: 8px; }
     }
     .user-group { margin-bottom: 8px; }
     .group-title {

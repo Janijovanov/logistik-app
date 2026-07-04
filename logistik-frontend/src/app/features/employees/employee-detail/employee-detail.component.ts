@@ -130,18 +130,18 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
             @if (loadingSalary() && salaryHistory().length === 0) {
               <div class="loading-row"><mat-spinner diameter="32" /></div>
             } @else {
-              <table mat-table [dataSource]="salaryHistory()" class="mat-elevation-z0">
+              <table mat-table [dataSource]="salaryHistory()" class="mat-elevation-z0 stacked-mobile">
                 <ng-container matColumnDef="month">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.month' | translate }}</th>
-                  <td mat-cell *matCellDef="let s">{{ s.salaryMonth | date:'MMMM yyyy' }}</td>
+                  <td mat-cell *matCellDef="let s" [attr.data-label]="'salary.month' | translate">{{ s.salaryMonth | date:'MMMM yyyy' }}</td>
                 </ng-container>
                 <ng-container matColumnDef="netSalary">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.netSalary' | translate }}</th>
-                  <td mat-cell *matCellDef="let s">{{ s.netSalary | currencyMk }}</td>
+                  <td mat-cell *matCellDef="let s" [attr.data-label]="'salary.netSalary' | translate">{{ s.netSalary | currencyMk }}</td>
                 </ng-container>
                 <ng-container matColumnDef="deduction">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.deduction' | translate }}</th>
-                  <td mat-cell *matCellDef="let s">
+                  <td mat-cell *matCellDef="let s" [attr.data-label]="'salary.deduction' | translate">
                     @if (s.deductionAmount > 0 || s.overflowDeductionAmount) {
                       <div [class]="deductionClass(s)">
                         <span class="deduction-amount">{{ s.deductionAmount | currencyMk }}</span>
@@ -164,11 +164,11 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
                 </ng-container>
                 <ng-container matColumnDef="net">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.netPaid' | translate }}</th>
-                  <td mat-cell *matCellDef="let s">{{ (s.netSalary - s.deductionAmount - (s.overflowDeductionAmount ?? 0)) | currencyMk }}</td>
+                  <td mat-cell *matCellDef="let s" [attr.data-label]="'salary.netPaid' | translate">{{ (s.netSalary - s.deductionAmount - (s.overflowDeductionAmount ?? 0)) | currencyMk }}</td>
                 </ng-container>
                 <ng-container matColumnDef="notes">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.notes' | translate }}</th>
-                  <td mat-cell *matCellDef="let s" class="notes-cell">
+                  <td mat-cell *matCellDef="let s" class="notes-cell" [attr.data-label]="'salary.notes' | translate">
                     @if (s.notes) {
                       <span [matTooltip]="s.notes" class="notes-text">{{ s.notes }}</span>
                     } @else {
@@ -178,7 +178,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
                 </ng-container>
                 <ng-container matColumnDef="recordedBy">
                   <th mat-header-cell *matHeaderCellDef>{{ 'salary.recordedBy' | translate }}</th>
-                  <td mat-cell *matCellDef="let s">{{ s.recordedByUsername }}</td>
+                  <td mat-cell *matCellDef="let s" [attr.data-label]="'salary.recordedBy' | translate">{{ s.recordedByUsername }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="paymentOrder">
@@ -239,30 +239,30 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
               }
             </div>
 
-            <table mat-table [dataSource]="orders()" class="mat-elevation-z0">
+            <table mat-table [dataSource]="orders()" class="mat-elevation-z0 stacked-mobile">
               <ng-container matColumnDef="orderNumber">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.orderNo' | translate }}</th>
-                <td mat-cell *matCellDef="let o">{{ o.orderNumber }}</td>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.orderNo' | translate">{{ o.orderNumber }}</td>
               </ng-container>
               <ng-container matColumnDef="executor">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.executor' | translate }}</th>
-                <td mat-cell *matCellDef="let o">{{ o.executorName }}</td>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.executor' | translate">{{ o.executorName }}</td>
               </ng-container>
               <ng-container matColumnDef="total">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.totalAmount' | translate }}</th>
-                <td mat-cell *matCellDef="let o">{{ o.totalAmount | currencyMk }}</td>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.totalAmount' | translate">{{ o.totalAmount | currencyMk }}</td>
               </ng-container>
               <ng-container matColumnDef="remaining">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.remaining' | translate }}</th>
-                <td mat-cell *matCellDef="let o">{{ o.remainingAmount | currencyMk }}</td>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.remaining' | translate">{{ o.remainingAmount | currencyMk }}</td>
               </ng-container>
               <ng-container matColumnDef="receivedDate">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.received' | translate }}</th>
-                <td mat-cell *matCellDef="let o">{{ o.receivedDate | date:'dd.MM.yyyy' }}</td>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.received' | translate">{{ o.receivedDate | date:'dd.MM.yyyy' }}</td>
               </ng-container>
               <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef>{{ 'orders.status' | translate }}</th>
-                <td mat-cell *matCellDef="let o">
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.status' | translate">
                   <app-status-badge [status]="o.status" [statusColor]="o.statusColor" />
                 </td>
               </ng-container>

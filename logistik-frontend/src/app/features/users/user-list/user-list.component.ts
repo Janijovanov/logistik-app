@@ -49,30 +49,30 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       @if (loading()) {
         <div class="table-loading"><mat-spinner diameter="36" /></div>
       } @else {
-        <table mat-table [dataSource]="result()?.items ?? []" class="mat-elevation-z0">
+        <table mat-table [dataSource]="result()?.items ?? []" class="mat-elevation-z0 stacked-mobile">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | translate }}</th>
-            <td mat-cell *matCellDef="let u">
-              <strong>{{ u.firstName }} {{ u.lastName }}</strong><br />
-              <span class="text-muted text-sm">{{ u.username }}</span>
+            <td mat-cell *matCellDef="let u" [attr.data-label]="'common.name' | translate">
+              <span><strong>{{ u.firstName }} {{ u.lastName }}</strong><br />
+              <span class="text-muted text-sm">{{ u.username }}</span></span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="email">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.email' | translate }}</th>
-            <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+            <td mat-cell *matCellDef="let u" [attr.data-label]="'common.email' | translate">{{ u.email }}</td>
           </ng-container>
 
           <ng-container matColumnDef="role">
             <th mat-header-cell *matHeaderCellDef>{{ 'users.role' | translate }}</th>
-            <td mat-cell *matCellDef="let u">
+            <td mat-cell *matCellDef="let u" [attr.data-label]="'users.role' | translate">
               <span [class]="u.role === 'Admin' ? 'chip-admin' : 'chip-user'">{{ u.role }}</span>
             </td>
           </ng-container>
 
           <ng-container matColumnDef="status">
             <th mat-header-cell *matHeaderCellDef>{{ 'common.status' | translate }}</th>
-            <td mat-cell *matCellDef="let u">
+            <td mat-cell *matCellDef="let u" [attr.data-label]="'common.status' | translate">
               <span [class]="u.isActive ? 'chip-active' : 'chip-inactive'">
                 {{ (u.isActive ? 'common.active' : 'common.inactive') | translate }}
               </span>

@@ -237,3 +237,52 @@ body {
   // Tighter typography on phones
   .page-title { font-size: 20px !important; }
 }
+
+// ============================================================
+// Stacked "card" tables on mobile - each row becomes a card,
+// each cell a label/value line (label from [data-label]).
+// Opt-in via class="stacked-mobile" on the mat-table.
+// ============================================================
+@media (max-width: 768px) {
+  table.mat-mdc-table.stacked-mobile {
+    min-width: 0 !important;
+
+    thead { display: none; }
+
+    tr.mat-mdc-row, tr.mat-mdc-footer-row {
+      display: block;
+      height: auto;
+      padding: 6px 0;
+      border-bottom: 6px solid #f0f2f5;
+    }
+
+    td.mat-mdc-cell {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: none;
+      padding: 5px 16px;
+      min-height: 0;
+      text-align: right;
+    }
+
+    td.mat-mdc-cell[data-label]::before {
+      content: attr(data-label);
+      font-weight: 600;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.54);
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    // Cells without a label (actions) become a right-aligned button row
+    td.mat-mdc-cell:not([data-label]) {
+      justify-content: flex-end;
+      padding-top: 8px;
+    }
+
+    // Hide cells explicitly marked as empty on mobile
+    td.mat-mdc-cell.hide-sm-empty:empty { display: none; }
+  }
+}

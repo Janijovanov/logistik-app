@@ -87,26 +87,26 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               </button>
             </div>
 
-            <table mat-table [dataSource]="user()!.permissions ?? []" class="mat-elevation-z0">
+            <table mat-table [dataSource]="user()!.permissions ?? []" class="mat-elevation-z0 stacked-mobile">
               <ng-container matColumnDef="company">
                 <th mat-header-cell *matHeaderCellDef>{{ 'users.company' | translate }}</th>
-                <td mat-cell *matCellDef="let p">{{ p.companyName }}</td>
+                <td mat-cell *matCellDef="let p" [attr.data-label]="'users.company' | translate">{{ p.companyName }}</td>
               </ng-container>
               <ng-container matColumnDef="canView">
                 <th mat-header-cell *matHeaderCellDef>{{ 'users.canView' | translate }}</th>
-                <td mat-cell *matCellDef="let p">
+                <td mat-cell *matCellDef="let p" [attr.data-label]="'users.canView' | translate">
                   <mat-checkbox [checked]="p.canView" (change)="updatePerm(p, 'canView', $event.checked)" />
                 </td>
               </ng-container>
               <ng-container matColumnDef="canEdit">
                 <th mat-header-cell *matHeaderCellDef>{{ 'users.canEdit' | translate }}</th>
-                <td mat-cell *matCellDef="let p">
+                <td mat-cell *matCellDef="let p" [attr.data-label]="'users.canEdit' | translate">
                   <mat-checkbox [checked]="p.canEdit" (change)="updatePerm(p, 'canEdit', $event.checked)" />
                 </td>
               </ng-container>
               <ng-container matColumnDef="canExport">
                 <th mat-header-cell *matHeaderCellDef>{{ 'users.canExport' | translate }}</th>
-                <td mat-cell *matCellDef="let p">
+                <td mat-cell *matCellDef="let p" [attr.data-label]="'users.canExport' | translate">
                   <mat-checkbox [checked]="p.canExport" (change)="updatePerm(p, 'canExport', $event.checked)" />
                 </td>
               </ng-container>
