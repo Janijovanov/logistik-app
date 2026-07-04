@@ -210,11 +210,13 @@ export class UserDetailComponent implements OnInit {
   }
 
   updatePerm(perm: UserCompanyPermission, field: keyof UserCompanyPermission, value: boolean): void {
-    const updated = { ...perm, [field]: value };
+    // Mutate in place so a second checkbox click right after this one reads the
+    // just-saved value instead of the stale snapshot and overwriting it back.
+    (perm as any)[field] = value;
     this.service.updatePermission(this.userId, perm.companyId, {
-      canView: updated.canView,
-      canEdit: updated.canEdit,
-      canExport: updated.canExport
+      canView: perm.canView,
+      canEdit: perm.canEdit,
+      canExport: perm.canExport
     }).subscribe({
       next: () => this.notifications.success(this.translate.instant('users.permissionUpdated')),
       error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
