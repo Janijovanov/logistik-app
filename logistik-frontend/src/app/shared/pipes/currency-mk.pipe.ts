@@ -5,8 +5,8 @@ export class CurrencyMkPipe implements PipeTransform {
   transform(value: number | null | undefined): string {
     if (value == null) return '-';
     return new Intl.NumberFormat('mk-MK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value) + ' ден.';
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.round(value)) + ' ден.';
   }
 }

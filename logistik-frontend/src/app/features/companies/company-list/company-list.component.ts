@@ -186,9 +186,9 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                   <td mat-cell *matCellDef="let e">
                     @if (e.recordedNetSalary !== null) {
                       <span class="salary-recorded">
-                        {{ e.recordedNetSalary | number:'1.2-2' }} ден.
+                        {{ e.recordedNetSalary | number:'1.0-0' }} ден.
                         @if (e.deductionAmount && e.deductionAmount > 0) {
-                          <span class="deduction-hint">(-{{ e.deductionAmount | number:'1.2-2' }})</span>
+                          <span class="deduction-hint">(-{{ e.deductionAmount | number:'1.0-0' }})</span>
                         }
                       </span>
                     } @else {
@@ -293,7 +293,7 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                   <th mat-header-cell *matHeaderCellDef>Износ 1/5</th>
                   <td mat-cell *matCellDef="let e">
                     @if (e.deductionAmount !== null && e.deductionAmount > 0) {
-                      <span class="amount-recorded">{{ e.deductionAmount | number:'1.2-2' }} ден.</span>
+                      <span class="amount-recorded">{{ e.deductionAmount | number:'1.0-0' }} ден.</span>
                     } @else {
                       <span class="text-muted">—</span>
                     }

@@ -173,6 +173,6 @@ export class DashboardComponent implements OnInit {
   }
 
   private formatCurrency(value: number): string {
-    return new Intl.NumberFormat('mk-MK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' ден.';
+    return new Intl.NumberFormat('mk-MK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(value)) + ' ден.';
   }
 }

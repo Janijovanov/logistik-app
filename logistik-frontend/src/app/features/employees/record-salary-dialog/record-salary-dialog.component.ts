@@ -61,7 +61,7 @@ interface OrderCalc {
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>{{ 'employees.netSalary' | translate }}</mat-label>
             <input matInput type="number" formControlName="netSalary" />
-            <mat-hint>{{ 'salary.salaryDefault' | translate: {amount: (data.netSalary | number:'1.2-2')} }}</mat-hint>
+            <mat-hint>{{ 'salary.salaryDefault' | translate: {amount: (data.netSalary | number:'1.0-0')} }}</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
@@ -89,20 +89,20 @@ interface OrderCalc {
           <div class="calc-grid">
             <div class="calc-row">
               <span class="calc-label">{{ 'salary.totalOrderAmount' | translate }}</span>
-              <span class="calc-value">{{ calc()!.order.totalAmount | number:'1.2-2' }} ден.</span>
+              <span class="calc-value">{{ calc()!.order.totalAmount | number:'1.0-0' }} ден.</span>
             </div>
             <div class="calc-row">
               <span class="calc-label">{{ 'salary.totalPaidSoFar' | translate }}</span>
-              <span class="calc-value">{{ calc()!.order.totalPaid | number:'1.2-2' }} ден.</span>
+              <span class="calc-value">{{ calc()!.order.totalPaid | number:'1.0-0' }} ден.</span>
             </div>
             <div class="calc-row emphasis">
               <span class="calc-label">{{ 'salary.paymentThisMonth' | translate }}</span>
-              <span class="calc-value red">{{ calc()!.monthlyDeduction | number:'1.2-2' }} ден.</span>
+              <span class="calc-value red">{{ calc()!.monthlyDeduction | number:'1.0-0' }} ден.</span>
             </div>
             <div class="calc-row emphasis total-row">
               <span class="calc-label">{{ 'salary.remainingAfterPayment' | translate }}</span>
               <span class="calc-value" [class.green]="calc()!.order.remainingAmount <= 0" [class.red]="calc()!.order.remainingAmount > 0">
-                {{ calc()!.order.remainingAmount | number:'1.2-2' }} ден.
+                {{ calc()!.order.remainingAmount | number:'1.0-0' }} ден.
               </span>
             </div>
           </div>
