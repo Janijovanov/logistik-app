@@ -56,7 +56,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
                   <button mat-icon-button (click)="editingSubId.set(null)"><mat-icon>close</mat-icon></button>
                 } @else {
                   <span class="sub-name">{{ sub.name }}</span>
-                  <span class="sub-plan">{{ sub.annualPlan | number:'1.0-0' }} ден.</span>
+                  <span class="sub-plan">{{ sub.annualPlan | number:'1.0-0':'mk' }} ден.</span>
                   <button mat-icon-button (click)="startEditSub(sub)"><mat-icon>edit</mat-icon></button>
                   <button mat-icon-button color="warn" (click)="deleteSub(cat, sub)"><mat-icon>delete</mat-icon></button>
                 }

@@ -68,12 +68,12 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                 <td class="idx-col cat-no">{{ catIdx + 1 }}</td>
                 <td class="name-col cat-name">{{ cat.name }}</td>
                 @for (m of monthNums; track m) {
-                  <td class="amount-cell cat-amount">{{ catMonthTotal(cat, m) || '' | number:'1.0-0' }}</td>
+                  <td class="amount-cell cat-amount">{{ catMonthTotal(cat, m) || '' | number:'1.0-0':'mk' }}</td>
                 }
-                <td class="sum-cell cat-amount">{{ catVkupno(cat) | number:'1.0-0' }}</td>
+                <td class="sum-cell cat-amount">{{ catVkupno(cat) | number:'1.0-0':'mk' }}</td>
                 <td class="pct-cell cat-pct">{{ pctOfTotal(catVkupno(cat)) }}%</td>
-                <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0' }}</td>
-                <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0' }}</td>
+                <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0':'mk' }}</td>
+                <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0':'mk' }}</td>
                 <td class="cnt-col"></td>
               </tr>
 
@@ -95,11 +95,11 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                           (click)="$event.stopPropagation()"
                         />
                       } @else {
-                        {{ sub.amounts[m] ? (sub.amounts[m] | number:'1.0-0') : '' }}
+                        {{ sub.amounts[m] ? (sub.amounts[m] | number:'1.0-0':'mk') : '' }}
                       }
                     </td>
                   }
-                  <td class="sum-cell">{{ subVkupno(sub) | number:'1.0-0' }}</td>
+                  <td class="sum-cell">{{ subVkupno(sub) | number:'1.0-0':'mk' }}</td>
                   <td class="pct-cell">{{ pctOfTotal(subVkupno(sub)) }}%</td>
                   <!-- Месечно: editable input -->
                   <td class="plan-cell editable" (click)="startEditPlan(sub.id)">
@@ -114,11 +114,11 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                         (click)="$event.stopPropagation()"
                       />
                     } @else {
-                      {{ monthlyPlan(sub) ? (monthlyPlan(sub) | number:'1.0-0') : '' }}
+                      {{ monthlyPlan(sub) ? (monthlyPlan(sub) | number:'1.0-0':'mk') : '' }}
                     }
                   </td>
                   <!-- Годишно: computed = monthly × 12 -->
-                  <td class="plan-cell annual-cell">{{ sub.annualPlan | number:'1.0-0' }}</td>
+                  <td class="plan-cell annual-cell">{{ sub.annualPlan | number:'1.0-0':'mk' }}</td>
                   <td class="cnt-col">{{ monthCount(sub) }}</td>
                 </tr>
               }
@@ -129,12 +129,12 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
               <td class="idx-col"></td>
               <td class="name-col">ВКУПНО</td>
               @for (m of monthNums; track m) {
-                <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0' }}</td>
+                <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0':'mk' }}</td>
               }
-              <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0' }}</td>
+              <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0':'mk' }}</td>
               <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
-              <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
-              <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
+              <td class="plan-cell">{{ grandMonthly() | number:'1.0-0':'mk' }}</td>
+              <td class="plan-cell">{{ grandAnnual() | number:'1.0-0':'mk' }}</td>
               <td class="cnt-col">{{ grandMonthCount() }}</td>
             </tr>
           </tbody>

@@ -90,7 +90,7 @@ interface DialogData {
           <mat-form-field appearance="outline">
             <mat-label>Месечна задршка (МКД)</mat-label>
             <input matInput type="number" formControlName="monthlyDeduction" min="1" />
-            <mat-hint>Остави празно за автоматски 1/5 = {{ data.netSalary / 5 | number:'1.0-0' }} ден.</mat-hint>
+            <mat-hint>Остави празно за автоматски 1/5 = {{ data.netSalary / 5 | number:'1.0-0':'mk' }} ден.</mat-hint>
             @if (form.get('monthlyDeduction')?.hasError('min') && form.get('monthlyDeduction')?.touched) {
               <mat-error>Задршката мора да биде > 0</mat-error>
             }

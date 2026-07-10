@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatNumber } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -173,6 +173,6 @@ export class DashboardComponent implements OnInit {
   }
 
   private formatCurrency(value: number): string {
-    return new Intl.NumberFormat('mk-MK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(value)) + ' ден.';
+    return formatNumber(Math.round(value), 'mk', '1.0-0') + ' ден.';
   }
 }
