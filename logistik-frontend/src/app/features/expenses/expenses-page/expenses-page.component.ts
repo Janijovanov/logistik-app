@@ -13,6 +13,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { CategoryManagerComponent } from '../category-manager/category-manager.component';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Noe', 'Dec'];
+const PLAN_COL = 13; // logical column for the editable "Месечно" (monthly plan) cell
 
 @Component({
   selector: 'app-expenses-page',
@@ -43,11 +44,12 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
     } @else if (!data()) {
       <div class="empty">Нема податоци.</div>
     } @else {
+      <p class="hint">Кликни на поле за внес · <kbd>Tab</kbd> следно · <kbd>↑↓←→</kbd> движење · <kbd>Enter</kbd> надолу</p>
       <div class="table-wrapper">
         <table class="expense-table">
           <thead>
             <tr>
-              <th class="no-col">Бр.</th>
+              <th class="idx-col">Бр.</th>
               <th class="name-col">Назив</th>
               @for (m of months; track m) {
                 <th class="month-col">{{ m }}</th>
@@ -56,45 +58,40 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
               <th class="pct-col">%</th>
               <th class="plan-col">Месечно</th>
               <th class="plan-col">Годишно</th>
-              <th class="no-col">бр.мес.</th>
+              <th class="cnt-col">бр.мес.</th>
             </tr>
           </thead>
           <tbody>
             @for (cat of data()!.categories; track cat.id; let catIdx = $index) {
               <!-- Category header row -->
               <tr class="cat-row">
-                <td class="no-cell cat-no">{{ catIdx + 1 }}</td>
+                <td class="idx-col cat-no">{{ catIdx + 1 }}</td>
                 <td class="name-col cat-name">{{ cat.name }}</td>
-                @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
+                @for (m of monthNums; track m) {
                   <td class="amount-cell cat-amount">{{ catMonthTotal(cat, m) || '' | number:'1.0-0' }}</td>
                 }
                 <td class="sum-cell cat-amount">{{ catVkupno(cat) | number:'1.0-0' }}</td>
                 <td class="pct-cell cat-pct">{{ pctOfTotal(catVkupno(cat)) }}%</td>
                 <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0' }}</td>
                 <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0' }}</td>
-                <td class="no-cell"></td>
+                <td class="cnt-col"></td>
               </tr>
 
               @for (sub of cat.subcategories; track sub.id; let subIdx = $index) {
                 <!-- Subcategory row -->
                 <tr class="sub-row">
-                  <td class="no-cell sub-no">{{ catIdx + 1 }}.{{ subIdx + 1 }}</td>
+                  <td class="idx-col sub-no">{{ catIdx + 1 }}.{{ subIdx + 1 }}</td>
                   <td class="name-col sub-name">{{ sub.name }}</td>
-                  @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
-                    <td
-                      class="amount-cell editable"
-                      (click)="startEdit(sub.id, m)"
-                    >
-                      @if (editingCell()?.subId === sub.id && editingCell()?.month === m) {
+                  @for (m of monthNums; track m) {
+                    <td class="amount-cell editable" (click)="startEdit(sub.id, m)">
+                      @if (isEditing(sub.id, m)) {
                         <input
                           class="cell-input"
-                          type="number"
-                          min="0"
+                          type="text"
+                          inputmode="numeric"
                           [value]="sub.amounts[m] ?? ''"
-                          (keydown.enter)="saveEntry($event, sub, m)"
-                          (keydown.escape)="cancelEdit()"
-                          (blur)="saveEntry($event, sub, m)"
-                          #cellInput
+                          (keydown)="onKeyMonth($event, sub, m)"
+                          (blur)="onBlurMonth($event, sub, m)"
                           (click)="$event.stopPropagation()"
                         />
                       } @else {
@@ -104,43 +101,41 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
                   }
                   <td class="sum-cell">{{ subVkupno(sub) | number:'1.0-0' }}</td>
                   <td class="pct-cell">{{ pctOfTotal(subVkupno(sub)) }}%</td>
-                  <td class="plan-cell">{{ (sub.annualPlan / 12) | number:'1.0-0' }}</td>
-                  <td
-                    class="plan-cell editable"
-                    (click)="startEditPlan(sub)"
-                  >
-                    @if (editingPlanSubId() === sub.id) {
+                  <!-- Месечно: editable input -->
+                  <td class="plan-cell editable" (click)="startEditPlan(sub.id)">
+                    @if (isEditingPlan(sub.id)) {
                       <input
                         class="cell-input"
-                        type="number"
-                        min="0"
-                        [value]="sub.annualPlan"
-                        (keydown.enter)="savePlan($event, sub)"
-                        (keydown.escape)="editingPlanSubId.set(null)"
-                        (blur)="savePlan($event, sub)"
+                        type="text"
+                        inputmode="numeric"
+                        [value]="monthlyPlan(sub) || ''"
+                        (keydown)="onKeyPlan($event, sub)"
+                        (blur)="onBlurPlan($event, sub)"
                         (click)="$event.stopPropagation()"
                       />
                     } @else {
-                      {{ sub.annualPlan | number:'1.0-0' }}
+                      {{ monthlyPlan(sub) ? (monthlyPlan(sub) | number:'1.0-0') : '' }}
                     }
                   </td>
-                  <td class="no-cell">{{ monthCount(sub) }}</td>
+                  <!-- Годишно: computed = monthly × 12 -->
+                  <td class="plan-cell annual-cell">{{ sub.annualPlan | number:'1.0-0' }}</td>
+                  <td class="cnt-col">{{ monthCount(sub) }}</td>
                 </tr>
               }
             }
 
             <!-- Grand total row -->
             <tr class="grand-total-row">
-              <td class="no-cell"></td>
+              <td class="idx-col"></td>
               <td class="name-col">ВКУПНО</td>
-              @for (m of [1,2,3,4,5,6,7,8,9,10,11,12]; track m) {
+              @for (m of monthNums; track m) {
                 <td class="amount-cell">{{ grandTotal()[m] || 0 | number:'1.0-0' }}</td>
               }
               <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0' }}</td>
               <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
               <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
               <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
-              <td class="no-cell">{{ grandMonthCount() }}</td>
+              <td class="cnt-col">{{ grandMonthCount() }}</td>
             </tr>
           </tbody>
         </table>
@@ -154,7 +149,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -169,69 +164,105 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', '
     .loading { display: flex; justify-content: center; padding: 60px; }
     .empty { text-align: center; padding: 60px; color: rgba(0,0,0,0.38); }
 
-    .table-wrapper { overflow-x: auto; }
+    .hint {
+      font-size: 12px; color: rgba(0,0,0,0.5); margin: 0 0 8px;
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .hint kbd {
+      background: #eceff1; border: 1px solid #cfd8dc; border-bottom-width: 2px;
+      border-radius: 4px; padding: 0 5px; font-size: 11px; font-family: inherit; color: #37474f;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      max-height: calc(100vh - 190px);
+    }
 
     .expense-table {
-      border-collapse: collapse;
-      font-size: 13px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12.5px;
       white-space: nowrap;
       width: 100%;
     }
 
     .expense-table th, .expense-table td {
-      border: 1px solid #ddd;
-      padding: 4px 6px;
+      border-right: 1px solid #e6e6e6;
+      border-bottom: 1px solid #e6e6e6;
+      padding: 3px 8px;
       text-align: right;
+      height: 30px;
     }
 
-    .name-col { text-align: left !important; min-width: 200px; max-width: 260px; white-space: normal; }
-    .month-col { min-width: 64px; }
-    .sum-col, .sum-cell { min-width: 80px; font-weight: 600; }
-    .pct-col, .pct-cell { min-width: 56px; }
-    .plan-col, .plan-cell { min-width: 72px; }
-    .no-col, .no-cell { min-width: 48px; }
+    /* ── Column widths ───────────────────────────────── */
+    .idx-col  { width: 44px;  min-width: 44px;  text-align: center; }
+    .name-col { min-width: 160px; max-width: 220px; text-align: left; white-space: normal; }
+    .month-col, .amount-cell { width: 58px; min-width: 58px; }
+    .sum-col, .sum-cell { width: 82px; min-width: 82px; font-weight: 600; }
+    .pct-col, .pct-cell { width: 58px; min-width: 58px; }
+    .plan-col, .plan-cell { width: 74px; min-width: 74px; }
+    .cnt-col { width: 50px; min-width: 50px; text-align: center; }
 
-    .amount-cell { min-width: 64px; }
-    .editable { cursor: pointer; }
-    .editable:hover { background: rgba(57, 73, 171, 0.06); }
-
+    /* ── Sticky header ───────────────────────────────── */
     thead th {
       background: #3949ab;
       color: white;
       font-weight: 600;
       position: sticky;
       top: 0;
-      z-index: 1;
+      z-index: 3;
+      border-right-color: #4d5cc0;
+      border-bottom-color: #4d5cc0;
     }
 
-    .grand-total-row td {
-      background: #1a237e;
-      color: white;
-      font-weight: 700;
-    }
+    /* ── Sticky first two columns (Бр. + Назив) ──────── */
+    .idx-col  { position: sticky; left: 0;    z-index: 2; }
+    .name-col { position: sticky; left: 44px; z-index: 2; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.12); }
+    thead .idx-col, thead .name-col { z-index: 4; }
 
-    .cat-row td {
-      background: #e8eaf6;
-      font-weight: 600;
-    }
-    .cat-name { font-weight: 700; }
-    .cat-pct { color: #1565c0; }
+    /* ── Row styling ─────────────────────────────────── */
+    .cat-row td   { background: #e8eaf6; font-weight: 600; }
+    .cat-name     { font-weight: 700; }
+    .cat-pct      { color: #1565c0; }
+    .cat-no       { font-weight: 700; }
 
-    .sub-row td { background: white; }
-    .sub-row:hover td { background: #f5f5f5; }
-    .sub-name { padding-left: 16px !important; }
-    .cat-no { font-weight: 700; }
-    .sub-no { padding-left: 16px !important; color: rgba(0,0,0,0.5); font-size: 12px; }
+    .sub-row td        { background: #ffffff; }
+    .sub-row:hover td  { background: #f4f6ff; }
+    .sub-name          { padding-left: 14px !important; }
+    .sub-no            { color: rgba(0,0,0,0.5); font-size: 11px; }
+    .annual-cell       { color: rgba(0,0,0,0.6); font-style: italic; }
+
+    .grand-total-row td { background: #1a237e; color: white; font-weight: 700; }
+
+    .editable { cursor: pointer; }
+    .editable:hover { background: rgba(57, 73, 171, 0.08) !important; }
 
     .cell-input {
       width: 100%;
       border: none;
       background: #fff9c4;
-      font-size: 13px;
+      font-size: 12.5px;
       text-align: right;
       outline: 2px solid #f9a825;
       padding: 2px 4px;
       box-sizing: border-box;
+      /* no spinner arrows */
+      -moz-appearance: textfield;
+    }
+    .cell-input::-webkit-outer-spin-button,
+    .cell-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    @media (max-width: 768px) {
+      .expense-table { font-size: 11.5px; }
+      .expense-table th, .expense-table td { padding: 3px 5px; height: 32px; }
+      .name-col { min-width: 118px; max-width: 140px; left: 40px; }
+      .idx-col { width: 40px; min-width: 40px; }
+      .name-col { position: sticky; }
+      .month-col, .amount-cell { width: 50px; min-width: 50px; }
+      .table-wrapper { max-height: calc(100vh - 210px); }
     }
   `]
 })
@@ -241,6 +272,7 @@ export class ExpensesPageComponent implements OnInit {
   private notifications = inject(NotificationService);
 
   readonly months = MONTHS;
+  readonly monthNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   readonly currentYear = new Date().getFullYear();
 
   year = signal(this.currentYear);
@@ -248,6 +280,10 @@ export class ExpensesPageComponent implements OnInit {
   data = signal<ExpensesYearDto | null>(null);
   editingCell = signal<{ subId: number; month: number } | null>(null);
   editingPlanSubId = signal<number | null>(null);
+
+  // Flat list of subcategories in visual order — the grid's row axis for keyboard nav.
+  flatSubs = computed<ExpenseSubcategoryDto[]>(() =>
+    (this.data()?.categories ?? []).flatMap(c => c.subcategories));
 
   ngOnInit(): void { this.load(); }
 
@@ -261,7 +297,8 @@ export class ExpensesPageComponent implements OnInit {
 
   changeYear(delta: number): void {
     this.year.update(y => y + delta);
-    this.cancelEdit();
+    this.editingCell.set(null);
+    this.editingPlanSubId.set(null);
     this.load();
   }
 
@@ -282,24 +319,18 @@ export class ExpensesPageComponent implements OnInit {
     return cat.subcategories.reduce((s, sub) => s + (sub.amounts[month] ?? 0), 0);
   }
   catVkupno(cat: ExpenseCategoryDto): number {
-    return [1,2,3,4,5,6,7,8,9,10,11,12].reduce((s, m) => s + this.catMonthTotal(cat, m), 0);
+    return this.monthNums.reduce((s, m) => s + this.catMonthTotal(cat, m), 0);
   }
   catAnnual(cat: ExpenseCategoryDto): number {
     return cat.subcategories.reduce((s, sub) => s + sub.annualPlan, 0);
   }
   catMonthly(cat: ExpenseCategoryDto): number { return this.catAnnual(cat) / 12; }
-  catPct(cat: ExpenseCategoryDto): string {
-    const annual = this.catAnnual(cat);
-    if (!annual) return '0.00';
-    return ((this.catVkupno(cat) / annual) * 100).toFixed(2);
-  }
 
   subVkupno(sub: ExpenseSubcategoryDto): number {
     return Object.values(sub.amounts).reduce((s, v) => s + v, 0);
   }
-  subPct(sub: ExpenseSubcategoryDto): string {
-    if (!sub.annualPlan) return '0.00';
-    return ((this.subVkupno(sub) / sub.annualPlan) * 100).toFixed(2);
+  monthlyPlan(sub: ExpenseSubcategoryDto): number {
+    return sub.annualPlan ? sub.annualPlan / 12 : 0;
   }
   monthCount(sub: ExpenseSubcategoryDto): number {
     return Object.values(sub.amounts).filter(v => v > 0).length;
@@ -307,7 +338,7 @@ export class ExpensesPageComponent implements OnInit {
 
   grandTotal(): Record<number, number> {
     const totals: Record<number, number> = {};
-    for (const m of [1,2,3,4,5,6,7,8,9,10,11,12]) {
+    for (const m of this.monthNums) {
       totals[m] = this.data()?.categories.reduce((s, cat) => s + this.catMonthTotal(cat, m), 0) ?? 0;
     }
     return totals;
@@ -315,64 +346,128 @@ export class ExpensesPageComponent implements OnInit {
   grandTotalVkupno(): number { return Object.values(this.grandTotal()).reduce((s, v) => s + v, 0); }
   grandAnnual(): number { return this.data()?.categories.reduce((s, cat) => s + this.catAnnual(cat), 0) ?? 0; }
   grandMonthly(): number { return this.grandAnnual() / 12; }
-  grandTotalPct(): string {
-    const annual = this.grandAnnual();
-    if (!annual) return '0.00';
-    return ((this.grandTotalVkupno() / annual) * 100).toFixed(2);
-  }
   grandMonthCount(): number {
     return this.data()?.categories.flatMap(c => c.subcategories).reduce((s, sub) => s + this.monthCount(sub), 0) ?? 0;
   }
 
-  // ── Cell editing ───────────────────────────────────────────────────────────
+  // ── Edit state ─────────────────────────────────────────────────────────────
+
+  isEditing(subId: number, month: number): boolean {
+    const c = this.editingCell();
+    return c?.subId === subId && c?.month === month;
+  }
+  isEditingPlan(subId: number): boolean { return this.editingPlanSubId() === subId; }
 
   startEdit(subId: number, month: number): void {
     this.editingPlanSubId.set(null);
     this.editingCell.set({ subId, month });
+    this.focusInput();
+  }
+  startEditPlan(subId: number): void {
+    this.editingCell.set(null);
+    this.editingPlanSubId.set(subId);
+    this.focusInput();
+  }
+  private focusInput(): void {
     setTimeout(() => {
-      const input = document.querySelector('.cell-input') as HTMLInputElement;
-      input?.focus();
+      const i = document.querySelector('.cell-input') as HTMLInputElement | null;
+      if (i) { i.focus(); i.select(); }
     });
   }
 
-  cancelEdit(): void { this.editingCell.set(null); }
+  // ── Saving ─────────────────────────────────────────────────────────────────
 
-  saveEntry(event: Event, sub: ExpenseSubcategoryDto, month: number): void {
-    const current = this.editingCell();
-    if (!current || current.subId !== sub.id || current.month !== month) return;
-    const input = event.target as HTMLInputElement;
-    const amount = parseFloat(input.value) || 0;
-    this.editingCell.set(null);
+  private parseNum(raw: string): number {
+    const n = parseFloat((raw ?? '').toString().replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? 0 : Math.max(0, Math.round(n));
+  }
+
+  private commitMonth(sub: ExpenseSubcategoryDto, month: number, raw: string): void {
+    const amount = this.parseNum(raw);
+    if (amount === (sub.amounts[month] ?? 0)) return;
     this.service.upsertEntry(sub.id, this.year(), month, amount).subscribe({
       next: () => {
-        if (amount > 0) sub.amounts[month] = amount;
-        else delete sub.amounts[month];
+        if (amount > 0) sub.amounts[month] = amount; else delete sub.amounts[month];
         this.data.set({ ...this.data()! });
       },
       error: () => this.notifications.error('Грешка при зачувување.')
     });
   }
 
-  startEditPlan(sub: ExpenseSubcategoryDto): void {
-    this.editingCell.set(null);
-    this.editingPlanSubId.set(sub.id);
-    setTimeout(() => {
-      const input = document.querySelector('.cell-input') as HTMLInputElement;
-      input?.focus();
+  private commitPlan(sub: ExpenseSubcategoryDto, raw: string): void {
+    const monthly = this.parseNum(raw);
+    const annual = monthly * 12;
+    if (annual === sub.annualPlan) return;
+    this.service.updateSubcategory(sub.id, sub.categoryId, sub.name, annual).subscribe({
+      next: () => { sub.annualPlan = annual; this.data.set({ ...this.data()! }); },
+      error: () => this.notifications.error('Грешка при зачувување.')
     });
   }
 
-  savePlan(event: Event, sub: ExpenseSubcategoryDto): void {
-    if (this.editingPlanSubId() !== sub.id) return;
+  onBlurMonth(event: Event, sub: ExpenseSubcategoryDto, month: number): void {
+    this.commitMonth(sub, month, (event.target as HTMLInputElement).value);
+    if (this.isEditing(sub.id, month)) this.editingCell.set(null);
+  }
+  onBlurPlan(event: Event, sub: ExpenseSubcategoryDto): void {
+    this.commitPlan(sub, (event.target as HTMLInputElement).value);
+    if (this.isEditingPlan(sub.id)) this.editingPlanSubId.set(null);
+  }
+
+  // ── Keyboard navigation ──────────────────────────────────────────────────
+  // Logical columns: 1..12 = months, 13 = monthly-plan (Месечно).
+
+  onKeyMonth(event: KeyboardEvent, sub: ExpenseSubcategoryDto, month: number): void {
+    const target = this.resolveTarget(event, sub, month);
+    if (target === 'ignore') return;
+    event.preventDefault();
+    if (target === 'escape') { this.editingCell.set(null); return; }
+    this.commitMonth(sub, month, (event.target as HTMLInputElement).value);
+    this.activate(target.pos, target.col);
+  }
+
+  onKeyPlan(event: KeyboardEvent, sub: ExpenseSubcategoryDto): void {
+    const target = this.resolveTarget(event, sub, PLAN_COL);
+    if (target === 'ignore') return;
+    event.preventDefault();
+    if (target === 'escape') { this.editingPlanSubId.set(null); return; }
+    this.commitPlan(sub, (event.target as HTMLInputElement).value);
+    this.activate(target.pos, target.col);
+  }
+
+  private resolveTarget(
+    event: KeyboardEvent, sub: ExpenseSubcategoryDto, col: number
+  ): { pos: number; col: number } | 'ignore' | 'escape' {
     const input = event.target as HTMLInputElement;
-    const plan = parseFloat(input.value) || 0;
-    this.editingPlanSubId.set(null);
-    this.service.updateSubcategory(sub.id, sub.categoryId, sub.name, plan).subscribe({
-      next: () => {
-        sub.annualPlan = plan;
-        this.data.set({ ...this.data()! });
-      },
-      error: () => this.notifications.error('Грешка при зачувување.')
-    });
+    const pos = this.flatSubs().findIndex(s => s.id === sub.id);
+    if (pos < 0) return 'ignore';
+    const atStart = input.selectionStart === 0 && input.selectionEnd === 0;
+    const atEnd = input.selectionStart === input.value.length;
+
+    switch (event.key) {
+      case 'Tab': return this.step(pos, col, event.shiftKey ? -1 : 1);
+      case 'Enter':
+      case 'ArrowDown': return { pos: pos + 1, col };
+      case 'ArrowUp': return { pos: pos - 1, col };
+      case 'ArrowLeft': return atStart ? this.step(pos, col, -1) : 'ignore';
+      case 'ArrowRight': return atEnd ? this.step(pos, col, 1) : 'ignore';
+      case 'Escape': return 'escape';
+      default: return 'ignore';
+    }
+  }
+
+  // Move one logical column left/right, wrapping across rows.
+  private step(pos: number, col: number, dir: number): { pos: number; col: number } {
+    let c = col + dir;
+    if (c < 1) { c = PLAN_COL; pos--; }
+    else if (c > PLAN_COL) { c = 1; pos++; }
+    return { pos, col: c };
+  }
+
+  private activate(pos: number, col: number): void {
+    const subs = this.flatSubs();
+    if (pos < 0 || pos >= subs.length || col < 1 || col > PLAN_COL) return;
+    const sub = subs[pos];
+    if (col <= 12) this.startEdit(sub.id, col);
+    else this.startEditPlan(sub.id);
   }
 }
