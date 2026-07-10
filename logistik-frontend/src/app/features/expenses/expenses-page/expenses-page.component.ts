@@ -186,7 +186,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
       border-spacing: 0;
       font-size: 12.5px;
       white-space: nowrap;
-      width: 100%;
+      width: auto;
     }
 
     .expense-table th, .expense-table td {
@@ -199,7 +199,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
 
     /* ── Column widths ───────────────────────────────── */
     .idx-col  { width: 44px;  min-width: 44px;  text-align: center !important; }
-    .name-col { min-width: 160px; max-width: 220px; text-align: left !important; white-space: normal; }
+    .name-col { min-width: 88px; text-align: left !important; white-space: nowrap; }
     .month-col, .amount-cell { width: 58px; min-width: 58px; }
     .sum-col, .sum-cell { width: 82px; min-width: 82px; font-weight: 600; }
     .pct-col, .pct-cell { width: 58px; min-width: 58px; }
@@ -258,9 +258,8 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
     @media (max-width: 768px) {
       .expense-table { font-size: 11.5px; }
       .expense-table th, .expense-table td { padding: 3px 5px; height: 32px; }
-      .name-col { min-width: 118px; max-width: 140px; left: 40px; }
+      .name-col { min-width: 88px; left: 40px; }
       .idx-col { width: 40px; min-width: 40px; }
-      .name-col { position: sticky; }
       .month-col, .amount-cell { width: 50px; min-width: 50px; }
       .table-wrapper { max-height: calc(100vh - 210px); }
     }
