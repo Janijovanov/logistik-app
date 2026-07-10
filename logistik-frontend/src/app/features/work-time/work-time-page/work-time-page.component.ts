@@ -63,7 +63,7 @@ interface RowState {
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>{{ 'common.date' | translate }}</mat-label>
         <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDateObj"
-          (dateChange)="onDateChange()" readonly (click)="picker.open()" />
+          (dateChange)="onDateChange()" placeholder="дд.мм.гггг" />
         <mat-datepicker-toggle matIconSuffix [for]="picker" />
         <mat-datepicker #picker [dateClass]="dateClass" />
       </mat-form-field>

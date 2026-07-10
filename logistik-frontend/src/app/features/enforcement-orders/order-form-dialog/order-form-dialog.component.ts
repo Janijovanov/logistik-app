@@ -44,7 +44,7 @@ interface DialogData {
 
           <mat-form-field appearance="outline">
             <mat-label>{{ 'orders.receivedDate' | translate }}</mat-label>
-            <input matInput [matDatepicker]="picker" formControlName="receivedDate" />
+            <input matInput [matDatepicker]="picker" formControlName="receivedDate" placeholder="дд.мм.гггг" />
             <mat-datepicker-toggle matIconSuffix [for]="picker" />
             <mat-datepicker #picker />
           </mat-form-field>

@@ -41,7 +41,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
   template: `
     @if (employee()) {
       <app-page-header [title]="employee()!.fullName" [subtitle]="'employees.employeeDetails' | translate">
-        <button mat-stroked-button routerLink="/companies">
+        <button mat-stroked-button [routerLink]="['/companies']" [state]="{ selectedCompanyId: companyId }">
           <mat-icon>arrow_back</mat-icon>
           {{ 'common.back' | translate }}
         </button>

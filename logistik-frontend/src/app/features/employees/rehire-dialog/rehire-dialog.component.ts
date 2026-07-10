@@ -52,7 +52,7 @@ interface DialogData {
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Нов датум на вработување</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="startDate" readonly (click)="picker.open()" />
+          <input matInput [matDatepicker]="picker" formControlName="startDate" placeholder="дд.мм.гггг" />
           <mat-datepicker-toggle matIconSuffix [for]="picker" />
           <mat-datepicker #picker />
           @if (form.get('startDate')?.hasError('required') && form.get('startDate')?.touched) {

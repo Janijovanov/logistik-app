@@ -72,7 +72,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
           <div class="form-row">
             <mat-form-field appearance="outline">
               <mat-label>{{ 'employees.employmentStartDate' | translate }}</mat-label>
-              <input matInput [matDatepicker]="startPicker" formControlName="employmentStartDate" />
+              <input matInput [matDatepicker]="startPicker" formControlName="employmentStartDate" placeholder="дд.мм.гггг" />
               <mat-datepicker-toggle matIconSuffix [for]="startPicker" />
               <mat-datepicker #startPicker />
             </mat-form-field>
@@ -80,7 +80,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
             @if (isEdit) {
               <mat-form-field appearance="outline">
                 <mat-label>{{ 'employees.employmentEndDate' | translate }}</mat-label>
-                <input matInput [matDatepicker]="endPicker" formControlName="employmentEndDate" />
+                <input matInput [matDatepicker]="endPicker" formControlName="employmentEndDate" placeholder="дд.мм.гггг" />
                 <mat-datepicker-toggle matIconSuffix [for]="endPicker" />
                 <mat-datepicker #endPicker />
               </mat-form-field>
