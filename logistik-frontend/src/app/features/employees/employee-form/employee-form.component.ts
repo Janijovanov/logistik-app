@@ -10,7 +10,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -29,7 +28,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
     CommonModule, ReactiveFormsModule,
     MatCardModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatDatepickerModule,
-    MatNativeDateModule, MatProgressSpinnerModule,
+    MatProgressSpinnerModule,
     MatDialogModule, PageHeaderComponent, TranslateModule
   ],
   template: `

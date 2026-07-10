@@ -12,7 +12,6 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CompaniesService } from '../companies.service';
@@ -33,7 +32,7 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
     CommonModule, ReactiveFormsModule, RouterLink,
     MatSelectModule, MatFormFieldModule, MatButtonModule, MatButtonToggleModule,
     MatIconModule, MatTableModule, MatDialogModule, MatTooltipModule,
-    MatProgressSpinnerModule, MatDatepickerModule, MatNativeDateModule, MatInputModule,
+    MatProgressSpinnerModule, MatDatepickerModule, MatInputModule,
     PageHeaderComponent, TranslateModule, RehireDialogComponent
   ],
   template: `

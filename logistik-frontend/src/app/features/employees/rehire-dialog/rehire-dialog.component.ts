@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmployeesService } from '../employees.service';
 import { EmployeeMonthlySalary } from '../../../core/models/employee.models';
@@ -23,7 +22,7 @@ interface DialogData {
   imports: [
     CommonModule, ReactiveFormsModule, MatDialogModule,
     MatButtonModule, MatIconModule, MatInputModule,
-    MatFormFieldModule, MatDatepickerModule, MatNativeDateModule,
+    MatFormFieldModule, MatDatepickerModule,
     MatProgressSpinnerModule
   ],
   template: `
