@@ -198,8 +198,8 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
     }
 
     /* ── Column widths ───────────────────────────────── */
-    .idx-col  { width: 44px;  min-width: 44px;  text-align: center; }
-    .name-col { min-width: 160px; max-width: 220px; text-align: left; white-space: normal; }
+    .idx-col  { width: 44px;  min-width: 44px;  text-align: center !important; }
+    .name-col { min-width: 160px; max-width: 220px; text-align: left !important; white-space: normal; }
     .month-col, .amount-cell { width: 58px; min-width: 58px; }
     .sum-col, .sum-cell { width: 82px; min-width: 82px; font-weight: 600; }
     .pct-col, .pct-cell { width: 58px; min-width: 58px; }
