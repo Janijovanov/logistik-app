@@ -59,6 +59,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
               <th class="plan-col">Месечно</th>
               <th class="plan-col">Годишно</th>
               <th class="cnt-col">бр.мес.</th>
+              <th class="spacer-col"></th>
             </tr>
           </thead>
           <tbody>
@@ -75,6 +76,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                 <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0' }}</td>
                 <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0' }}</td>
                 <td class="cnt-col"></td>
+                <td class="spacer-col"></td>
               </tr>
 
               @for (sub of cat.subcategories; track sub.id; let subIdx = $index) {
@@ -120,6 +122,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                   <!-- Годишно: computed = monthly × 12 -->
                   <td class="plan-cell annual-cell">{{ sub.annualPlan | number:'1.0-0' }}</td>
                   <td class="cnt-col">{{ monthCount(sub) }}</td>
+                  <td class="spacer-col"></td>
                 </tr>
               }
             }
@@ -136,6 +139,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
               <td class="plan-cell">{{ grandMonthly() | number:'1.0-0' }}</td>
               <td class="plan-cell">{{ grandAnnual() | number:'1.0-0' }}</td>
               <td class="cnt-col">{{ grandMonthCount() }}</td>
+              <td class="spacer-col"></td>
             </tr>
           </tbody>
         </table>
@@ -186,8 +190,12 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
       border-spacing: 0;
       font-size: 12.5px;
       white-space: nowrap;
-      width: auto;
+      width: 100%;
     }
+
+    /* Absorbs leftover width on wide screens so real columns stay compact.
+       Collapses to 0 when the 12-month grid overflows (horizontal scroll). */
+    .spacer-col { width: 100%; min-width: 0; padding: 0; border-right: none !important; }
 
     .expense-table th, .expense-table td {
       border-right: 1px solid #e6e6e6;
