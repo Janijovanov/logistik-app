@@ -24,9 +24,11 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .Include(u => u.CompanyPermissions).ThenInclude(p => p.Company)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
 
-    public async Task<(IReadOnlyList<User> Items, int Total)> GetPagedAsync(int page, int pageSize, string? search, CancellationToken ct = default)
+    public async Task<(IReadOnlyList<User> Items, int Total)> GetPagedAsync(int page, int pageSize, string? search, bool? isActive = null, CancellationToken ct = default)
     {
         var query = _dbSet.Include(u => u.Role).AsQueryable();
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search) || u.FirstName.Contains(search) || u.LastName.Contains(search));
 

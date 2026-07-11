@@ -10,8 +10,9 @@ export class UsersService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/users`;
 
-  getAll(page = 1, pageSize = 20, search = ''): Observable<PaginatedResult<User>> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
+  getAll(page = 1, pageSize = 20, search = '', isActive?: boolean): Observable<PaginatedResult<User>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize).set('search', search);
+    if (isActive !== undefined) params = params.set('isActive', isActive);
     return this.http.get<PaginatedResult<User>>(this.base, { params });
   }
 
@@ -29,6 +30,10 @@ export class UsersService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  activate(id: number): Observable<void> {
+    return this.http.post<void>(`${this.base}/${id}/activate`, {});
   }
 
   assignPermission(userId: number, request: AssignPermissionRequest): Observable<void> {

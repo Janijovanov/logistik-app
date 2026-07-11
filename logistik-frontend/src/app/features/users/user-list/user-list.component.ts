@@ -44,6 +44,10 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           <input matInput [formControl]="searchCtrl" />
           <mat-icon matSuffix>search</mat-icon>
         </mat-form-field>
+        <button mat-stroked-button class="toggle-inactive" [class.on]="showInactive()" (click)="toggleInactive()">
+          <mat-icon>{{ showInactive() ? 'group' : 'person_off' }}</mat-icon>
+          {{ (showInactive() ? 'users.showActive' : 'users.showInactive') | translate }}
+        </button>
       </div>
 
       @if (loading()) {
@@ -88,9 +92,15 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               <button mat-icon-button [routerLink]="[u.id, 'edit']" [matTooltip]="'common.edit' | translate">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deactivate(u)" [matTooltip]="'users.deactivate' | translate">
-                <mat-icon>person_off</mat-icon>
-              </button>
+              @if (showInactive()) {
+                <button mat-icon-button color="primary" (click)="activate(u)" [matTooltip]="'users.activate' | translate">
+                  <mat-icon>restart_alt</mat-icon>
+                </button>
+              } @else if (u.role !== 'Admin') {
+                <button mat-icon-button color="warn" (click)="deactivate(u)" [matTooltip]="'users.deactivate' | translate">
+                  <mat-icon>person_off</mat-icon>
+                </button>
+              }
             </td>
           </ng-container>
 
@@ -114,11 +124,14 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     </div>
   `,
   styles: [`
-    .table-toolbar { padding: 16px 16px 0; }
+    .table-toolbar { padding: 16px 16px 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .search-field { width: 320px; }
+    .toggle-inactive { height: 40px; color: rgba(0,0,0,0.6); }
+    .toggle-inactive.on { color: #e65100; border-color: #e65100; background: #fff3e0; }
     @media (max-width: 768px) {
       .table-toolbar { padding: 12px 12px 0; }
       .search-field { width: 100%; }
+      .toggle-inactive { width: 100%; }
     }
     .table-loading { display: flex; justify-content: center; padding: 48px; }
     .actions-cell { text-align: right; white-space: nowrap; }
@@ -142,6 +155,7 @@ export class UserListComponent implements OnInit {
   searchCtrl = new FormControl('');
   loading = signal(true);
   result = signal<PaginatedResult<User> | null>(null);
+  showInactive = signal(false);
   page = 1;
   pageSize = 20;
 
@@ -155,9 +169,22 @@ export class UserListComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.service.getAll(this.page, this.pageSize, this.searchCtrl.value ?? '').subscribe({
+    this.service.getAll(this.page, this.pageSize, this.searchCtrl.value ?? '', !this.showInactive()).subscribe({
       next: (data) => { this.result.set(data); this.loading.set(false); },
       error: () => this.loading.set(false)
+    });
+  }
+
+  toggleInactive(): void {
+    this.showInactive.update(v => !v);
+    this.page = 1;
+    this.load();
+  }
+
+  activate(user: User): void {
+    this.service.activate(user.id).subscribe({
+      next: () => { this.notifications.success(this.translate.instant('users.userActivated')); this.load(); },
+      error: (err: any) => this.notifications.error(err.error?.message ?? this.translate.instant('errors.failedToLoad'))
     });
   }
 

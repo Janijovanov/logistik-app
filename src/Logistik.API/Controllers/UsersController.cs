@@ -18,8 +18,8 @@ public class UsersController : ControllerBase
     public UsersController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResult<UserDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, CancellationToken ct = default)
-        => Ok(await _mediator.Send(new GetUsersQuery(page, pageSize, search), ct));
+    public async Task<ActionResult<PaginatedResult<UserDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] bool? isActive = null, CancellationToken ct = default)
+        => Ok(await _mediator.Send(new GetUsersQuery(page, pageSize, search, isActive), ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserDetailDto>> GetById(int id, CancellationToken ct)
@@ -41,10 +41,20 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    // Soft-deactivate (hides the user from the active list).
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await _mediator.Send(new DeleteUserCommand(id), ct);
+        if (!result.Succeeded) return BadRequest(result.Errors);
+        return NoContent();
+    }
+
+    // Re-activate a previously deactivated user.
+    [HttpPost("{id:int}/activate")]
+    public async Task<ActionResult> Activate(int id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new SetUserActiveCommand(id, true), ct);
         if (!result.Succeeded) return BadRequest(result.Errors);
         return NoContent();
     }
