@@ -27,3 +27,9 @@ export interface WorkTimeUserDto {
   id: number;
   fullName: string;
 }
+
+export interface WorkTimeMonthSummary {
+  month: number;
+  documentCount: number;
+  minutes: number;
+}

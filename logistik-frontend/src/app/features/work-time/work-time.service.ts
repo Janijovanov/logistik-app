@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeEntryDto, WorkTimeUserDto } from '../../core/models/work-time.models';
+import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeEntryDto, WorkTimeUserDto, WorkTimeMonthSummary } from '../../core/models/work-time.models';
 
 @Injectable({ providedIn: 'root' })
 export class WorkTimeService {
@@ -57,6 +57,12 @@ export class WorkTimeService {
     userId?: number;
   }): Observable<void> {
     return this.http.post<void>(`${this.base}/entries`, payload);
+  }
+
+  getYearlySummary(companyId: number, year: number, userId?: number): Observable<WorkTimeMonthSummary[]> {
+    let url = `${this.base}/yearly-summary?companyId=${companyId}&year=${year}`;
+    if (userId) url += `&userId=${userId}`;
+    return this.http.get<WorkTimeMonthSummary[]>(url);
   }
 
   getEntryDates(companyId: number, userId?: number): Observable<string[]> {

@@ -15,7 +15,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkTimeService } from '../work-time.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeEntryDto, WorkTimeUserDto } from '../../../core/models/work-time.models';
+import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeEntryDto, WorkTimeUserDto, WorkTimeMonthSummary } from '../../../core/models/work-time.models';
 import { WorkTimeManagerDialogComponent } from '../work-time-manager-dialog/work-time-manager-dialog.component';
 
 interface RowState {
@@ -89,6 +89,44 @@ interface RowState {
       }
     </div>
 
+    <!-- Per-company yearly breakdown by month -->
+    @if (selectedCompanyId && yearlySummary().length > 0) {
+      <div class="year-summary">
+        <h3 class="year-summary-title">
+          {{ 'workTime.yearSummary' | translate }} — {{ selectedDateObj.getFullYear() }}
+        </h3>
+        <div class="table-wrapper">
+          <table class="wt-table aligned">
+            <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /></colgroup>
+            <thead>
+              <tr>
+                <th>{{ 'workTime.month' | translate }}</th>
+                <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of yearlySummary(); track row.month) {
+                <tr>
+                  <td class="name-cell">{{ monthName(row.month) }}</td>
+                  <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ row.documentCount }}</td>
+                  <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ row.minutes }}</td>
+                  <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(row.minutes, row.documentCount) | number:'1.0-1':'mk' }}</td>
+                </tr>
+              }
+              <tr class="grand-total-row">
+                <td class="name-cell"><strong>{{ 'workTime.total' | translate }}</strong></td>
+                <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ yearTotalDocs() }}</strong></td>
+                <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ yearTotalMinutes() }}</strong></td>
+                <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(yearTotalMinutes(), yearTotalDocs()) | number:'1.0-1':'mk' }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
     @if (!selectedCompanyId) {
       <div class="empty-state">
         <mat-icon>business</mat-icon>
@@ -111,12 +149,13 @@ interface RowState {
                 <h3 class="group-title">{{ group.userName }}</h3>
                 <div class="table-wrapper">
                   <table class="wt-table aligned">
-                    <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+                    <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
                     <thead>
                       <tr>
                         <th>{{ 'workTime.docType' | translate }}</th>
                         <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                         <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                        <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
                         <th class="notes-col">{{ 'common.notes' | translate }}</th>
                       </tr>
                     </thead>
@@ -126,6 +165,7 @@ interface RowState {
                           <td class="name-cell">{{ entry.documentTypeName }}</td>
                           <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ entry.documentCount }}</td>
                           <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ entry.minutes }}</td>
+                          <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(entry.minutes, entry.documentCount) | number:'1.0-1':'mk' }}</td>
                           <td class="notes-col" [attr.data-label]="'common.notes' | translate">{{ entry.notes || '—' }}</td>
                         </tr>
                       }
@@ -133,6 +173,7 @@ interface RowState {
                         <td class="name-cell"><strong>{{ 'workTime.total' | translate }}</strong></td>
                         <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
                         <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
+                        <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(group.entries, 'minutes'), groupTotal(group.entries, 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
                         <td class="ghost-cell"></td>
                       </tr>
                     </tbody>
@@ -145,12 +186,13 @@ interface RowState {
           <!-- Day + month totals for the company -->
           <div class="company-total">
             <table class="wt-table aligned">
-              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
               <thead>
                 <tr>
                   <th></th>
                   <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                   <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                  <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
                   <th class="notes-col"></th>
                 </tr>
               </thead>
@@ -160,6 +202,7 @@ interface RowState {
                     <td class="name-cell"><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(entries(), 'minutes'), groupTotal(entries(), 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
                     <td class="ghost-cell notes-col"></td>
                   </tr>
                 }
@@ -167,6 +210,7 @@ interface RowState {
                   <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
                   <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
                   <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
                   <td class="ghost-cell notes-col"></td>
                 </tr>
               </tbody>
@@ -186,7 +230,7 @@ interface RowState {
               <table class="wt-table editable-table">
                 <colgroup>
                   <col class="col-order" /><col class="col-name" /><col class="col-num" />
-                  <col class="col-num" /><col /><col class="col-action" />
+                  <col class="col-num" /><col class="col-num" /><col /><col class="col-action" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -194,6 +238,7 @@ interface RowState {
                     <th>{{ 'workTime.docType' | translate }}</th>
                     <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                     <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                    <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
                     <th class="notes-col">{{ 'common.notes' | translate }}</th>
                     <th class="action-col"></th>
                   </tr>
@@ -223,6 +268,7 @@ interface RowState {
                           placeholder="0"
                         />
                       </td>
+                      <td class="num-col avg-cell" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(+row.minutes, +row.documentCount) | number:'1.0-1':'mk' }}</td>
                       <td class="notes-col" [attr.data-label]="'common.notes' | translate">
                         <input
                           type="text"
@@ -256,6 +302,7 @@ interface RowState {
                     <td class="name-cell"><strong>{{ 'workTime.dayTotal' | translate }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ totalDocs() }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ totalMinutes() }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(totalMinutes(), totalDocs()) | number:'1.0-1':'mk' }}</strong></td>
                     <td colspan="2" class="ghost-cell"></td>
                   </tr>
                   <tr class="grand-total-row month-total-row">
@@ -263,6 +310,7 @@ interface RowState {
                     <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
                     <td colspan="2" class="ghost-cell"></td>
                   </tr>
                 </tfoot>
@@ -359,6 +407,9 @@ interface RowState {
       justify-content: flex-end;
     }
     .admin-summary { display: flex; flex-direction: column; gap: 16px; }
+    .year-summary { margin: 0 0 24px; }
+    .year-summary-title { font-size: 15px; font-weight: 600; margin: 0 0 8px; color: #3949ab; }
+    .avg-cell { color: rgba(0,0,0,0.55); }
     @media (max-width: 768px) {
       .header-actions { width: 100%; }
       .header-actions > button { flex: 1 1 auto; }
@@ -457,7 +508,14 @@ export class WorkTimePageComponent implements OnInit {
   rows = signal<RowState[]>([]);
   loading = signal(false);
   monthlyTotal = signal<{ documentCount: number; minutes: number }>({ documentCount: 0, minutes: 0 });
+  yearlySummary = signal<WorkTimeMonthSummary[]>([]);
   private entryDates = new Set<string>();
+
+  // Average minutes per document, used across every table.
+  avgTime(minutes: number, docs: number): number { return docs > 0 ? minutes / docs : 0; }
+  monthName(m: number): string { return WorkTimePageComponent.MK_MONTHS[m - 1] ?? ''; }
+  yearTotalDocs(): number { return this.yearlySummary().reduce((s, r) => s + r.documentCount, 0); }
+  yearTotalMinutes(): number { return this.yearlySummary().reduce((s, r) => s + r.minutes, 0); }
 
   // Highlights calendar days that already have entries for the selected company/worker.
   dateClass = (d: Date): string => {
@@ -543,6 +601,11 @@ export class WorkTimePageComponent implements OnInit {
     this.svc.getEntryDates(this.selectedCompanyId, userId ?? undefined).subscribe({
       next: dates => this.entryDates = new Set(dates),
       error: () => this.entryDates.clear()
+    });
+
+    this.svc.getYearlySummary(this.selectedCompanyId, this.selectedDateObj.getFullYear(), userId ?? undefined).subscribe({
+      next: s => this.yearlySummary.set(s),
+      error: () => this.yearlySummary.set([])
     });
   }
 

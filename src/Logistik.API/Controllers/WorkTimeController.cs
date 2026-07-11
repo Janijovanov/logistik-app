@@ -180,6 +180,48 @@ public class WorkTimeController : ControllerBase
         return Ok(entries);
     }
 
+    [HttpGet("yearly-summary")]
+    public async Task<IActionResult> GetYearlySummary(
+        [FromQuery] int companyId,
+        [FromQuery] int year,
+        [FromQuery] int? userId,
+        CancellationToken ct)
+    {
+        var start = new DateOnly(year, 1, 1);
+        var end = start.AddYears(1);
+
+        var query = _db.WorkTimeEntries
+            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= start && e.Date < end);
+
+        if (_currentUser.IsAdmin)
+        {
+            if (userId.HasValue)
+                query = query.Where(e => e.UserId == userId.Value);
+        }
+        else
+        {
+            query = query.Where(e => e.UserId == _currentUser.UserId);
+        }
+
+        // Pull minimal data and group in memory (small volume: one company / one year)
+        var rows = await query
+            .Select(e => new { e.Date, e.DocumentCount, e.Minutes })
+            .ToListAsync(ct);
+
+        var byMonth = rows
+            .GroupBy(e => e.Date.Month)
+            .Select(g => new
+            {
+                month = g.Key,
+                documentCount = g.Sum(e => e.DocumentCount),
+                minutes = g.Sum(e => e.Minutes)
+            })
+            .OrderBy(x => x.month)
+            .ToList();
+
+        return Ok(byMonth);
+    }
+
     [HttpGet("entry-dates")]
     public async Task<IActionResult> GetEntryDates(
         [FromQuery] int companyId,
