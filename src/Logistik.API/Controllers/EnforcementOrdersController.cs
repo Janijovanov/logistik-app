@@ -50,6 +50,36 @@ public class EnforcementOrdersController : ControllerBase
         return StatusCode(201, new { id = result.Value });
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult> Update(int companyId, int employeeId, int id, [FromBody] UpdateEnforcementOrderRequest request, CancellationToken ct)
+    {
+        var order = await _db.EnforcementOrders
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(o => o.Id == id && o.EmployeeId == employeeId, ct);
+        if (order is null) return NotFound();
+
+        if (string.IsNullOrWhiteSpace(request.OrderNumber))
+            return BadRequest(new { message = "Бројот на решение е задолжителен." });
+        if (request.TotalAmount <= 0)
+            return BadRequest(new { message = "Вкупниот износ мора да биде поголем од 0." });
+        if (request.TotalAmount < order.TotalPaid)
+            return BadRequest(new { message = $"Вкупниот износ не смее да биде помал од веќе уплатеното ({order.TotalPaid:0} ден.)." });
+
+        order.OrderNumber = request.OrderNumber.Trim();
+        order.ExecutorName = request.ExecutorName;
+        order.ExecutorEmail = request.ExecutorEmail;
+        order.ExecutorBankAccount = request.ExecutorBankAccount;
+        order.TotalAmount = request.TotalAmount;
+        order.MonthlyDeduction = request.MonthlyDeduction;
+        order.ReceivedDate = request.ReceivedDate;
+        order.RemainingAmount = request.TotalAmount - order.TotalPaid;
+        order.RecalculateStatus();
+        order.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
     [HttpPost("{id:int}/mark-paid")]
     public async Task<ActionResult> MarkPaid(int companyId, int employeeId, int id, CancellationToken ct)
     {

@@ -13,11 +13,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { EnforcementOrdersService } from '../enforcement-orders.service';
 import { ExecutorsService, Executor } from '../executors.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { EnforcementOrder } from '../../../core/models/enforcement-order.models';
 
 interface DialogData {
   companyId: number;
   employeeId: number;
   netSalary: number;
+  order?: EnforcementOrder;
 }
 
 @Component({
@@ -30,7 +32,7 @@ interface DialogData {
     TranslateModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ 'orders.newOrder' | translate }}</h2>
+    <h2 mat-dialog-title>{{ (isEdit ? 'orders.editOrder' : 'orders.newOrder') | translate }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="dialog-form">
         <div class="form-row-2">
@@ -102,7 +104,7 @@ interface DialogData {
       <button mat-button [mat-dialog-close]="false">{{ 'common.cancel' | translate }}</button>
       <button mat-flat-button color="primary" (click)="submit()" [disabled]="saving || loadingExecutors() || !canSubmit()">
         @if (saving) { <mat-spinner diameter="18" /> }
-        {{ 'orders.createOrder' | translate }}
+        {{ (isEdit ? 'common.saveChanges' : 'orders.createOrder') | translate }}
       </button>
     </mat-dialog-actions>
   `,
@@ -149,10 +151,34 @@ export class OrderFormDialogComponent implements OnInit {
     monthlyDeduction: [null as number | null, [Validators.min(1)]]
   });
 
+  get isEdit(): boolean { return !!this.data.order; }
+
   ngOnInit(): void {
     this.executorsService.getAll().subscribe({
-      next: list => { this.executors.set(list); this.loadingExecutors.set(false); },
+      next: list => {
+        this.executors.set(list);
+        this.loadingExecutors.set(false);
+        if (this.isEdit) this.prefillFromOrder();
+      },
       error: () => this.loadingExecutors.set(false)
+    });
+  }
+
+  private prefillFromOrder(): void {
+    const o = this.data.order!;
+    // Match the stored executor back to one in the list (orders keep executor
+    // details denormalized, not a FK).
+    const match = this.executors().find(e =>
+      e.name === o.executorName && e.bankAccount === o.executorBankAccount)
+      ?? this.executors().find(e => e.name === o.executorName)
+      ?? null;
+    this.selectedExecutor.set(match);
+    this.form.patchValue({
+      orderNumber: o.orderNumber,
+      receivedDate: new Date(o.receivedDate),
+      executorId: match?.id ?? null,
+      totalAmount: o.totalAmount,
+      monthlyDeduction: o.monthlyDeduction ?? null
     });
   }
 
@@ -177,7 +203,7 @@ export class OrderFormDialogComponent implements OnInit {
     const d = v.receivedDate as Date;
     const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
 
-    this.service.create(this.data.companyId, this.data.employeeId, {
+    const payload = {
       orderNumber: v.orderNumber!,
       executorName: executor.name,
       executorEmail: executor.email,
@@ -185,12 +211,23 @@ export class OrderFormDialogComponent implements OnInit {
       totalAmount: v.totalAmount!,
       monthlyDeduction: v.monthlyDeduction ?? undefined,
       receivedDate: `${y}-${m}-${day}`
-    }).subscribe({
-      next: (res: { id: number }) => { this.saving = false; this.dialogRef.close(res.id); },
-      error: (err: any) => {
-        this.saving = false;
-        if (err.status < 500) this.notifications.error(err.error?.message || this.translate.instant('errors.failedToLoad'));
-      }
-    });
+    };
+
+    const onError = (err: any) => {
+      this.saving = false;
+      if (err.status < 500) this.notifications.error(err.error?.message || this.translate.instant('errors.failedToLoad'));
+    };
+
+    if (this.isEdit) {
+      this.service.update(this.data.companyId, this.data.employeeId, this.data.order!.id, payload).subscribe({
+        next: () => { this.saving = false; this.dialogRef.close(this.data.order!.id); },
+        error: onError
+      });
+    } else {
+      this.service.create(this.data.companyId, this.data.employeeId, payload).subscribe({
+        next: (res: { id: number }) => { this.saving = false; this.dialogRef.close(res.id); },
+        error: onError
+      });
+    }
   }
 }

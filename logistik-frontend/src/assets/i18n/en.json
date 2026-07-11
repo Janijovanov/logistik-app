@@ -144,6 +144,7 @@
   "orders": {
     "addOrder": "Add Order",
     "newOrder": "New Enforcement Order",
+    "editOrder": "Edit Enforcement Order",
     "orderNo": "Order No.",
     "executor": "Executor",
     "received": "Received",

@@ -20,4 +20,4 @@ public record CreateEnforcementOrderRequest(
 
 public record UpdateEnforcementOrderRequest(
     string OrderNumber, string ExecutorName, string ExecutorEmail, string ExecutorBankAccount,
-    decimal TotalAmount, DateOnly ReceivedDate);
+    decimal TotalAmount, decimal? MonthlyDeduction, DateOnly ReceivedDate);

@@ -273,6 +273,9 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
                     <mat-icon style="color:#3949ab">email</mat-icon>
                   </button>
                   @if (authService.canEditCompany(companyId)) {
+                    <button mat-icon-button matTooltip="Измени налог" (click)="openEditOrder(o)">
+                      <mat-icon style="color:#00897b">edit</mat-icon>
+                    </button>
                     <button mat-icon-button matTooltip="Избриши налог" (click)="deleteOrder(o)">
                       <mat-icon style="color:#c62828">delete</mat-icon>
                     </button>
@@ -484,6 +487,19 @@ export class EmployeeDetailComponent implements OnInit {
           maxWidth: '95vw',
           data: { companyId: this.companyId, employeeId: this.employeeId, orderId }
         });
+      }
+    });
+  }
+
+  openEditOrder(order: EnforcementOrder): void {
+    this.dialog.open(OrderFormDialogComponent, {
+      width: '560px',
+      maxWidth: '95vw',
+      data: { companyId: this.companyId, employeeId: this.employeeId, netSalary: this.employee()?.netSalary, order }
+    }).afterClosed().subscribe((saved: number | undefined) => {
+      if (saved) {
+        this.notifications.success(this.translate.instant('common.saveChanges'));
+        this.load();
       }
     });
   }
