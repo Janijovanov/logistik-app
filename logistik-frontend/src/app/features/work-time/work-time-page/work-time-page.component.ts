@@ -138,7 +138,8 @@ interface RowState {
       <!-- Admin: showing all users grouped -->
       @if (isAdmin() && !selectedUserId) {
         <div class="admin-summary">
-          <!-- Day + month totals for the company (shown first) -->
+          <!-- Day + month totals for the company (only when there is data) -->
+          @if (entries().length > 0 || monthlyTotal().documentCount > 0 || monthlyTotal().minutes > 0) {
           <div class="company-total">
             <table class="wt-table aligned">
               <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
@@ -171,6 +172,7 @@ interface RowState {
               </tbody>
             </table>
           </div>
+          }
 
           @if (adminGroups().length === 0) {
             <div class="empty-state">
