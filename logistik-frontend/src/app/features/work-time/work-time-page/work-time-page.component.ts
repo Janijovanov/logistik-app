@@ -138,6 +138,40 @@ interface RowState {
       <!-- Admin: showing all users grouped -->
       @if (isAdmin() && !selectedUserId) {
         <div class="admin-summary">
+          <!-- Day + month totals for the company (shown first) -->
+          <div class="company-total">
+            <table class="wt-table aligned">
+              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
+                  <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
+                  <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+                  <th class="notes-col"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (adminGroups().length > 0) {
+                  <tr class="grand-total-row">
+                    <td class="name-cell"><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
+                    <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(entries(), 'minutes'), groupTotal(entries(), 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
+                    <td class="ghost-cell notes-col"></td>
+                  </tr>
+                }
+                <tr class="grand-total-row month-total-row">
+                  <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
+                  <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
+                  <td class="ghost-cell notes-col"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           @if (adminGroups().length === 0) {
             <div class="empty-state">
               <mat-icon>inbox</mat-icon>
@@ -182,40 +216,6 @@ interface RowState {
               </div>
             }
           }
-
-          <!-- Day + month totals for the company -->
-          <div class="company-total">
-            <table class="wt-table aligned">
-              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
-              <thead>
-                <tr>
-                  <th></th>
-                  <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
-                  <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
-                  <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
-                  <th class="notes-col"></th>
-                </tr>
-              </thead>
-              <tbody>
-                @if (adminGroups().length > 0) {
-                  <tr class="grand-total-row">
-                    <td class="name-cell"><strong>{{ 'workTime.companyTotal' | translate }}</strong></td>
-                    <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
-                    <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
-                    <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(entries(), 'minutes'), groupTotal(entries(), 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
-                    <td class="ghost-cell notes-col"></td>
-                  </tr>
-                }
-                <tr class="grand-total-row month-total-row">
-                  <td class="name-cell"><strong>{{ 'workTime.monthTotal' | translate }} ({{ monthLabel() }})</strong></td>
-                  <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
-                  <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
-                  <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
-                  <td class="ghost-cell notes-col"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
       } @else {
         <!-- User entry form (own data, or admin filtered to one user) -->
