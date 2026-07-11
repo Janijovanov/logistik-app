@@ -21,6 +21,13 @@ public class SoftDeleteEmployeeCommandHandler : IRequestHandler<SoftDeleteEmploy
         if (employee.CompanyId != request.CompanyId)
             return Result.Failure("Employee does not belong to this company.");
 
+        // Block deletion while the employee still has enforcement orders —
+        // those must be deleted first so no orders are left orphaned.
+        var orders = await _uow.EnforcementOrders.GetOrdersForEmployeeAsync(request.Id, includeArchived: true, ct);
+        if (orders.Count > 0)
+            return Result.Failure(
+                $"Вработениот има {orders.Count} извршно решение(ја). Прво избришете ги извршните решенија, па потоа вработениот.");
+
         employee.IsDeleted = true;
         employee.DeletedAt = DateTime.UtcNow;
         _uow.Employees.Update(employee);
