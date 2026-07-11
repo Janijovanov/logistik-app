@@ -97,13 +97,14 @@ interface RowState {
         </h3>
         <div class="table-wrapper">
           <table class="wt-table aligned">
-            <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /></colgroup>
+            <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
             <thead>
               <tr>
                 <th>{{ 'workTime.month' | translate }}</th>
                 <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                 <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
                 <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+                <th class="notes-col"></th>
               </tr>
             </thead>
             <tbody>
@@ -113,6 +114,7 @@ interface RowState {
                   <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ row.documentCount }}</td>
                   <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ row.minutes }}</td>
                   <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(row.minutes, row.documentCount) | number:'1.0-1':'mk' }}</td>
+                  <td class="ghost-cell notes-col"></td>
                 </tr>
               }
               <tr class="grand-total-row">
@@ -120,6 +122,7 @@ interface RowState {
                 <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ yearTotalDocs() }}</strong></td>
                 <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ yearTotalMinutes() }}</strong></td>
                 <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(yearTotalMinutes(), yearTotalDocs()) | number:'1.0-1':'mk' }}</strong></td>
+                <td class="ghost-cell notes-col"></td>
               </tr>
             </tbody>
           </table>
