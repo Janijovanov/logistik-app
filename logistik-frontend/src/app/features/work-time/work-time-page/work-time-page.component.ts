@@ -470,13 +470,13 @@ interface RowState {
        numbers are two narrow centered columns, notes take the rest. */
     .wt-table.aligned { table-layout: fixed; width: 100%; }
     .aligned .col-name { width: 40%; }
-    .aligned .col-num { width: 150px; }
+    .aligned .col-num { width: 175px; }
     .aligned td, .aligned th { overflow: hidden; text-overflow: ellipsis; }
     /* Editable table: same fixed layout so header, inputs and totals line up */
     .editable-table { table-layout: fixed; width: 100%; }
     .editable-table .col-order { width: 48px; }
     .editable-table .col-name { width: 38%; }
-    .editable-table .col-num { width: 150px; }
+    .editable-table .col-num { width: 175px; }
     .editable-table .col-action { width: 56px; }
     .grand-total-row td {
       background: #e8eaf6 !important;
