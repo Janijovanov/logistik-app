@@ -51,4 +51,8 @@ public class EnforcementOrderRepository : BaseRepository<EnforcementOrder>, IEnf
             .IgnoreQueryFilters()
             .Include(o => o.Employee).ThenInclude(e => e.Company)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task<bool> OrderNumberExistsAsync(string orderNumber, int? excludeId = null, CancellationToken ct = default)
+        => await _dbSet.IgnoreQueryFilters()
+            .AnyAsync(o => o.OrderNumber == orderNumber && (excludeId == null || o.Id != excludeId), ct);
 }

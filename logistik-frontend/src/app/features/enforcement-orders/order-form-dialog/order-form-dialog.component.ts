@@ -220,7 +220,11 @@ export class OrderFormDialogComponent implements OnInit {
 
     if (this.isEdit) {
       this.service.update(this.data.companyId, this.data.employeeId, this.data.order!.id, payload).subscribe({
-        next: () => { this.saving = false; this.dialogRef.close(this.data.order!.id); },
+        next: (res: { message?: string }) => {
+          this.saving = false;
+          if (res?.message) this.notifications.success(res.message);
+          this.dialogRef.close(this.data.order!.id);
+        },
         error: onError
       });
     } else {

@@ -34,8 +34,8 @@ export class EnforcementOrdersService {
     return this.http.post<{ id: number }>(this.base(companyId, employeeId), request);
   }
 
-  update(companyId: number, employeeId: number, orderId: number, request: UpdateEnforcementOrderRequest): Observable<void> {
-    return this.http.put<void>(`${this.base(companyId, employeeId)}/${orderId}`, request);
+  update(companyId: number, employeeId: number, orderId: number, request: UpdateEnforcementOrderRequest): Observable<{ message?: string }> {
+    return this.http.put<{ message?: string }>(`${this.base(companyId, employeeId)}/${orderId}`, request);
   }
 
   markPaid(companyId: number, employeeId: number, orderId: number): Observable<void> {

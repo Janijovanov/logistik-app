@@ -58,26 +58,59 @@ public class EnforcementOrdersController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == id && o.EmployeeId == employeeId, ct);
         if (order is null) return NotFound();
 
-        if (string.IsNullOrWhiteSpace(request.OrderNumber))
+        var orderNumber = (request.OrderNumber ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(orderNumber))
             return BadRequest(new { message = "Бројот на решение е задолжителен." });
         if (request.TotalAmount <= 0)
             return BadRequest(new { message = "Вкупниот износ мора да биде поголем од 0." });
-        if (request.TotalAmount < order.TotalPaid)
-            return BadRequest(new { message = $"Вкупниот износ не смее да биде помал од веќе уплатеното ({order.TotalPaid:0} ден.)." });
 
-        order.OrderNumber = request.OrderNumber.Trim();
+        // No two orders may share the same number (excluding this one)
+        if (await _db.EnforcementOrders.IgnoreQueryFilters()
+                .AnyAsync(o => o.OrderNumber == orderNumber && o.Id != id, ct))
+            return BadRequest(new { message = $"Веќе постои друго извршно решение со број И.бр. {orderNumber}." });
+
+        var wasClosed = order.Status == OrderStatus.Completed || order.IsArchived;
+
+        order.OrderNumber = orderNumber;
         order.ExecutorName = request.ExecutorName;
         order.ExecutorEmail = request.ExecutorEmail;
         order.ExecutorBankAccount = request.ExecutorBankAccount;
         order.TotalAmount = request.TotalAmount;
-        order.MonthlyDeduction = request.MonthlyDeduction;
+        order.MonthlyDeduction = request.MonthlyDeduction; // null = auto 1/5 of salary
         order.ReceivedDate = request.ReceivedDate;
         order.RemainingAmount = request.TotalAmount - order.TotalPaid;
-        order.RecalculateStatus();
         order.UpdatedAt = DateTime.UtcNow;
 
+        string message;
+        if (order.RemainingAmount > 0)
+        {
+            // Still owing — (re)activate so collection continues on this order.
+            order.IsArchived = false;
+            order.CompletedDate = null;
+            order.RecalculateStatus();
+            if (order.Status is OrderStatus.Completed)
+                order.Status = OrderStatus.Active;
+            message = wasClosed
+                ? $"Решението е повторно активирано. Преостануваат {order.RemainingAmount:0} ден. за наплата."
+                : $"Зачувано. Преостануваат {order.RemainingAmount:0} ден. за наплата.";
+        }
+        else if (order.RemainingAmount < 0)
+        {
+            // Paid more than the (new, lower) total — mark completed and report the surplus.
+            var surplus = -order.RemainingAmount;
+            order.Status = OrderStatus.Completed;
+            order.CompletedDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
+            message = $"Решението е претплатено за {surplus:0} ден. (наплатено {order.TotalPaid:0} од {order.TotalAmount:0}).";
+        }
+        else
+        {
+            order.Status = OrderStatus.Completed;
+            order.CompletedDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
+            message = "Решението е целосно наплатено.";
+        }
+
         await _db.SaveChangesAsync(ct);
-        return NoContent();
+        return Ok(new { message, order.RemainingAmount, status = order.Status.ToString() });
     }
 
     [HttpPost("{id:int}/mark-paid")]

@@ -497,10 +497,7 @@ export class EmployeeDetailComponent implements OnInit {
       maxWidth: '95vw',
       data: { companyId: this.companyId, employeeId: this.employeeId, netSalary: this.employee()?.netSalary, order }
     }).afterClosed().subscribe((saved: number | undefined) => {
-      if (saved) {
-        this.notifications.success(this.translate.instant('common.saveChanges'));
-        this.load();
-      }
+      if (saved) this.load();
     });
   }
 

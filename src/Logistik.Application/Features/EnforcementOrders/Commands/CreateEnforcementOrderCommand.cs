@@ -34,13 +34,16 @@ public class CreateEnforcementOrderCommandHandler : IRequestHandler<CreateEnforc
         if (employee.CompanyId != request.CompanyId)
             return Result<int>.Failure("Employee does not belong to this company.");
 
+        if (await _uow.EnforcementOrders.OrderNumberExistsAsync(request.OrderNumber.Trim(), null, ct))
+            return Result<int>.Failure($"Веќе постои извршно решение со број И.бр. {request.OrderNumber.Trim()}.");
+
         var activeOrder = await _uow.EnforcementOrders.GetActiveOrderForEmployeeAsync(request.EmployeeId, ct);
         var maxQueue = await _uow.EnforcementOrders.GetMaxQueuePositionAsync(request.EmployeeId, ct);
 
         var order = new EnforcementOrder
         {
             EmployeeId = request.EmployeeId,
-            OrderNumber = request.OrderNumber,
+            OrderNumber = request.OrderNumber.Trim(),
             ExecutorName = request.ExecutorName,
             ExecutorEmail = request.ExecutorEmail,
             ExecutorBankAccount = request.ExecutorBankAccount,

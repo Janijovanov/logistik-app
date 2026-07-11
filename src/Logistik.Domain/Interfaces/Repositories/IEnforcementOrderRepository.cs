@@ -13,4 +13,5 @@ public interface IEnforcementOrderRepository : IRepository<EnforcementOrder>
     Task<EnforcementOrder?> GetWithPaymentsAsync(int id, CancellationToken ct = default);
     Task<IReadOnlyList<EnforcementOrder>> GetActiveOrdersForCompanyAsync(int companyId, CancellationToken ct = default);
     Task<EnforcementOrder?> GetWithDetailsAsync(int id, CancellationToken ct = default);
+    Task<bool> OrderNumberExistsAsync(string orderNumber, int? excludeId = null, CancellationToken ct = default);
 }
