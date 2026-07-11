@@ -36,6 +36,11 @@ public class EmployeeRepository : BaseRepository<Employee>, IEmployeeRepository
         => await _dbSet.IgnoreQueryFilters()
             .AnyAsync(e => e.EMBG == embg && e.CompanyId == companyId && (excludeId == null || e.Id != excludeId), ct);
 
+    // Only among active (non-deleted) employees — a deleted employee's code may be reused.
+    public async Task<bool> CodeExistsAsync(string code, int companyId, int? excludeId = null, CancellationToken ct = default)
+        => await _dbSet
+            .AnyAsync(e => e.Code == code && e.CompanyId == companyId && (excludeId == null || e.Id != excludeId), ct);
+
     public async Task<Employee?> GetByEmbgAsync(string embg, int companyId, CancellationToken ct = default)
         => await _dbSet.IgnoreQueryFilters()
             .FirstOrDefaultAsync(e => e.EMBG == embg && e.CompanyId == companyId, ct); // includes soft-deleted

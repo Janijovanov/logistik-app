@@ -22,6 +22,11 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
     {
         var existing = await _uow.Employees.GetByEmbgAsync(request.EMBG, request.CompanyId, ct);
 
+        // Code must be unique within the company (ignore the employee we may be restoring/re-hiring)
+        if (!string.IsNullOrWhiteSpace(request.Code) &&
+            await _uow.Employees.CodeExistsAsync(request.Code.Trim(), request.CompanyId, existing?.Id, ct))
+            return Result<int>.Failure($"Веќе постои вработен со шифра {request.Code.Trim()} во оваа компанија.");
+
         if (existing is not null)
         {
             // Soft-deleted employee (deleted via the delete button) — just restore them in place

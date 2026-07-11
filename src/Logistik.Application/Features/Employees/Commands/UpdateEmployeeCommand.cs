@@ -29,6 +29,10 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
         if (await _uow.Employees.EmbgExistsAsync(request.EMBG, request.CompanyId, request.Id, ct))
             return Result.Failure("EMBG already registered.");
 
+        if (!string.IsNullOrWhiteSpace(request.Code) &&
+            await _uow.Employees.CodeExistsAsync(request.Code.Trim(), request.CompanyId, request.Id, ct))
+            return Result.Failure($"Веќе постои вработен со шифра {request.Code.Trim()} во оваа компанија.");
+
         bool employmentEndDateAdded = employee.EmploymentEndDate is null && request.EmploymentEndDate.HasValue;
 
         employee.FullName = request.FullName;
