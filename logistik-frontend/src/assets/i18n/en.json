@@ -89,6 +89,7 @@
     "embg": "EMBG",
     "bankAccount": "Bank Account",
     "netSalary": "Net Salary (MKD)",
+    "baseNetSalary": "Base Net Salary (MKD)",
     "startDate": "Start Date",
     "endDate": "End Date",
     "employmentStartDate": "Employment Start Date",

@@ -96,11 +96,8 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>{{ 'employees.netSalary' | translate }}</mat-label>
+              <mat-label>{{ 'employees.baseNetSalary' | translate }}</mat-label>
               <input matInput type="number" formControlName="netSalary" min="0" />
-              @if (form.get('netSalary')?.hasError('required') && form.get('netSalary')?.touched) {
-                <mat-error>{{ 'employees.netSalaryRequired' | translate }}</mat-error>
-              }
             </mat-form-field>
           </div>
 
@@ -148,7 +145,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     employmentStartDate: [null as Date | null, Validators.required],
     employmentEndDate: [null as Date | null],
     bankAccount: ['', Validators.required],
-    netSalary: [null as number | null, [Validators.required, Validators.min(0)]]
+    netSalary: [null as number | null, [Validators.min(0)]]
   });
 
   ngOnInit(): void {
@@ -210,7 +207,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
       employmentStartDate: toDateOnly(v.employmentStartDate),
       employmentEndDate: v.employmentEndDate ? toDateOnly(v.employmentEndDate) : null,
       bankAccount: v.bankAccount!,
-      netSalary: v.netSalary!,
+      netSalary: v.netSalary ?? 0,
       ...(v.code ? { code: v.code } : {}),
       ...(transferFromEmployeeId ? { transferFromEmployeeId } : {})
     };

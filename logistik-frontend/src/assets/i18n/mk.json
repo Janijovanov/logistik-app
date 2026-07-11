@@ -89,6 +89,7 @@
     "embg": "ЕМБГ",
     "bankAccount": "Банкарска сметка",
     "netSalary": "Нето плата (МКД)",
+    "baseNetSalary": "Основна нето плата (МКД)",
     "startDate": "Датум на вработување",
     "endDate": "Датум на престанок",
     "employmentStartDate": "Датум на вработување",
