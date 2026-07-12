@@ -70,14 +70,6 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
                 <span class="info-value">{{ employee()!.bankAccount }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">{{ 'salary.netSalary' | translate }}</span>
-                <span class="info-value">{{ employee()!.netSalary | currencyMk }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">{{ 'employees.monthlyDeduction' | translate }}</span>
-                <span class="info-value">{{ employee()!.netSalary / 5 | currencyMk }}</span>
-              </div>
-              <div class="info-item">
                 <span class="info-label">{{ 'employees.startDate' | translate }}</span>
                 <span class="info-value">{{ employee()!.employmentStartDate | date:'dd.MM.yyyy' }}</span>
               </div>
