@@ -17,12 +17,13 @@ public class ExportService : IExportService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public async Task<byte[]> ExportEmployeeToPdfAsync(int employeeId, CancellationToken ct = default)
+    public async Task<byte[]> ExportEmployeeToPdfAsync(int employeeId, string lang = "mk", CancellationToken ct = default)
     {
         var employee = await _uow.Employees.GetWithOrdersAsync(employeeId, ct);
         if (employee is null) return Array.Empty<byte>();
 
         var salaries = await _uow.SalaryHistories.GetByEmployeeAsync(employeeId, 1, 1000, ct);
+        var L = Labels(lang);
 
         var document = Document.Create(container =>
         {
@@ -30,43 +31,50 @@ public class ExportService : IExportService
             {
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
-                page.Header().Text($"Employee Report: {employee.FullName}").Bold().FontSize(18);
+                page.DefaultTextStyle(x => x.FontFamily("Arial")); // Cyrillic support
+                page.Header().Text($"{L["title"]}: {employee.FullName}").Bold().FontSize(18);
                 page.Content().Column(col =>
                 {
-                    col.Item().Text($"EMBG: {employee.EMBG}");
-                    col.Item().Text($"Employment Start: {employee.EmploymentStartDate}");
-                    col.Item().Text($"Employment End: {employee.EmploymentEndDate?.ToString() ?? "N/A"}");
-                    col.Item().Text($"Bank Account: {employee.BankAccount}");
-                    col.Item().Text($"Net Salary: {employee.NetSalary:N2} MKD");
+                    col.Item().Text($"{L["embg"]}: {employee.EMBG}");
+                    col.Item().Text($"{L["start"]}: {employee.EmploymentStartDate:dd.MM.yyyy}");
+                    col.Item().Text($"{L["end"]}: {(employee.EmploymentEndDate.HasValue ? employee.EmploymentEndDate.Value.ToString("dd.MM.yyyy") : L["employed"])}");
+                    col.Item().Text($"{L["bank"]}: {employee.BankAccount}");
 
-                    col.Item().PaddingTop(10).Text("Salary History").Bold().FontSize(14);
+                    col.Item().PaddingTop(10).Text(L["salaryHistory"]).Bold().FontSize(14);
                     col.Item().Table(table =>
                     {
                         table.ColumnsDefinition(cols =>
                         {
-                            cols.RelativeColumn();
-                            cols.RelativeColumn();
-                            cols.RelativeColumn();
+                            cols.RelativeColumn(1.2f);  // month
+                            cols.RelativeColumn(1.3f);  // net salary
+                            cols.RelativeColumn(1.3f);  // deduction
+                            cols.RelativeColumn(1.6f);  // order number
+                            cols.RelativeColumn(2f);    // executor
                         });
                         table.Header(header =>
                         {
-                            header.Cell().Text("Month").Bold();
-                            header.Cell().Text("Net Salary").Bold();
-                            header.Cell().Text("Deduction").Bold();
+                            header.Cell().Text(L["month"]).Bold();
+                            header.Cell().Text(L["netSalary"]).Bold();
+                            header.Cell().Text(L["deduction"]).Bold();
+                            header.Cell().Text(L["orderNo"]).Bold();
+                            header.Cell().Text(L["executor"]).Bold();
                         });
                         foreach (var s in salaries)
                         {
-                            table.Cell().Text(s.SalaryMonth.ToString("yyyy-MM"));
-                            table.Cell().Text(s.NetSalary.ToString("N2"));
-                            table.Cell().Text(s.DeductionAmount.ToString("N2"));
+                            var hasDeduction = s.DeductionAmount > 0 && s.EnforcementOrder is not null;
+                            table.Cell().Text(s.SalaryMonth.ToString("MM.yyyy"));
+                            table.Cell().Text(FormatNum(s.NetSalary, lang));
+                            table.Cell().Text(FormatNum(s.DeductionAmount, lang));
+                            table.Cell().Text(hasDeduction ? s.EnforcementOrder!.OrderNumber : L["na"]);
+                            table.Cell().Text(hasDeduction ? s.EnforcementOrder!.ExecutorName : L["na"]);
                         }
                     });
                 });
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Page ");
+                    x.Span($"{L["page"]} ");
                     x.CurrentPageNumber();
-                    x.Span(" of ");
+                    x.Span($" {L["of"]} ");
                     x.TotalPages();
                 });
             });
@@ -75,20 +83,22 @@ public class ExportService : IExportService
         return document.GeneratePdf();
     }
 
-    public async Task<byte[]> ExportEmployeeToExcelAsync(int employeeId, CancellationToken ct = default)
+    public async Task<byte[]> ExportEmployeeToExcelAsync(int employeeId, string lang = "mk", CancellationToken ct = default)
     {
         var employee = await _uow.Employees.GetByIdAsync(employeeId, ct);
         if (employee is null) return Array.Empty<byte>();
 
         var salaries = await _uow.SalaryHistories.GetByEmployeeAsync(employeeId, 1, 1000, ct);
+        var L = Labels(lang);
 
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add("Salary History");
+        var ws = wb.Worksheets.Add(L["salaryHistory"]);
 
-        ws.Cell(1, 1).Value = "Month";
-        ws.Cell(1, 2).Value = "Net Salary (MKD)";
-        ws.Cell(1, 3).Value = "Deduction (MKD)";
-        ws.Cell(1, 4).Value = "Order Number";
+        ws.Cell(1, 1).Value = L["month"];
+        ws.Cell(1, 2).Value = L["netSalary"];
+        ws.Cell(1, 3).Value = L["deduction"];
+        ws.Cell(1, 4).Value = L["orderNo"];
+        ws.Cell(1, 5).Value = L["executor"];
 
         var headerRow = ws.Row(1);
         headerRow.Style.Font.Bold = true;
@@ -97,10 +107,14 @@ public class ExportService : IExportService
         int row = 2;
         foreach (var s in salaries)
         {
-            ws.Cell(row, 1).Value = s.SalaryMonth.ToString("yyyy-MM");
+            var hasDeduction = s.DeductionAmount > 0 && s.EnforcementOrder is not null;
+            ws.Cell(row, 1).Value = s.SalaryMonth.ToString("MM.yyyy");
             ws.Cell(row, 2).Value = (double)s.NetSalary;
+            ws.Cell(row, 2).Style.NumberFormat.Format = "#,##0";
             ws.Cell(row, 3).Value = (double)s.DeductionAmount;
-            ws.Cell(row, 4).Value = s.EnforcementOrder?.OrderNumber ?? "";
+            ws.Cell(row, 3).Style.NumberFormat.Format = "#,##0";
+            ws.Cell(row, 4).Value = hasDeduction ? s.EnforcementOrder!.OrderNumber : "";
+            ws.Cell(row, 5).Value = hasDeduction ? s.EnforcementOrder!.ExecutorName : "";
             row++;
         }
 
@@ -110,6 +124,36 @@ public class ExportService : IExportService
         wb.SaveAs(ms);
         return ms.ToArray();
     }
+
+    private static string FormatNum(decimal value, string lang)
+    {
+        var culture = lang == "en"
+            ? System.Globalization.CultureInfo.GetCultureInfo("en-US")
+            : System.Globalization.CultureInfo.GetCultureInfo("mk-MK");
+        return value.ToString("#,##0", culture);
+    }
+
+    private static Dictionary<string, string> Labels(string lang) => lang == "en"
+        ? new Dictionary<string, string>
+        {
+            ["title"] = "Employee Report", ["embg"] = "EMBG",
+            ["start"] = "Employment Start", ["end"] = "Employment End",
+            ["bank"] = "Bank Account", ["employed"] = "Currently employed",
+            ["salaryHistory"] = "Salary History", ["month"] = "Month",
+            ["netSalary"] = "Net Salary (MKD)", ["deduction"] = "Deduction (MKD)",
+            ["orderNo"] = "Enforcement Order (No.)", ["executor"] = "Executor",
+            ["na"] = "—", ["page"] = "Page", ["of"] = "of"
+        }
+        : new Dictionary<string, string>
+        {
+            ["title"] = "Извештај за вработен", ["embg"] = "ЕМБГ",
+            ["start"] = "Датум на вработување", ["end"] = "Датум на престанок",
+            ["bank"] = "Банкарска сметка", ["employed"] = "Во работен однос",
+            ["salaryHistory"] = "Историјат на плати", ["month"] = "Месец",
+            ["netSalary"] = "Нето плата (МКД)", ["deduction"] = "Задршка (МКД)",
+            ["orderNo"] = "Извршно решение (И.бр.)", ["executor"] = "Извршител",
+            ["na"] = "—", ["page"] = "Страница", ["of"] = "од"
+        };
 
     public async Task<byte[]> ExportEnforcementOrderToPdfAsync(int orderId, CancellationToken ct = default)
     {

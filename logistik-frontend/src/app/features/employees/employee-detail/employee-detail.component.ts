@@ -532,9 +532,10 @@ export class EmployeeDetailComponent implements OnInit {
   }
 
   exportEmployee(type: 'pdf' | 'excel'): void {
+    const lang = this.translate.currentLang || localStorage.getItem('lang') || 'mk';
     const obs = type === 'pdf'
-      ? this.service.exportPdf(this.companyId, this.employeeId)
-      : this.service.exportExcel(this.companyId, this.employeeId);
+      ? this.service.exportPdf(this.companyId, this.employeeId, lang)
+      : this.service.exportExcel(this.companyId, this.employeeId, lang);
     const ext = type === 'pdf' ? 'pdf' : 'xlsx';
     obs.subscribe(blob => {
       const url = URL.createObjectURL(blob);

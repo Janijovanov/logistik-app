@@ -28,16 +28,16 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("employees/{id:int}/export/pdf")]
-    public async Task<IActionResult> EmployeePdf(int id, CancellationToken ct)
+    public async Task<IActionResult> EmployeePdf(int id, [FromQuery] string lang = "mk", CancellationToken ct = default)
     {
-        var bytes = await _export.ExportEmployeeToPdfAsync(id, ct);
+        var bytes = await _export.ExportEmployeeToPdfAsync(id, lang, ct);
         return File(bytes, "application/pdf", $"employee_{id}.pdf");
     }
 
     [HttpGet("employees/{id:int}/export/excel")]
-    public async Task<IActionResult> EmployeeExcel(int id, CancellationToken ct)
+    public async Task<IActionResult> EmployeeExcel(int id, [FromQuery] string lang = "mk", CancellationToken ct = default)
     {
-        var bytes = await _export.ExportEmployeeToExcelAsync(id, ct);
+        var bytes = await _export.ExportEmployeeToExcelAsync(id, lang, ct);
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"employee_{id}.xlsx");
     }
 

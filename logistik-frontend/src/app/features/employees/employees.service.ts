@@ -72,13 +72,13 @@ export class EmployeesService {
     return this.http.put<void>(`${this.base(companyId)}/${employeeId}/salary-history/${recordId}`, request);
   }
 
-  exportPdf(companyId: number, employeeId: number): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/reports/employees/${employeeId}/export/pdf`,
+  exportPdf(companyId: number, employeeId: number, lang = 'mk'): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reports/employees/${employeeId}/export/pdf?lang=${lang}`,
       { responseType: 'blob' });
   }
 
-  exportExcel(companyId: number, employeeId: number): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/reports/employees/${employeeId}/export/excel`,
+  exportExcel(companyId: number, employeeId: number, lang = 'mk'): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reports/employees/${employeeId}/export/excel?lang=${lang}`,
       { responseType: 'blob' });
   }
 
