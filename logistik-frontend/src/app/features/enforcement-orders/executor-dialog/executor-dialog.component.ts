@@ -126,14 +126,14 @@ import { NotificationService } from '../../../core/services/notification.service
     .executor-item {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 2px;
       padding: 10px 4px 10px 12px;
       border-radius: 6px;
       background: #fafafa;
       flex-shrink: 0;
     }
     .executor-item:hover { background: #f0f0f0; }
-    .executor-info { display: flex; flex-direction: column; gap: 2px; }
+    .executor-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
     .executor-name { font-size: 14px; font-weight: 500; }
     .executor-sub { font-size: 12px; color: rgba(0,0,0,0.54); }
     .empty-hint { color: rgba(0,0,0,0.38); font-size: 14px; text-align: center; padding: 16px 0 8px; }
