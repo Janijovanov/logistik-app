@@ -84,6 +84,7 @@
   },
   "employees": {
     "code": "Шифра",
+    "codeRequired": "Шифрата е задолжителна",
     "addEmployee": "Додади вработен",
     "editEmployee": "Измени вработен",
     "newEmployee": "Нов вработен",

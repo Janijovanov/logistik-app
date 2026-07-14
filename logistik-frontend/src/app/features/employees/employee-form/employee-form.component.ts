@@ -46,6 +46,9 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
             <mat-form-field appearance="outline">
               <mat-label>{{ 'employees.code' | translate }}</mat-label>
               <input matInput formControlName="code" />
+              @if (form.get('code')?.hasError('required') && form.get('code')?.touched) {
+                <mat-error>{{ 'employees.codeRequired' | translate }}</mat-error>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
@@ -132,7 +135,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   private savingTimerSub?: Subscription;
 
   form = this.fb.group({
-    code: [null as string | null],
+    code: [null as string | null, Validators.required],
     fullName: ['', Validators.required],
     embg: ['', [Validators.required, Validators.minLength(13), Validators.maxLength(13)]],
     employmentStartDate: [null as Date | null, Validators.required],

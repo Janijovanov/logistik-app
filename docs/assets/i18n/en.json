@@ -84,6 +84,7 @@
   },
   "employees": {
     "code": "Code",
+    "codeRequired": "Code is required",
     "addEmployee": "Add Employee",
     "editEmployee": "Edit Employee",
     "newEmployee": "New Employee",
