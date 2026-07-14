@@ -26,6 +26,6 @@ public class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery,
 
         return new EmployeeDto(e.Id, e.CompanyId, e.FullName, e.EMBG,
             e.EmploymentStartDate, e.EmploymentEndDate, e.BankAccount, e.NetSalary, e.IsDeleted,
-            histories);
+            histories, Code: e.Code);
     }
 }

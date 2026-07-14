@@ -25,6 +25,8 @@ export const appConfig: ApplicationConfig = {
     provideStore(),
     provideEffects(),
     provideTranslateService({ defaultLanguage: 'mk' }),
-    provideTranslateHttpLoader({ prefix: 'assets/i18n/', suffix: '.json' })
+    // Cache-bust the translation files so a redeploy always fetches fresh
+    // strings (the .json filenames are not content-hashed). Bump on change.
+    provideTranslateHttpLoader({ prefix: 'assets/i18n/', suffix: '.json?v=20260712' })
   ]
 };
