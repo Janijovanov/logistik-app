@@ -66,10 +66,6 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
                 <span class="info-value">{{ employee()!.embg | embgMask:false }}</span>
               </div>
               <div class="info-item">
-                <span class="info-label">{{ 'employees.bankAccount' | translate }}</span>
-                <span class="info-value">{{ employee()!.bankAccount }}</span>
-              </div>
-              <div class="info-item">
                 <span class="info-label">{{ 'employees.startDate' | translate }}</span>
                 <span class="info-value">{{ employee()!.employmentStartDate | date:'dd.MM.yyyy' }}</span>
               </div>
@@ -291,7 +287,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
   styles: [`
     .tab-content { padding: 24px 0; }
     .tab-header { display: flex; justify-content: flex-end; margin-bottom: 16px; }
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+    .info-grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; }
     .info-item { display: flex; flex-direction: column; gap: 4px; }
     .info-label { font-size: 12px; color: rgba(0,0,0,0.54); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
     .info-value { font-size: 14px; font-weight: 500; }

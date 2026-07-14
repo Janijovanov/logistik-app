@@ -45,17 +45,23 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
             <mat-form-field appearance="outline">
               <mat-label>{{ 'companies.taxNumber' | translate }}</mat-label>
-              <input matInput formControlName="taxNumber" />
+              <input matInput formControlName="taxNumber" maxlength="13" inputmode="numeric" />
               @if (form.get('taxNumber')?.hasError('required') && form.get('taxNumber')?.touched) {
                 <mat-error>{{ 'companies.taxRequired' | translate }}</mat-error>
+              }
+              @if (form.get('taxNumber')?.hasError('pattern') && form.get('taxNumber')?.touched) {
+                <mat-error>{{ 'companies.tax13' | translate }}</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>{{ 'companies.registrationNumber' | translate }}</mat-label>
-              <input matInput formControlName="registrationNumber" />
+              <input matInput formControlName="registrationNumber" maxlength="7" inputmode="numeric" />
               @if (form.get('registrationNumber')?.hasError('required') && form.get('registrationNumber')?.touched) {
                 <mat-error>{{ 'companies.regRequired' | translate }}</mat-error>
+              }
+              @if (form.get('registrationNumber')?.hasError('pattern') && form.get('registrationNumber')?.touched) {
+                <mat-error>{{ 'companies.reg7' | translate }}</mat-error>
               }
             </mat-form-field>
           </div>
@@ -105,8 +111,8 @@ export class CompanyFormComponent implements OnInit {
 
   form = this.fb.group({
     name: ['', Validators.required],
-    taxNumber: ['', Validators.required],
-    registrationNumber: ['', Validators.required],
+    taxNumber: ['', [Validators.required, Validators.pattern(/^\d{13}$/)]],
+    registrationNumber: ['', [Validators.required, Validators.pattern(/^\d{7}$/)]],
     headquartersAddress: ['', Validators.required],
     isActive: [true]
   });

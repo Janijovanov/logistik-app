@@ -29,6 +29,10 @@ export class ExecutorsService {
     return this.http.post<{ id: number }>(this.url, request);
   }
 
+  update(id: number, request: CreateExecutorRequest): Observable<void> {
+    return this.http.put<void>(`${this.url}/${id}`, request);
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
   }

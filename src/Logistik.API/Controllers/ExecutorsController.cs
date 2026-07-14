@@ -29,6 +29,14 @@ public class ExecutorsController : ControllerBase
         return StatusCode(201, new { id = result.Value });
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult> Update(int id, [FromBody] CreateExecutorRequest request, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new UpdateExecutorCommand(id, request.Name, request.Email, request.BankAccount), ct);
+        if (!result.Succeeded) return BadRequest(new { message = result.Errors.FirstOrDefault() });
+        return NoContent();
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> Delete(int id, CancellationToken ct)
     {

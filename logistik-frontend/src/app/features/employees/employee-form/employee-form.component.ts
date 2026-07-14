@@ -87,14 +87,7 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
           </div>
 
           <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>{{ 'employees.bankAccount' | translate }}</mat-label>
-              <input matInput formControlName="bankAccount" />
-              @if (form.get('bankAccount')?.hasError('required') && form.get('bankAccount')?.touched) {
-                <mat-error>{{ 'employees.bankAccountRequired' | translate }}</mat-error>
-              }
-            </mat-form-field>
-
+            <!-- Bank account hidden for now (kept in the model in case it is needed later) -->
             <mat-form-field appearance="outline">
               <mat-label>{{ 'employees.baseNetSalary' | translate }}</mat-label>
               <input matInput type="number" formControlName="netSalary" min="0" />
@@ -144,7 +137,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     embg: ['', [Validators.required, Validators.minLength(13), Validators.maxLength(13)]],
     employmentStartDate: [null as Date | null, Validators.required],
     employmentEndDate: [null as Date | null],
-    bankAccount: ['', Validators.required],
+    bankAccount: [''], // hidden in the UI for now; kept so it can be restored later
     netSalary: [null as number | null, [Validators.min(0)]]
   });
 

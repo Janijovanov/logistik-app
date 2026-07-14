@@ -32,11 +32,15 @@ import { NotificationService } from '../../../core/services/notification.service
       } @else if (executors().length > 0) {
         <div class="executor-list">
           @for (ex of executors(); track ex.id) {
-            <div class="executor-item">
+            <div class="executor-item" [class.editing]="editingId() === ex.id">
               <div class="executor-info">
                 <span class="executor-name">{{ ex.name }}</span>
                 <span class="executor-sub">{{ ex.email }} · {{ ex.bankAccount }}</span>
               </div>
+              <button mat-icon-button color="primary" (click)="startEdit(ex)"
+                [matTooltip]="'common.edit' | translate">
+                <mat-icon>edit</mat-icon>
+              </button>
               <button mat-icon-button color="warn" (click)="deleteExecutor(ex)"
                 [disabled]="deletingId() === ex.id"
                 [matTooltip]="'executors.deleteTooltip' | translate">
@@ -55,8 +59,8 @@ import { NotificationService } from '../../../core/services/notification.service
 
       <mat-divider class="divider" />
 
-      <!-- Add new executor form -->
-      <p class="add-title">{{ 'executors.addNew' | translate }}</p>
+      <!-- Add / edit executor form -->
+      <p class="add-title">{{ (editingId() ? 'executors.editExecutor' : 'executors.addNew') | translate }}</p>
       <form [formGroup]="form" class="add-form">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'executors.name' | translate }}</mat-label>
@@ -80,17 +84,23 @@ import { NotificationService } from '../../../core/services/notification.service
 
           <mat-form-field appearance="outline">
             <mat-label>{{ 'executors.bankAccount' | translate }}</mat-label>
-            <input matInput formControlName="bankAccount" />
+            <input matInput formControlName="bankAccount" maxlength="15" inputmode="numeric" />
             @if (form.get('bankAccount')?.hasError('required') && form.get('bankAccount')?.touched) {
               <mat-error>{{ 'executors.bankAccountRequired' | translate }}</mat-error>
+            }
+            @if (form.get('bankAccount')?.hasError('pattern') && form.get('bankAccount')?.touched) {
+              <mat-error>{{ 'executors.bankAccount15' | translate }}</mat-error>
             }
           </mat-form-field>
         </div>
 
         <div class="add-action">
-          <button mat-flat-button color="primary" (click)="addExecutor()" [disabled]="saving()">
+          @if (editingId()) {
+            <button mat-button type="button" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
+          }
+          <button mat-flat-button color="primary" (click)="saveExecutor()" [disabled]="saving()">
             @if (saving()) { <mat-spinner diameter="18" /> }
-            {{ 'executors.add' | translate }}
+            {{ (editingId() ? 'common.saveChanges' : 'executors.add') | translate }}
           </button>
         </div>
       </form>
@@ -147,13 +157,14 @@ export class ExecutorDialogComponent implements OnInit {
   loading = signal(true);
   saving = signal(false);
   deletingId = signal<number | null>(null);
+  editingId = signal<number | null>(null);
   executors = signal<Executor[]>([]);
   changed = signal(false);
 
   form = this.fb.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    bankAccount: ['', Validators.required]
+    bankAccount: ['', [Validators.required, Validators.pattern(/^\d{15}$/)]]
   });
 
   ngOnInit(): void {
@@ -168,23 +179,41 @@ export class ExecutorDialogComponent implements OnInit {
     });
   }
 
-  addExecutor(): void {
+  startEdit(ex: Executor): void {
+    this.editingId.set(ex.id);
+    this.form.setValue({ name: ex.name, email: ex.email, bankAccount: ex.bankAccount });
+  }
+
+  cancelEdit(): void {
+    this.editingId.set(null);
+    this.form.reset();
+  }
+
+  saveExecutor(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
     const v = this.form.value;
-    this.service.create({ name: v.name!, email: v.email!, bankAccount: v.bankAccount! }).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.form.reset();
-        this.changed.set(true);
-        this.loadExecutors();
-        this.notifications.success(this.translate.instant('executors.add'));
-      },
-      error: (err: any) => {
-        this.saving.set(false);
-        if (err.status < 500) this.notifications.error(err.error?.message || this.translate.instant('errors.failedToLoad'));
-      }
-    });
+    const payload = { name: v.name!, email: v.email!, bankAccount: v.bankAccount! };
+    const editId = this.editingId();
+
+    const onSuccess = () => {
+      this.saving.set(false);
+      this.editingId.set(null);
+      this.form.reset();
+      this.changed.set(true);
+      this.loadExecutors();
+      this.notifications.success(this.translate.instant(editId ? 'common.saveChanges' : 'executors.add'));
+    };
+    const onError = (err: any) => {
+      this.saving.set(false);
+      if (err.status < 500) this.notifications.error(err.error?.message || this.translate.instant('errors.failedToLoad'));
+    };
+
+    if (editId) {
+      this.service.update(editId, payload).subscribe({ next: onSuccess, error: onError });
+    } else {
+      this.service.create(payload).subscribe({ next: onSuccess, error: onError });
+    }
   }
 
   deleteExecutor(ex: Executor): void {
