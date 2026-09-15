@@ -182,11 +182,22 @@ public class ExpensesController : ControllerBase
 
         string[] months = { "Јан", "Фев", "Мар", "Апр", "Мај", "Јун", "Јул", "Авг", "Сеп", "Окт", "Ное", "Дек" };
 
-        decimal MonthAmount(ExpenseSubcategory s, int m) =>
-            s.Entries.Where(e => e.Year == year && e.Month == m).Sum(e => e.Amount);
+        // Replicate GetForYear EXACTLY: group this year's entries by month and take
+        // the FIRST amount per month (not a sum). This keeps the export identical to
+        // the on-screen table even when duplicate entries exist for the same month.
+        var amountsBySub = categories
+            .SelectMany(c => c.Subcategories)
+            .ToDictionary(
+                s => s.Id,
+                s => s.Entries.Where(e => e.Year == year)
+                      .GroupBy(e => e.Month)
+                      .ToDictionary(g => g.Key, g => g.First().Amount));
 
-        decimal grandTotal = categories.Sum(c => c.Subcategories.Sum(s =>
-            s.Entries.Where(e => e.Year == year).Sum(e => e.Amount)));
+        decimal MonthAmount(ExpenseSubcategory s, int m) =>
+            amountsBySub[s.Id].TryGetValue(m, out var v) ? v : 0m;
+
+        decimal grandTotal = categories.Sum(c =>
+            c.Subcategories.Sum(s => amountsBySub[s.Id].Values.Sum()));
 
         using var wb = new XLWorkbook();
         var ws = wb.Worksheets.Add($"Трошоци {year}");
@@ -259,7 +270,7 @@ public class ExpensesController : ControllerBase
             if (mt != 0) ws.Cell(row, 2 + m).Value = (double)mt;
         }
         decimal gAnnual = categories.Sum(c => c.Subcategories.Sum(s => s.AnnualPlan));
-        int gCnt = categories.Sum(c => c.Subcategories.Sum(s => s.Entries.Count(e => e.Year == year && e.Amount > 0)));
+        int gCnt = categories.Sum(c => c.Subcategories.Sum(s => amountsBySub[s.Id].Values.Count(v => v > 0)));
         ws.Cell(row, sumCol).Value = (double)grandTotal;
         ws.Cell(row, pctCol).Value = grandTotal > 0 ? 100d : 0d;
         ws.Cell(row, cntCol).Value = gCnt;
