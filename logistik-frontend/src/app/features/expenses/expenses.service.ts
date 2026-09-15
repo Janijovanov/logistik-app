@@ -40,4 +40,8 @@ export class ExpensesService {
   upsertEntry(subcategoryId: number, year: number, month: number, amount: number): Observable<void> {
     return this.http.put<void>(`${this.base}/entries`, { subcategoryId, year, month, amount });
   }
+
+  exportExcel(year: number): Observable<Blob> {
+    return this.http.get(`${this.base}/export?year=${year}`, { responseType: 'blob' });
+  }
 }

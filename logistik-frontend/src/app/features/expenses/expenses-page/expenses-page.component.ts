@@ -33,10 +33,16 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
           <button mat-icon-button (click)="changeYear(1)" [disabled]="year() >= currentYear"><mat-icon>chevron_right</mat-icon></button>
         </div>
       </div>
-      <button mat-stroked-button (click)="openCategoryManager()">
-        <mat-icon>settings</mat-icon>
-        Управувај со категории
-      </button>
+      <div class="header-actions">
+        <button mat-stroked-button (click)="exportExcel()" [disabled]="exporting()">
+          @if (exporting()) { <mat-spinner diameter="18" /> } @else { <mat-icon>download</mat-icon> }
+          Export во Excel
+        </button>
+        <button mat-stroked-button (click)="openCategoryManager()">
+          <mat-icon>settings</mat-icon>
+          Управувај со категории
+        </button>
+      </div>
     </div>
 
     @if (loading()) {
@@ -88,7 +94,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                         <input
                           class="cell-input"
                           type="text"
-                          inputmode="numeric"
+                          inputmode="text"
                           [value]="sub.amounts[m] ?? ''"
                           (keydown)="onKeyMonth($event, sub, m)"
                           (blur)="onBlurMonth($event, sub, m)"
@@ -154,9 +160,12 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
       gap: 12px;
     }
     .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .header-actions button mat-spinner { display: inline-block; margin-right: 4px; }
     @media (max-width: 768px) {
       .header-left { width: 100%; justify-content: space-between; }
-      .page-header > button { width: 100%; }
+      .header-actions { width: 100%; }
+      .header-actions button { flex: 1; }
     }
     .page-title { font-size: 22px; font-weight: 700; margin: 0; }
     .year-nav { display: flex; align-items: center; gap: 4px; }
@@ -276,6 +285,7 @@ export class ExpensesPageComponent implements OnInit {
 
   year = signal(this.currentYear);
   loading = signal(false);
+  exporting = signal(false);
   data = signal<ExpensesYearDto | null>(null);
   editingCell = signal<{ subId: number; month: number } | null>(null);
   editingPlanSubId = signal<number | null>(null);
@@ -304,6 +314,27 @@ export class ExpensesPageComponent implements OnInit {
   openCategoryManager(): void {
     this.dialog.open(CategoryManagerComponent, { width: '600px', maxWidth: '96vw' })
       .afterClosed().subscribe(() => this.load());
+  }
+
+  exportExcel(): void {
+    if (this.exporting()) return;
+    this.exporting.set(true);
+    const yr = this.year();
+    this.service.exportExcel(yr).subscribe({
+      next: blob => {
+        this.exporting.set(false);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Trosoci-${yr}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.exporting.set(false);
+        this.notifications.error('Грешка при export во Excel.');
+      }
+    });
   }
 
   // ── Computed totals ────────────────────────────────────────────────────────
@@ -370,14 +401,37 @@ export class ExpensesPageComponent implements OnInit {
   private focusInput(): void {
     setTimeout(() => {
       const i = document.querySelector('.cell-input') as HTMLInputElement | null;
-      if (i) { i.focus(); i.select(); }
+      if (i) {
+        i.focus();
+        // Caret at end (not select-all) so you can append arithmetic to an
+        // existing value, e.g. "100" → type "+50" → "100+50".
+        const len = i.value.length;
+        i.setSelectionRange(len, len);
+      }
     });
   }
 
   // ── Saving ─────────────────────────────────────────────────────────────────
 
+  // Parse a cell value. Supports Excel-like arithmetic: a leading "=" or any
+  // expression containing + - * / is evaluated (e.g. "100+50" or "=200-30" → number).
   private parseNum(raw: string): number {
-    const n = parseFloat((raw ?? '').toString().replace(/[^0-9.]/g, ''));
+    let s = (raw ?? '').toString().trim();
+    if (!s) return 0;
+    if (s.startsWith('=')) s = s.slice(1).trim();
+
+    // Has an arithmetic operator (ignoring a single leading minus sign)?
+    if (/[+\-*/]/.test(s.replace(/^-/, ''))) {
+      const expr = s.replace(/[^0-9.+\-*/() ]/g, '');
+      try {
+        // eslint-disable-next-line no-new-func
+        const val = Function('"use strict"; return (' + expr + ')')();
+        if (typeof val === 'number' && isFinite(val)) return Math.max(0, Math.round(val));
+      } catch { /* invalid expression → treat as 0 */ }
+      return 0;
+    }
+
+    const n = parseFloat(s.replace(/[^0-9.]/g, ''));
     return isNaN(n) ? 0 : Math.max(0, Math.round(n));
   }
 

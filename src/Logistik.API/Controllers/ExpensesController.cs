@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Logistik.Domain.Entities;
 using Logistik.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -166,6 +167,119 @@ public class ExpensesController : ControllerBase
         }
         await _db.SaveChangesAsync(ct);
         return NoContent();
+    }
+
+    // ── GET /api/expenses/export?year=2026 — Excel export ────────────────────
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] int year, CancellationToken ct)
+    {
+        if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
+
+        var categories = await _db.ExpenseCategories
+            .Include(c => c.Subcategories).ThenInclude(s => s.Entries)
+            .OrderBy(c => c.Order)
+            .ToListAsync(ct);
+
+        string[] months = { "Јан", "Фев", "Мар", "Апр", "Мај", "Јун", "Јул", "Авг", "Сеп", "Окт", "Ное", "Дек" };
+
+        decimal MonthAmount(ExpenseSubcategory s, int m) =>
+            s.Entries.Where(e => e.Year == year && e.Month == m).Sum(e => e.Amount);
+
+        decimal grandTotal = categories.Sum(c => c.Subcategories.Sum(s =>
+            s.Entries.Where(e => e.Year == year).Sum(e => e.Amount)));
+
+        using var wb = new XLWorkbook();
+        var ws = wb.Worksheets.Add($"Трошоци {year}");
+
+        // Header — Бр. | Назив | Jan..Dec | Вкупно | % | бр.мес. | Месечно | Годишно
+        int col = 1;
+        ws.Cell(1, col++).Value = "Бр.";
+        ws.Cell(1, col++).Value = "Назив";
+        for (int m = 0; m < 12; m++) ws.Cell(1, col++).Value = months[m];
+        int sumCol = col; ws.Cell(1, col++).Value = "Вкупно";
+        int pctCol = col; ws.Cell(1, col++).Value = "%";
+        int cntCol = col; ws.Cell(1, col++).Value = "бр.мес.";
+        int monCol = col; ws.Cell(1, col++).Value = "Месечно";
+        int annCol = col; ws.Cell(1, col++).Value = "Годишно";
+
+        ws.Row(1).Style.Font.Bold = true;
+        ws.Row(1).Style.Fill.BackgroundColor = XLColor.FromHtml("#DBEAFE");
+        ws.Row(1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+        int row = 2;
+        int catIdx = 0;
+        foreach (var cat in categories)
+        {
+            catIdx++;
+            decimal catVkupno = 0;
+            for (int m = 1; m <= 12; m++)
+            {
+                decimal mt = cat.Subcategories.Sum(s => MonthAmount(s, m));
+                catVkupno += mt;
+                if (mt != 0) ws.Cell(row, 2 + m).Value = (double)mt;
+            }
+            decimal catAnnual = cat.Subcategories.Sum(s => s.AnnualPlan);
+            ws.Cell(row, 1).Value = catIdx;
+            ws.Cell(row, 2).Value = cat.Name;
+            ws.Cell(row, sumCol).Value = (double)catVkupno;
+            ws.Cell(row, pctCol).Value = grandTotal > 0 ? (double)(catVkupno / grandTotal * 100) : 0;
+            ws.Cell(row, monCol).Value = (double)(catAnnual / 12);
+            ws.Cell(row, annCol).Value = (double)catAnnual;
+            ws.Row(row).Style.Font.Bold = true;
+            ws.Row(row).Style.Fill.BackgroundColor = XLColor.FromHtml("#EEF2FF");
+            row++;
+
+            int subIdx = 0;
+            foreach (var sub in cat.Subcategories.OrderBy(s => s.Order))
+            {
+                subIdx++;
+                decimal subVkupno = 0;
+                int cnt = 0;
+                for (int m = 1; m <= 12; m++)
+                {
+                    decimal amt = MonthAmount(sub, m);
+                    if (amt != 0) { ws.Cell(row, 2 + m).Value = (double)amt; subVkupno += amt; cnt++; }
+                }
+                ws.Cell(row, 1).Value = $"{catIdx}.{subIdx}";
+                ws.Cell(row, 2).Value = sub.Name;
+                ws.Cell(row, sumCol).Value = (double)subVkupno;
+                ws.Cell(row, pctCol).Value = grandTotal > 0 ? (double)(subVkupno / grandTotal * 100) : 0;
+                ws.Cell(row, cntCol).Value = cnt;
+                ws.Cell(row, monCol).Value = (double)(sub.AnnualPlan / 12);
+                ws.Cell(row, annCol).Value = (double)sub.AnnualPlan;
+                row++;
+            }
+        }
+
+        // Grand total row
+        ws.Cell(row, 2).Value = "ВКУПНО";
+        for (int m = 1; m <= 12; m++)
+        {
+            decimal mt = categories.Sum(c => c.Subcategories.Sum(s => MonthAmount(s, m)));
+            if (mt != 0) ws.Cell(row, 2 + m).Value = (double)mt;
+        }
+        decimal gAnnual = categories.Sum(c => c.Subcategories.Sum(s => s.AnnualPlan));
+        int gCnt = categories.Sum(c => c.Subcategories.Sum(s => s.Entries.Count(e => e.Year == year && e.Amount > 0)));
+        ws.Cell(row, sumCol).Value = (double)grandTotal;
+        ws.Cell(row, pctCol).Value = grandTotal > 0 ? 100d : 0d;
+        ws.Cell(row, cntCol).Value = gCnt;
+        ws.Cell(row, monCol).Value = (double)(gAnnual / 12);
+        ws.Cell(row, annCol).Value = (double)gAnnual;
+        ws.Row(row).Style.Font.Bold = true;
+        ws.Row(row).Style.Fill.BackgroundColor = XLColor.FromHtml("#FEF9C3");
+
+        // Number formats
+        ws.Range(2, 3, row, annCol).Style.NumberFormat.Format = "#,##0";
+        ws.Column(pctCol).Style.NumberFormat.Format = "0.00";
+        ws.Column(2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+        ws.Columns().AdjustToContents();
+        ws.SheetView.FreezeRows(1);
+
+        using var ms = new MemoryStream();
+        wb.SaveAs(ms);
+        return File(ms.ToArray(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"Trosoci-{year}.xlsx");
     }
 }
 
