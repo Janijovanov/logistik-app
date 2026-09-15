@@ -56,9 +56,9 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
               }
               <th class="sum-col">Вкупно</th>
               <th class="pct-col">%</th>
+              <th class="cnt-col">бр.мес.</th>
               <th class="plan-col">Месечно</th>
               <th class="plan-col">Годишно</th>
-              <th class="cnt-col">бр.мес.</th>
             </tr>
           </thead>
           <tbody>
@@ -72,9 +72,9 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                 }
                 <td class="sum-cell cat-amount">{{ catVkupno(cat) | number:'1.0-0':'mk' }}</td>
                 <td class="pct-cell cat-pct">{{ pctOfTotal(catVkupno(cat)) }}%</td>
+                <td class="cnt-col"></td>
                 <td class="plan-cell cat-amount">{{ catMonthly(cat) | number:'1.0-0':'mk' }}</td>
                 <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0':'mk' }}</td>
-                <td class="cnt-col"></td>
               </tr>
 
               @for (sub of cat.subcategories; track sub.id; let subIdx = $index) {
@@ -101,6 +101,7 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                   }
                   <td class="sum-cell">{{ subVkupno(sub) | number:'1.0-0':'mk' }}</td>
                   <td class="pct-cell">{{ pctOfTotal(subVkupno(sub)) }}%</td>
+                  <td class="cnt-col">{{ monthCount(sub) }}</td>
                   <!-- Месечно: editable input -->
                   <td class="plan-cell editable" (click)="startEditPlan(sub.id)">
                     @if (isEditingPlan(sub.id)) {
@@ -119,7 +120,6 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                   </td>
                   <!-- Годишно: computed = monthly × 12 -->
                   <td class="plan-cell annual-cell">{{ sub.annualPlan | number:'1.0-0':'mk' }}</td>
-                  <td class="cnt-col">{{ monthCount(sub) }}</td>
                 </tr>
               }
             }
@@ -133,9 +133,9 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
               }
               <td class="sum-cell">{{ grandTotalVkupno() | number:'1.0-0':'mk' }}</td>
               <td class="pct-cell">{{ grandTotalVkupno() ? '100.00' : '0.00' }}%</td>
+              <td class="cnt-col">{{ grandMonthCount() }}</td>
               <td class="plan-cell">{{ grandMonthly() | number:'1.0-0':'mk' }}</td>
               <td class="plan-cell">{{ grandAnnual() | number:'1.0-0':'mk' }}</td>
-              <td class="cnt-col">{{ grandMonthCount() }}</td>
             </tr>
           </tbody>
         </table>

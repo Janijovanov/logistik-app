@@ -57,58 +57,74 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
       </app-page-header>
 
       <mat-tab-group (selectedTabChange)="onTabChange($event)">
-        <!-- Tab 1: Info -->
-        <mat-tab [label]="'employees.info' | translate">
+        <!-- Tab 1: Enforcement Orders -->
+        <mat-tab [label]="'employees.enforcementOrders' | translate">
           <div class="tab-content">
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">{{ 'employees.embg' | translate }}</span>
-                <span class="info-value">{{ employee()!.embg | embgMask:false }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">{{ 'employees.startDate' | translate }}</span>
-                <span class="info-value">{{ employee()!.employmentStartDate | date:'dd.MM.yyyy' }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">{{ 'employees.endDate' | translate }}</span>
-                <span class="info-value">{{ employee()!.employmentEndDate ? (employee()!.employmentEndDate | date:'dd.MM.yyyy') : ('employees.currentlyEmployed' | translate) }}</span>
-              </div>
+            <div class="tab-header">
+              @if (authService.canEditCompany(companyId)) {
+                <button mat-stroked-button (click)="openAddExecutor()" style="margin-right:8px">
+                  <mat-icon>person_add</mat-icon>
+                  {{ 'orders.addExecutor' | translate }}
+                </button>
+                <button mat-flat-button color="primary" (click)="openNewOrder()">
+                  <mat-icon>add</mat-icon>
+                  {{ 'orders.addOrder' | translate }}
+                </button>
+              }
             </div>
 
-            @if (employee()!.employmentEndDate && authService.canEditCompany(companyId)) {
-              <div class="termination-notice">
-                <mat-icon class="term-icon">person_off</mat-icon>
-                <div class="term-text">
-                  <span>Работникот е одјавен на {{ employee()!.employmentEndDate | date:'dd.MM.yyyy' }}</span>
-                </div>
-                <button mat-stroked-button color="warn" (click)="openTerminationEmails()" class="term-notify-btn">
-                  <mat-icon>mail_lock</mat-icon>
-                  Известувања
-                </button>
-              </div>
-            }
-
-            @if (employee()!.employmentHistories?.length) {
-              <div class="history-section">
-                <h4 class="history-title">
-                  <mat-icon class="history-icon">history</mat-icon>
-                  Претходни периоди на вработување
-                </h4>
-                <div class="history-list">
-                  @for (h of employee()!.employmentHistories; track h.id) {
-                    <div class="history-entry">
-                      <mat-icon class="entry-icon">work_history</mat-icon>
-                      <span class="entry-dates">
-                        {{ h.startDate | date:'dd.MM.yyyy' }}
-                        <span class="entry-arrow">→</span>
-                        {{ h.endDate | date:'dd.MM.yyyy' }}
-                      </span>
-                      <span class="entry-duration">({{ durationLabel(h) }})</span>
-                    </div>
+            <table mat-table [dataSource]="orders()" class="mat-elevation-z0 stacked-mobile">
+              <ng-container matColumnDef="orderNumber">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.orderNo' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.orderNo' | translate">{{ o.orderNumber }}</td>
+              </ng-container>
+              <ng-container matColumnDef="executor">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.executor' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.executor' | translate">{{ o.executorName }}</td>
+              </ng-container>
+              <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.totalAmount' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.totalAmount' | translate">{{ o.totalAmount | currencyMk }}</td>
+              </ng-container>
+              <ng-container matColumnDef="remaining">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.remaining' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.remaining' | translate">{{ o.remainingAmount | currencyMk }}</td>
+              </ng-container>
+              <ng-container matColumnDef="receivedDate">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.received' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.received' | translate">{{ o.receivedDate | date:'dd.MM.yyyy' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>{{ 'orders.status' | translate }}</th>
+                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.status' | translate">
+                  <app-status-badge [status]="o.status" [statusColor]="o.statusColor" />
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let o" class="actions-cell">
+                  <button mat-icon-button matTooltip="Испрати мејл" (click)="openEmailPreview(o)">
+                    <mat-icon style="color:#3949ab">email</mat-icon>
+                  </button>
+                  @if (authService.canEditCompany(companyId)) {
+                    <button mat-icon-button matTooltip="Измени налог" (click)="openEditOrder(o)">
+                      <mat-icon style="color:#00897b">edit</mat-icon>
+                    </button>
+                    <button mat-icon-button matTooltip="Избриши налог" (click)="deleteOrder(o)">
+                      <mat-icon style="color:#c62828">delete</mat-icon>
+                    </button>
                   }
-                </div>
-              </div>
-            }
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="orderColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: orderColumns;"
+                [class.row-order-yellow]="row.statusColor === 'yellow'"
+                [class.row-order-green]="row.statusColor === 'green'"
+              ></tr>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell empty-state" [attr.colspan]="orderColumns.length">{{ 'orders.noOrders' | translate }}</td>
+              </tr>
+            </table>
           </div>
         </mat-tab>
 
@@ -211,74 +227,58 @@ import { TerminationEmailsDialogComponent } from '../termination-emails-dialog/t
           </div>
         </mat-tab>
 
-        <!-- Tab 3: Enforcement Orders -->
-        <mat-tab [label]="'employees.enforcementOrders' | translate">
+        <!-- Tab 3: Info -->
+        <mat-tab [label]="'employees.info' | translate">
           <div class="tab-content">
-            <div class="tab-header">
-              @if (authService.canEditCompany(companyId)) {
-                <button mat-stroked-button (click)="openAddExecutor()" style="margin-right:8px">
-                  <mat-icon>person_add</mat-icon>
-                  {{ 'orders.addExecutor' | translate }}
-                </button>
-                <button mat-flat-button color="primary" (click)="openNewOrder()">
-                  <mat-icon>add</mat-icon>
-                  {{ 'orders.addOrder' | translate }}
-                </button>
-              }
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">{{ 'employees.embg' | translate }}</span>
+                <span class="info-value">{{ employee()!.embg | embgMask:false }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">{{ 'employees.startDate' | translate }}</span>
+                <span class="info-value">{{ employee()!.employmentStartDate | date:'dd.MM.yyyy' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">{{ 'employees.endDate' | translate }}</span>
+                <span class="info-value">{{ employee()!.employmentEndDate ? (employee()!.employmentEndDate | date:'dd.MM.yyyy') : ('employees.currentlyEmployed' | translate) }}</span>
+              </div>
             </div>
 
-            <table mat-table [dataSource]="orders()" class="mat-elevation-z0 stacked-mobile">
-              <ng-container matColumnDef="orderNumber">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.orderNo' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.orderNo' | translate">{{ o.orderNumber }}</td>
-              </ng-container>
-              <ng-container matColumnDef="executor">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.executor' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.executor' | translate">{{ o.executorName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.totalAmount' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.totalAmount' | translate">{{ o.totalAmount | currencyMk }}</td>
-              </ng-container>
-              <ng-container matColumnDef="remaining">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.remaining' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.remaining' | translate">{{ o.remainingAmount | currencyMk }}</td>
-              </ng-container>
-              <ng-container matColumnDef="receivedDate">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.received' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.received' | translate">{{ o.receivedDate | date:'dd.MM.yyyy' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>{{ 'orders.status' | translate }}</th>
-                <td mat-cell *matCellDef="let o" [attr.data-label]="'orders.status' | translate">
-                  <app-status-badge [status]="o.status" [statusColor]="o.statusColor" />
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let o" class="actions-cell">
-                  <button mat-icon-button matTooltip="Испрати мејл" (click)="openEmailPreview(o)">
-                    <mat-icon style="color:#3949ab">email</mat-icon>
-                  </button>
-                  @if (authService.canEditCompany(companyId)) {
-                    <button mat-icon-button matTooltip="Измени налог" (click)="openEditOrder(o)">
-                      <mat-icon style="color:#00897b">edit</mat-icon>
-                    </button>
-                    <button mat-icon-button matTooltip="Избриши налог" (click)="deleteOrder(o)">
-                      <mat-icon style="color:#c62828">delete</mat-icon>
-                    </button>
+            @if (employee()!.employmentEndDate && authService.canEditCompany(companyId)) {
+              <div class="termination-notice">
+                <mat-icon class="term-icon">person_off</mat-icon>
+                <div class="term-text">
+                  <span>Работникот е одјавен на {{ employee()!.employmentEndDate | date:'dd.MM.yyyy' }}</span>
+                </div>
+                <button mat-stroked-button color="warn" (click)="openTerminationEmails()" class="term-notify-btn">
+                  <mat-icon>mail_lock</mat-icon>
+                  Известувања
+                </button>
+              </div>
+            }
+
+            @if (employee()!.employmentHistories?.length) {
+              <div class="history-section">
+                <h4 class="history-title">
+                  <mat-icon class="history-icon">history</mat-icon>
+                  Претходни периоди на вработување
+                </h4>
+                <div class="history-list">
+                  @for (h of employee()!.employmentHistories; track h.id) {
+                    <div class="history-entry">
+                      <mat-icon class="entry-icon">work_history</mat-icon>
+                      <span class="entry-dates">
+                        {{ h.startDate | date:'dd.MM.yyyy' }}
+                        <span class="entry-arrow">→</span>
+                        {{ h.endDate | date:'dd.MM.yyyy' }}
+                      </span>
+                      <span class="entry-duration">({{ durationLabel(h) }})</span>
+                    </div>
                   }
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="orderColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: orderColumns;"
-                [class.row-order-yellow]="row.statusColor === 'yellow'"
-                [class.row-order-green]="row.statusColor === 'green'"
-              ></tr>
-              <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell empty-state" [attr.colspan]="orderColumns.length">{{ 'orders.noOrders' | translate }}</td>
-              </tr>
-            </table>
+                </div>
+              </div>
+            }
           </div>
         </mat-tab>
       </mat-tab-group>
