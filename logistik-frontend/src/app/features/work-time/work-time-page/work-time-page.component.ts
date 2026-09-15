@@ -259,6 +259,7 @@ interface RowState {
                           class="num-input"
                           [(ngModel)]="row.documentCount"
                           (ngModelChange)="row.dirty = true"
+                          (focus)="selectAll($event)"
                           min="0"
                           placeholder="0"
                         />
@@ -269,6 +270,7 @@ interface RowState {
                           class="num-input"
                           [(ngModel)]="row.minutes"
                           (ngModelChange)="row.dirty = true"
+                          (focus)="selectAll($event)"
                           min="0"
                           placeholder="0"
                         />
@@ -404,7 +406,10 @@ interface RowState {
       &:focus { outline: none; border-color: #3949ab; background: white; }
       &:hover { border-color: #bdbdbd; }
     }
-    .num-input { width: 70px; text-align: center; }
+    .num-input { width: 70px; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+    /* Remove the up/down spinner arrows from number inputs */
+    .num-input::-webkit-outer-spin-button,
+    .num-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .notes-input { width: 100%; box-sizing: border-box; }
     .save-all-row {
       margin-top: 16px;
@@ -518,6 +523,8 @@ export class WorkTimePageComponent implements OnInit {
 
   // Average minutes per document, used across every table.
   avgTime(minutes: number, docs: number): number { return docs > 0 ? minutes / docs : 0; }
+  // Select the field content on focus so typing replaces the default 0 (no "05").
+  selectAll(event: Event): void { (event.target as HTMLInputElement).select(); }
   monthName(m: number): string { return WorkTimePageComponent.MK_MONTHS[m - 1] ?? ''; }
   yearTotalDocs(): number { return this.yearlySummary().reduce((s, r) => s + r.documentCount, 0); }
   yearTotalMinutes(): number { return this.yearlySummary().reduce((s, r) => s + r.minutes, 0); }
