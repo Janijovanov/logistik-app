@@ -260,6 +260,8 @@ interface RowState {
                           [(ngModel)]="row.documentCount"
                           (ngModelChange)="row.dirty = true"
                           (focus)="selectAll($event)"
+                          (keydown)="onGridKey($event, i, 0)"
+                          [attr.data-wt-r]="i" data-wt-c="0"
                           min="0"
                           placeholder="0"
                         />
@@ -271,6 +273,8 @@ interface RowState {
                           [(ngModel)]="row.minutes"
                           (ngModelChange)="row.dirty = true"
                           (focus)="selectAll($event)"
+                          (keydown)="onGridKey($event, i, 1)"
+                          [attr.data-wt-r]="i" data-wt-c="1"
                           min="0"
                           placeholder="0"
                         />
@@ -282,6 +286,8 @@ interface RowState {
                           class="notes-input"
                           [(ngModel)]="row.notes"
                           (ngModelChange)="row.dirty = true"
+                          (keydown)="onGridKey($event, i, 2)"
+                          [attr.data-wt-r]="i" data-wt-c="2"
                           placeholder="{{ 'workTime.notesOptional' | translate }}"
                         />
                       </td>
@@ -525,6 +531,45 @@ export class WorkTimePageComponent implements OnInit {
   avgTime(minutes: number, docs: number): number { return docs > 0 ? minutes / docs : 0; }
   // Select the field content on focus so typing replaces the default 0 (no "05").
   selectAll(event: Event): void { (event.target as HTMLInputElement).select(); }
+
+  // Excel-like arrow navigation across the entry grid.
+  // Columns: 0 = documents, 1 = minutes, 2 = notes. Up/Down move rows,
+  // Left/Right move columns (wrapping to the previous/next row), Enter = down.
+  private static readonly GRID_COLS = 3;
+  onGridKey(event: KeyboardEvent, r: number, c: number): void {
+    const input = event.target as HTMLInputElement;
+    const isNum = input.type === 'number'; // number inputs don't expose caret position
+    const atStart = isNum || (input.selectionStart === 0 && input.selectionEnd === 0);
+    const atEnd = isNum || (input.selectionStart === input.value.length && input.selectionEnd === input.value.length);
+    const rowCount = this.rows().length;
+    const COLS = WorkTimePageComponent.GRID_COLS;
+
+    let tr = r, tc = c;
+    switch (event.key) {
+      case 'ArrowUp': tr = r - 1; break;
+      case 'ArrowDown':
+      case 'Enter': tr = r + 1; break;
+      case 'ArrowLeft':
+        if (!atStart) return;
+        tc = c - 1; if (tc < 0) { tc = COLS - 1; tr = r - 1; }
+        break;
+      case 'ArrowRight':
+        if (!atEnd) return;
+        tc = c + 1; if (tc >= COLS) { tc = 0; tr = r + 1; }
+        break;
+      default: return;
+    }
+    if (tr < 0 || tr >= rowCount) return;
+    event.preventDefault();
+    this.focusCell(tr, tc);
+  }
+
+  private focusCell(r: number, c: number): void {
+    setTimeout(() => {
+      const el = document.querySelector(`[data-wt-r="${r}"][data-wt-c="${c}"]`) as HTMLInputElement | null;
+      if (el) { el.focus(); el.select?.(); }
+    });
+  }
   monthName(m: number): string { return WorkTimePageComponent.MK_MONTHS[m - 1] ?? ''; }
   yearTotalDocs(): number { return this.yearlySummary().reduce((s, r) => s + r.documentCount, 0); }
   yearTotalMinutes(): number { return this.yearlySummary().reduce((s, r) => s + r.minutes, 0); }
