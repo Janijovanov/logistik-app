@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -33,7 +34,7 @@ interface RowState {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule,
+    MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatFormFieldModule,
     MatInputModule, MatProgressSpinnerModule, MatTooltipModule,
     MatDatepickerModule,
     MatDialogModule, TranslateModule
@@ -56,6 +57,12 @@ interface RowState {
         </div>
       }
     </div>
+
+    <!-- Mode: Процена (estimate) vs Утврдено (actual) -->
+    <mat-button-toggle-group class="kind-toggle" [(ngModel)]="selectedKind" (change)="onKindChange()">
+      <mat-button-toggle [value]="1">{{ 'workTime.kindEstimate' | translate }}</mat-button-toggle>
+      <mat-button-toggle [value]="0">{{ 'workTime.kindActual' | translate }}</mat-button-toggle>
+    </mat-button-toggle-group>
 
     <!-- Filters -->
     <div class="filters-row">
@@ -352,6 +359,7 @@ interface RowState {
     }
     .page-title { font-size: 24px; font-weight: 500; margin: 0; }
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .kind-toggle { margin-bottom: 16px; }
     .filters-row {
       display: flex;
       gap: 16px;
@@ -594,6 +602,7 @@ export class WorkTimePageComponent implements OnInit {
   selectedDateObj: Date = new Date();
   selectedCompanyId: number | null = null;
   selectedUserId: number | null = null;
+  selectedKind = 0; // 0 = Утврдено (actual), 1 = Процена (estimate)
 
   get selectedDate(): string {
     const d = this.selectedDateObj;
@@ -634,12 +643,20 @@ export class WorkTimePageComponent implements OnInit {
     this.loadEntries();
   }
 
+  onKindChange(): void {
+    // Switching between Процена / Утврдено reloads the whole view for that mode.
+    this.rows.set([]);
+    this.entries.set([]);
+    if (this.selectedCompanyId) this.loadEntries();
+  }
+
   private loadEntries(): void {
     if (!this.selectedCompanyId) return;
     this.loading.set(true);
 
     const userId = this.isAdmin() ? this.selectedUserId ?? undefined : undefined;
-    this.svc.getEntries(this.selectedDate, this.selectedCompanyId, userId ?? undefined).subscribe({
+    const kind = this.selectedKind;
+    this.svc.getEntries(this.selectedDate, this.selectedCompanyId, userId ?? undefined, kind).subscribe({
       next: entries => {
         this.entries.set(entries);
         if (!this.isAdmin() || this.selectedUserId !== null) {
@@ -650,17 +667,17 @@ export class WorkTimePageComponent implements OnInit {
       error: () => this.loading.set(false)
     });
 
-    this.svc.getMonthlyTotal(this.selectedDate, this.selectedCompanyId, userId ?? undefined).subscribe({
+    this.svc.getMonthlyTotal(this.selectedDate, this.selectedCompanyId, userId ?? undefined, kind).subscribe({
       next: total => this.monthlyTotal.set(total),
       error: () => this.monthlyTotal.set({ documentCount: 0, minutes: 0 })
     });
 
-    this.svc.getEntryDates(this.selectedCompanyId, userId ?? undefined).subscribe({
+    this.svc.getEntryDates(this.selectedCompanyId, userId ?? undefined, kind).subscribe({
       next: dates => this.entryDates = new Set(dates),
       error: () => this.entryDates.clear()
     });
 
-    this.svc.getYearlySummary(this.selectedCompanyId, this.selectedDateObj.getFullYear(), userId ?? undefined).subscribe({
+    this.svc.getYearlySummary(this.selectedCompanyId, this.selectedDateObj.getFullYear(), userId ?? undefined, kind).subscribe({
       next: s => this.yearlySummary.set(s),
       error: () => this.yearlySummary.set([])
     });
@@ -694,7 +711,8 @@ export class WorkTimePageComponent implements OnInit {
       documentCount: row.documentCount || 0,
       minutes: row.minutes || 0,
       notes: row.notes || null,
-      userId: this.isAdmin() && this.selectedUserId ? this.selectedUserId : undefined
+      userId: this.isAdmin() && this.selectedUserId ? this.selectedUserId : undefined,
+      kind: this.selectedKind
     }).subscribe({
       next: () => {
         row.dirty = false;

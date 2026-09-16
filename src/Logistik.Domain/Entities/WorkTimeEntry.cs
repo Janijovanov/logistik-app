@@ -14,4 +14,7 @@ public class WorkTimeEntry : BaseEntity
     public int DocumentCount { get; set; }
     public int Minutes { get; set; }
     public string? Notes { get; set; }
+
+    /// <summary>Which work-time mode this entry belongs to: 0 = Утврдено (actual), 1 = Процена (estimate).</summary>
+    public int Kind { get; set; }
 }

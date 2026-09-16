@@ -289,7 +289,9 @@
     "noItems": "No items.",
     "selectCompany": "Select a company to view records.",
     "manageCompanies": "Manage Companies",
-    "manageDocTypes": "Manage Doc Types"
+    "manageDocTypes": "Manage Doc Types",
+    "kindEstimate": "Estimate",
+    "kindActual": "Actual"
   },
   "dashboard": {
     "title": "Dashboard",

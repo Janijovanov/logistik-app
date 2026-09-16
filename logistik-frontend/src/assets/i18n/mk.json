@@ -289,7 +289,9 @@
     "noItems": "Нема ставки.",
     "selectCompany": "Изберете фирма за да ги видите записите.",
     "manageCompanies": "Управувај со фирми",
-    "manageDocTypes": "Управувај со типови"
+    "manageDocTypes": "Управувај со типови",
+    "kindEstimate": "Процена",
+    "kindActual": "Утврдено"
   },
   "dashboard": {
     "title": "Контролна табла",

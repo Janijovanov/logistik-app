@@ -41,8 +41,8 @@ export class WorkTimeService {
     return this.http.delete<void>(`${this.base}/document-types/${id}`);
   }
 
-  getEntries(date: string, companyId: number, userId?: number): Observable<WorkTimeEntryDto[]> {
-    let url = `${this.base}/entries?date=${date}&companyId=${companyId}`;
+  getEntries(date: string, companyId: number, userId?: number, kind = 0): Observable<WorkTimeEntryDto[]> {
+    let url = `${this.base}/entries?date=${date}&companyId=${companyId}&kind=${kind}`;
     if (userId) url += `&userId=${userId}`;
     return this.http.get<WorkTimeEntryDto[]>(url);
   }
@@ -55,24 +55,25 @@ export class WorkTimeService {
     minutes: number;
     notes: string | null;
     userId?: number;
+    kind?: number;
   }): Observable<void> {
     return this.http.post<void>(`${this.base}/entries`, payload);
   }
 
-  getYearlySummary(companyId: number, year: number, userId?: number): Observable<WorkTimeMonthSummary[]> {
-    let url = `${this.base}/yearly-summary?companyId=${companyId}&year=${year}`;
+  getYearlySummary(companyId: number, year: number, userId?: number, kind = 0): Observable<WorkTimeMonthSummary[]> {
+    let url = `${this.base}/yearly-summary?companyId=${companyId}&year=${year}&kind=${kind}`;
     if (userId) url += `&userId=${userId}`;
     return this.http.get<WorkTimeMonthSummary[]>(url);
   }
 
-  getEntryDates(companyId: number, userId?: number): Observable<string[]> {
-    let url = `${this.base}/entry-dates?companyId=${companyId}`;
+  getEntryDates(companyId: number, userId?: number, kind = 0): Observable<string[]> {
+    let url = `${this.base}/entry-dates?companyId=${companyId}&kind=${kind}`;
     if (userId) url += `&userId=${userId}`;
     return this.http.get<string[]>(url);
   }
 
-  getMonthlyTotal(date: string, companyId: number, userId?: number): Observable<{ documentCount: number; minutes: number }> {
-    let url = `${this.base}/monthly-total?date=${date}&companyId=${companyId}`;
+  getMonthlyTotal(date: string, companyId: number, userId?: number, kind = 0): Observable<{ documentCount: number; minutes: number }> {
+    let url = `${this.base}/monthly-total?date=${date}&companyId=${companyId}&kind=${kind}`;
     if (userId) url += `&userId=${userId}`;
     return this.http.get<{ documentCount: number; minutes: number }>(url);
   }

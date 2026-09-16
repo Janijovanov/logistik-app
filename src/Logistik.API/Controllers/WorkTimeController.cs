@@ -139,6 +139,7 @@ public class WorkTimeController : ControllerBase
         [FromQuery] string date,
         [FromQuery] int companyId,
         [FromQuery] int? userId,
+        [FromQuery] int kind,
         CancellationToken ct)
     {
         if (!DateOnly.TryParse(date, out var parsedDate))
@@ -147,7 +148,7 @@ public class WorkTimeController : ControllerBase
         var query = _db.WorkTimeEntries
             .Include(e => e.DocumentType)
             .Include(e => e.User)
-            .Where(e => e.Date == parsedDate && e.WorkTimeCompanyId == companyId);
+            .Where(e => e.Date == parsedDate && e.WorkTimeCompanyId == companyId && e.Kind == kind);
 
         if (_currentUser.IsAdmin)
         {
@@ -185,13 +186,14 @@ public class WorkTimeController : ControllerBase
         [FromQuery] int companyId,
         [FromQuery] int year,
         [FromQuery] int? userId,
+        [FromQuery] int kind,
         CancellationToken ct)
     {
         var start = new DateOnly(year, 1, 1);
         var end = start.AddYears(1);
 
         var query = _db.WorkTimeEntries
-            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= start && e.Date < end);
+            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= start && e.Date < end && e.Kind == kind);
 
         if (_currentUser.IsAdmin)
         {
@@ -226,9 +228,10 @@ public class WorkTimeController : ControllerBase
     public async Task<IActionResult> GetEntryDates(
         [FromQuery] int companyId,
         [FromQuery] int? userId,
+        [FromQuery] int kind,
         CancellationToken ct)
     {
-        var query = _db.WorkTimeEntries.Where(e => e.WorkTimeCompanyId == companyId);
+        var query = _db.WorkTimeEntries.Where(e => e.WorkTimeCompanyId == companyId && e.Kind == kind);
 
         if (_currentUser.IsAdmin)
         {
@@ -254,6 +257,7 @@ public class WorkTimeController : ControllerBase
         [FromQuery] string date,
         [FromQuery] int companyId,
         [FromQuery] int? userId,
+        [FromQuery] int kind,
         CancellationToken ct)
     {
         if (!DateOnly.TryParse(date, out var parsedDate))
@@ -263,7 +267,7 @@ public class WorkTimeController : ControllerBase
         var monthEnd = monthStart.AddMonths(1);
 
         var query = _db.WorkTimeEntries
-            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= monthStart && e.Date < monthEnd);
+            .Where(e => e.WorkTimeCompanyId == companyId && e.Date >= monthStart && e.Date < monthEnd && e.Kind == kind);
 
         if (_currentUser.IsAdmin)
         {
@@ -297,7 +301,8 @@ public class WorkTimeController : ControllerBase
             e => e.UserId == targetUserId
               && e.WorkTimeCompanyId == req.CompanyId
               && e.WorkDocumentTypeId == req.DocumentTypeId
-              && e.Date == parsedDate,
+              && e.Date == parsedDate
+              && e.Kind == req.Kind,
             ct);
 
         if (req.DocumentCount == 0 && req.Minutes == 0 && string.IsNullOrWhiteSpace(req.Notes))
@@ -320,7 +325,8 @@ public class WorkTimeController : ControllerBase
                 Date = parsedDate,
                 DocumentCount = req.DocumentCount,
                 Minutes = req.Minutes,
-                Notes = req.Notes?.Trim()
+                Notes = req.Notes?.Trim(),
+                Kind = req.Kind
             });
         }
         else
@@ -366,4 +372,4 @@ public class WorkTimeController : ControllerBase
 
 public record WorkTimeCompanyRequest(string Name);
 public record WorkDocumentTypeRequest(string Name);
-public record WorkTimeEntryRequest(string Date, int CompanyId, int DocumentTypeId, int DocumentCount, int Minutes, string? Notes, int? UserId);
+public record WorkTimeEntryRequest(string Date, int CompanyId, int DocumentTypeId, int DocumentCount, int Minutes, string? Notes, int? UserId, int Kind = 0);
