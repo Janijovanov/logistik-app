@@ -82,7 +82,16 @@ export class WorkTimeService {
     return this.http.delete<void>(`${this.base}/entries/${id}`);
   }
 
-  getUsers(): Observable<WorkTimeUserDto[]> {
-    return this.http.get<WorkTimeUserDto[]>(`${this.base}/users`);
+  getUsers(companyId?: number): Observable<WorkTimeUserDto[]> {
+    const url = companyId ? `${this.base}/users?companyId=${companyId}` : `${this.base}/users`;
+    return this.http.get<WorkTimeUserDto[]>(url);
+  }
+
+  getCompanyWorkerIds(companyId: number): Observable<number[]> {
+    return this.http.get<number[]>(`${this.base}/companies/${companyId}/workers`);
+  }
+
+  setCompanyWorkers(companyId: number, userIds: number[]): Observable<void> {
+    return this.http.put<void>(`${this.base}/companies/${companyId}/workers`, { userIds });
   }
 }

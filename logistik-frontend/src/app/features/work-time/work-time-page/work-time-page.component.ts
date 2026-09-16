@@ -59,7 +59,7 @@ interface RowState {
     </div>
 
     <!-- Mode: Процена (estimate) vs Утврдено (actual) -->
-    <mat-button-toggle-group class="kind-toggle" [(ngModel)]="selectedKind" (change)="onKindChange()">
+    <mat-button-toggle-group class="kind-toggle" [value]="selectedKind" (change)="onKindChange($event.value)">
       <mat-button-toggle [value]="1">{{ 'workTime.kindEstimate' | translate }}</mat-button-toggle>
       <mat-button-toggle [value]="0">{{ 'workTime.kindActual' | translate }}</mat-button-toggle>
     </mat-button-toggle-group>
@@ -76,7 +76,7 @@ interface RowState {
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>{{ 'workTime.company' | translate }}</mat-label>
-        <mat-select [(ngModel)]="selectedCompanyId" (selectionChange)="onFilterChange()">
+        <mat-select [(ngModel)]="selectedCompanyId" (selectionChange)="onCompanyChange()">
           @for (c of companies(); track c.id) {
             <mat-option [value]="c.id">{{ c.name }}</mat-option>
           }
@@ -629,9 +629,17 @@ export class WorkTimePageComponent implements OnInit {
   ngOnInit(): void {
     this.svc.getCompanies().subscribe(c => this.companies.set(c));
     this.svc.getDocumentTypes().subscribe(t => this.docTypes.set(t));
-    if (this.isAdmin()) {
-      this.svc.getUsers().subscribe(u => this.users.set(u));
+    // Workers are loaded per-company (see onCompanyChange), not all at once.
+  }
+
+  onCompanyChange(): void {
+    // Each company has its own assigned workers — reload the worker list for it.
+    this.selectedUserId = null;
+    this.users.set([]);
+    if (this.selectedCompanyId && this.isAdmin()) {
+      this.svc.getUsers(this.selectedCompanyId).subscribe(u => this.users.set(u));
     }
+    this.onFilterChange();
   }
 
   onDateChange(): void {
@@ -643,8 +651,9 @@ export class WorkTimePageComponent implements OnInit {
     this.loadEntries();
   }
 
-  onKindChange(): void {
+  onKindChange(value: number): void {
     // Switching between Процена / Утврдено reloads the whole view for that mode.
+    this.selectedKind = value;
     this.rows.set([]);
     this.entries.set([]);
     if (this.selectedCompanyId) this.loadEntries();

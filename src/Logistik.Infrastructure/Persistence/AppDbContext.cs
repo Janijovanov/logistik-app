@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkTimeCompany> WorkTimeCompanies => Set<WorkTimeCompany>();
     public DbSet<WorkDocumentType> WorkDocumentTypes => Set<WorkDocumentType>();
     public DbSet<WorkTimeEntry> WorkTimeEntries => Set<WorkTimeEntry>();
+    public DbSet<WorkTimeCompanyWorker> WorkTimeCompanyWorkers => Set<WorkTimeCompanyWorker>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

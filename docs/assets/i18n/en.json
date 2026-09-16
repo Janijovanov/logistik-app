@@ -291,7 +291,9 @@
     "manageCompanies": "Manage Companies",
     "manageDocTypes": "Manage Doc Types",
     "kindEstimate": "Estimate",
-    "kindActual": "Actual"
+    "kindActual": "Actual",
+    "assignWorkers": "Workers for this company",
+    "noWorkers": "No workers available"
   },
   "dashboard": {
     "title": "Dashboard",
