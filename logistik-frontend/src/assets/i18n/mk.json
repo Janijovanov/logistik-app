@@ -291,9 +291,7 @@
     "manageCompanies": "Управувај со фирми",
     "manageDocTypes": "Управувај со типови",
     "kindEstimate": "Процена",
-    "kindActual": "Утврдено",
-    "assignWorkers": "Работници за оваа фирма",
-    "noWorkers": "Нема достапни работници"
+    "kindActual": "Утврдено"
   },
   "dashboard": {
     "title": "Контролна табла",

@@ -76,7 +76,7 @@ interface RowState {
 
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>{{ 'workTime.company' | translate }}</mat-label>
-        <mat-select [(ngModel)]="selectedCompanyId" (selectionChange)="onCompanyChange()">
+        <mat-select [(ngModel)]="selectedCompanyId" (selectionChange)="onFilterChange()">
           @for (c of companies(); track c.id) {
             <mat-option [value]="c.id">{{ c.name }}</mat-option>
           }
@@ -629,17 +629,9 @@ export class WorkTimePageComponent implements OnInit {
   ngOnInit(): void {
     this.svc.getCompanies().subscribe(c => this.companies.set(c));
     this.svc.getDocumentTypes().subscribe(t => this.docTypes.set(t));
-    // Workers are loaded per-company (see onCompanyChange), not all at once.
-  }
-
-  onCompanyChange(): void {
-    // Each company has its own assigned workers — reload the worker list for it.
-    this.selectedUserId = null;
-    this.users.set([]);
-    if (this.selectedCompanyId && this.isAdmin()) {
-      this.svc.getUsers(this.selectedCompanyId).subscribe(u => this.users.set(u));
+    if (this.isAdmin()) {
+      this.svc.getUsers().subscribe(u => this.users.set(u));
     }
-    this.onFilterChange();
   }
 
   onDateChange(): void {

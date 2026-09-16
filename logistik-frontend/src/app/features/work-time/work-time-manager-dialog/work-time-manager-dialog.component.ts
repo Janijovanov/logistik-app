@@ -8,11 +8,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { WorkTimeService } from '../work-time.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeUserDto } from '../../../core/models/work-time.models';
+import { WorkTimeCompanyDto, WorkDocumentTypeDto } from '../../../core/models/work-time.models';
 
 @Component({
   selector: 'app-work-time-manager-dialog',
@@ -20,7 +19,7 @@ import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeUserDto } from '../../
   imports: [
     CommonModule, FormsModule,
     MatButtonModule, MatIconModule, MatInputModule, MatFormFieldModule,
-    MatDialogModule, MatListModule, MatTooltipModule, MatCheckboxModule, TranslateModule
+    MatDialogModule, MatListModule, MatTooltipModule, TranslateModule
   ],
   template: `
     <h2 mat-dialog-title>
@@ -57,13 +56,6 @@ import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeUserDto } from '../../
               </button>
             } @else {
               <span class="item-name">{{ item.name }}</span>
-              @if (data.type === 'companies') {
-                <button mat-icon-button (click)="toggleWorkers(item.id)"
-                  [color]="expandedCompanyId === item.id ? 'primary' : ''"
-                  [matTooltip]="'workTime.assignWorkers' | translate">
-                  <mat-icon>group</mat-icon>
-                </button>
-              }
               <button mat-icon-button (click)="startEdit(item)"
                 [matTooltip]="'common.edit' | translate">
                 <mat-icon>edit</mat-icon>
@@ -74,22 +66,6 @@ import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeUserDto } from '../../
               </button>
             }
           </div>
-
-          @if (data.type === 'companies' && expandedCompanyId === item.id) {
-            <div class="workers-panel">
-              <div class="workers-title">{{ 'workTime.assignWorkers' | translate }}</div>
-              @if (allUsers().length === 0) {
-                <div class="workers-empty">{{ 'workTime.noWorkers' | translate }}</div>
-              }
-              @for (u of allUsers(); track u.id) {
-                <mat-checkbox
-                  [checked]="assignedIds().has(u.id)"
-                  (change)="toggleAssign(u.id, $event.checked)">
-                  {{ u.fullName }}
-                </mat-checkbox>
-              }
-            </div>
-          }
         }
         @if (items().length === 0) {
           <div class="empty">{{ 'workTime.noItems' | translate }}</div>
@@ -120,13 +96,6 @@ import { WorkTimeCompanyDto, WorkDocumentTypeDto, WorkTimeUserDto } from '../../
     .item-name { flex: 1; font-size: 14px; }
     .edit-field { flex: 1; }
     .empty { color: rgba(0,0,0,0.38); padding: 16px; text-align: center; }
-    .workers-panel {
-      display: flex; flex-direction: column; gap: 6px;
-      padding: 10px 14px 14px 24px; margin: 0 8px 8px;
-      background: #f7f8fc; border-left: 3px solid #3949ab; border-radius: 0 6px 6px 0;
-    }
-    .workers-title { font-size: 12px; font-weight: 600; color: #3949ab; margin-bottom: 2px; }
-    .workers-empty { font-size: 13px; color: rgba(0,0,0,0.4); }
   `]
 })
 export class WorkTimeManagerDialogComponent implements OnInit {
@@ -141,43 +110,8 @@ export class WorkTimeManagerDialogComponent implements OnInit {
   editingId: number | null = null;
   editName = '';
 
-  // Worker assignment (companies only)
-  allUsers = signal<WorkTimeUserDto[]>([]);
-  expandedCompanyId: number | null = null;
-  assignedIds = signal<Set<number>>(new Set());
-
   ngOnInit(): void {
     this.load();
-    if (this.data.type === 'companies') {
-      this.svc.getUsers().subscribe(u => this.allUsers.set(u));
-    }
-  }
-
-  toggleWorkers(companyId: number): void {
-    if (this.expandedCompanyId === companyId) {
-      this.expandedCompanyId = null;
-      return;
-    }
-    this.expandedCompanyId = companyId;
-    this.assignedIds.set(new Set());
-    this.svc.getCompanyWorkerIds(companyId).subscribe(ids => this.assignedIds.set(new Set(ids)));
-  }
-
-  toggleAssign(userId: number, checked: boolean): void {
-    if (this.expandedCompanyId === null) return;
-    const next = new Set(this.assignedIds());
-    if (checked) next.add(userId); else next.delete(userId);
-    this.assignedIds.set(next);
-    this.svc.setCompanyWorkers(this.expandedCompanyId, Array.from(next)).subscribe({
-      next: () => this.notify.success(this.translate.instant('workTime.saved')),
-      error: () => {
-        // revert on failure
-        const revert = new Set(this.assignedIds());
-        if (checked) revert.delete(userId); else revert.add(userId);
-        this.assignedIds.set(revert);
-        this.notify.error(this.translate.instant('errors.failedToLoad'));
-      }
-    });
   }
 
   private load(): void {

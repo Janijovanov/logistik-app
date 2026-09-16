@@ -359,63 +359,17 @@ public class WorkTimeController : ControllerBase
 
     [HttpGet("users")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetUsers([FromQuery] int? companyId, CancellationToken ct)
+    public async Task<IActionResult> GetUsers(CancellationToken ct)
     {
-        var query = _db.Users.Where(u => u.IsActive && u.Role.Name == "User");
-
-        // When a company is given, return only the workers assigned to that company.
-        if (companyId.HasValue)
-        {
-            var assignedIds = _db.WorkTimeCompanyWorkers
-                .Where(w => w.WorkTimeCompanyId == companyId.Value)
-                .Select(w => w.UserId);
-            query = query.Where(u => assignedIds.Contains(u.Id));
-        }
-
-        var users = await query
+        var users = await _db.Users
+            .Where(u => u.IsActive && u.Role.Name == "User")
             .OrderBy(u => u.FirstName).ThenBy(u => u.LastName)
             .Select(u => new { u.Id, fullName = u.FirstName + " " + u.LastName })
             .ToListAsync(ct);
         return Ok(users);
-    }
-
-    // ── Company ↔ worker assignment ──────────────────────────────────────────
-
-    [HttpGet("companies/{id:int}/workers")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetCompanyWorkers(int id, CancellationToken ct)
-    {
-        var ids = await _db.WorkTimeCompanyWorkers
-            .Where(w => w.WorkTimeCompanyId == id)
-            .Select(w => w.UserId)
-            .ToListAsync(ct);
-        return Ok(ids);
-    }
-
-    [HttpPut("companies/{id:int}/workers")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> SetCompanyWorkers(int id, [FromBody] SetWorkersRequest req, CancellationToken ct)
-    {
-        var company = await _db.WorkTimeCompanies.FindAsync([id], ct);
-        if (company is null) return NotFound();
-
-        var existing = await _db.WorkTimeCompanyWorkers
-            .Where(w => w.WorkTimeCompanyId == id)
-            .ToListAsync(ct);
-        var newIds = (req.UserIds ?? new List<int>()).Distinct().ToHashSet();
-
-        _db.WorkTimeCompanyWorkers.RemoveRange(existing.Where(w => !newIds.Contains(w.UserId)));
-
-        var existingIds = existing.Select(w => w.UserId).ToHashSet();
-        foreach (var uid in newIds.Where(uid => !existingIds.Contains(uid)))
-            _db.WorkTimeCompanyWorkers.Add(new WorkTimeCompanyWorker { WorkTimeCompanyId = id, UserId = uid });
-
-        await _db.SaveChangesAsync(ct);
-        return NoContent();
     }
 }
 
 public record WorkTimeCompanyRequest(string Name);
 public record WorkDocumentTypeRequest(string Name);
 public record WorkTimeEntryRequest(string Date, int CompanyId, int DocumentTypeId, int DocumentCount, int Minutes, string? Notes, int? UserId, int Kind = 0);
-public record SetWorkersRequest(List<int> UserIds);

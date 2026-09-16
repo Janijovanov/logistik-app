@@ -27,6 +27,6 @@ export const appConfig: ApplicationConfig = {
     provideTranslateService({ defaultLanguage: 'mk' }),
     // Cache-bust the translation files so a redeploy always fetches fresh
     // strings (the .json filenames are not content-hashed). Bump on change.
-    provideTranslateHttpLoader({ prefix: 'assets/i18n/', suffix: '.json?v=20260917' })
+    provideTranslateHttpLoader({ prefix: 'assets/i18n/', suffix: '.json?v=20260917b' })
   ]
 };
