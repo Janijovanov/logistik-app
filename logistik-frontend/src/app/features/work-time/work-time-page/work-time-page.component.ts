@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -34,7 +35,7 @@ interface RowState {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    MatButtonModule, MatButtonToggleModule, MatIconModule, MatSelectModule, MatFormFieldModule,
+    MatButtonModule, MatButtonToggleModule, MatMenuModule, MatIconModule, MatSelectModule, MatFormFieldModule,
     MatInputModule, MatProgressSpinnerModule, MatTooltipModule,
     MatDatepickerModule,
     MatDialogModule, TranslateModule
@@ -44,8 +45,18 @@ interface RowState {
       <div class="header-left">
         <h1 class="page-title">{{ 'workTime.title' | translate }}</h1>
       </div>
-      @if (isAdmin()) {
-        <div class="header-actions">
+      <div class="header-actions">
+        <button mat-flat-button color="primary" [matMenuTriggerFor]="exportMenu"
+          [disabled]="!selectedCompanyId || exporting()">
+          @if (exporting()) { <mat-spinner diameter="18" /> } @else { <mat-icon>download</mat-icon> }
+          {{ 'workTime.export' | translate }}
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="exportExcel('day')">{{ 'workTime.exportDay' | translate }}</button>
+          <button mat-menu-item (click)="exportExcel('month')">{{ 'workTime.exportMonth' | translate }}</button>
+          <button mat-menu-item (click)="exportExcel('year')">{{ 'workTime.exportYear' | translate }}</button>
+        </mat-menu>
+        @if (isAdmin()) {
           <button mat-stroked-button (click)="openManager('companies')">
             <mat-icon>business</mat-icon>
             {{ 'workTime.manageCompanies' | translate }}
@@ -54,8 +65,8 @@ interface RowState {
             <mat-icon>description</mat-icon>
             {{ 'workTime.manageDocTypes' | translate }}
           </button>
-        </div>
-      }
+        }
+      </div>
     </div>
 
     <!-- Mode: Процена (estimate) vs Утврдено (actual) -->
@@ -531,6 +542,7 @@ export class WorkTimePageComponent implements OnInit {
   entries = signal<WorkTimeEntryDto[]>([]);
   rows = signal<RowState[]>([]);
   loading = signal(false);
+  exporting = signal(false);
   monthlyTotal = signal<{ documentCount: number; minutes: number }>({ documentCount: 0, minutes: 0 });
   yearlySummary = signal<WorkTimeMonthSummary[]>([]);
   private entryDates = new Set<string>();
@@ -641,6 +653,27 @@ export class WorkTimePageComponent implements OnInit {
   onFilterChange(): void {
     if (!this.selectedCompanyId) return;
     this.loadEntries();
+  }
+
+  exportExcel(period: 'day' | 'month' | 'year'): void {
+    if (!this.selectedCompanyId || this.exporting()) return;
+    this.exporting.set(true);
+    const userId = this.isAdmin() ? (this.selectedUserId ?? undefined) : undefined;
+    this.svc.exportExcel(period, this.selectedCompanyId, this.selectedDate, userId, this.selectedKind).subscribe({
+      next: blob => {
+        this.exporting.set(false);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `RabotnoVreme-${period}-${this.selectedDate}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.exporting.set(false);
+        this.notify.error(this.translate.instant('errors.failedToLoad'));
+      }
+    });
   }
 
   onKindChange(value: number): void {

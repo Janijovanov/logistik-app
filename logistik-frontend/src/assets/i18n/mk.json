@@ -291,7 +291,11 @@
     "manageCompanies": "Управувај со фирми",
     "manageDocTypes": "Управувај со типови",
     "kindEstimate": "Процена",
-    "kindActual": "Утврдено"
+    "kindActual": "Утврдено",
+    "export": "Export во Excel",
+    "exportDay": "За ден",
+    "exportMonth": "За месец",
+    "exportYear": "За година"
   },
   "dashboard": {
     "title": "Контролна табла",

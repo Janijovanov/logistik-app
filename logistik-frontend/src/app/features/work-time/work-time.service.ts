@@ -85,4 +85,10 @@ export class WorkTimeService {
   getUsers(): Observable<WorkTimeUserDto[]> {
     return this.http.get<WorkTimeUserDto[]>(`${this.base}/users`);
   }
+
+  exportExcel(period: 'day' | 'month' | 'year', companyId: number, date: string, userId?: number, kind = 0): Observable<Blob> {
+    let url = `${this.base}/export?period=${period}&companyId=${companyId}&date=${date}&kind=${kind}`;
+    if (userId) url += `&userId=${userId}`;
+    return this.http.get(url, { responseType: 'blob' });
+  }
 }

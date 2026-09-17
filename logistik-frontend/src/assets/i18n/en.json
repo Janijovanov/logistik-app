@@ -291,7 +291,11 @@
     "manageCompanies": "Manage Companies",
     "manageDocTypes": "Manage Doc Types",
     "kindEstimate": "Estimate",
-    "kindActual": "Actual"
+    "kindActual": "Actual",
+    "export": "Export to Excel",
+    "exportDay": "For day",
+    "exportMonth": "For month",
+    "exportYear": "For year"
   },
   "dashboard": {
     "title": "Dashboard",
