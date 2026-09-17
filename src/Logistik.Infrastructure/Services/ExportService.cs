@@ -248,8 +248,8 @@ public class ExportService : IExportService
         var ws = wb.Worksheets.Add(en ? "Employees" : "Вработени");
 
         string[] headers = en
-            ? new[] { "Code", "Full Name", "EMBG", "Bank Account", "Net Salary (MKD)", "Start Date", "End Date", "Executor", "Transaction Account", "Order No.", "Amount (MKD)" }
-            : new[] { "Шифра", "Целе име", "ЕМБГ", "Банкарска сметка", "Нето плата (МКД)", "Датум на вработување", "Датум на престанок", "Извршител", "Тр. сметка", "И. бр.", "Износ (МКД)" };
+            ? new[] { "Code", "Full Name", "EMBG", "Bank Account", "Net Salary (MKD)", "Start Date", "End Date", "Executor", "Transaction Account", "Order No.", "Amount 1/5 (MKD)" }
+            : new[] { "Шифра", "Целе име", "ЕМБГ", "Банкарска сметка", "Нето плата (МКД)", "Датум на вработување", "Датум на престанок", "Извршител", "Тр. сметка", "И. бр.", "Износ 1/5 (МКД)" };
         for (int i = 0; i < headers.Length; i++) ws.Cell(1, i + 1).Value = headers[i];
         ws.Row(1).Style.Font.Bold = true;
         ws.Row(1).Style.Fill.BackgroundColor = XLColor.FromHtml("#DBEAFE");
@@ -260,41 +260,29 @@ public class ExportService : IExportService
             .ThenBy(e => e.FullName)
             .ToList();
 
+        // One row per employee. Salary AND enforcement columns come from the recorded
+        // salary for the month — they stay blank until a salary is recorded (which is
+        // when the deduction actually happens), mirroring the on-screen tables.
         foreach (var e in ordered)
         {
             salaryLookup.TryGetValue(e.Id, out var sal);
-            decimal? netSalary = sal?.NetSalary ?? (e.NetSalary > 0 ? e.NetSalary : null);
-            var orders = await _uow.EnforcementOrders.GetOrdersForEmployeeAsync(e.Id, includeArchived: false, ct);
 
-            void WriteEmployee(int r)
-            {
-                ws.Cell(r, 1).Value = e.Code ?? "";
-                ws.Cell(r, 2).Value = e.FullName;
-                ws.Cell(r, 3).Value = e.EMBG;
-                ws.Cell(r, 4).Value = e.BankAccount ?? "";
-                if (netSalary.HasValue) ws.Cell(r, 5).Value = (double)netSalary.Value;
-                ws.Cell(r, 6).Value = e.EmploymentStartDate.ToString("dd.MM.yyyy");
-                ws.Cell(r, 7).Value = e.EmploymentEndDate?.ToString("dd.MM.yyyy") ?? "";
-            }
+            ws.Cell(row, 1).Value = e.Code ?? "";
+            ws.Cell(row, 2).Value = e.FullName;
+            ws.Cell(row, 3).Value = e.EMBG;
+            ws.Cell(row, 4).Value = e.BankAccount ?? "";
+            if (sal is not null) ws.Cell(row, 5).Value = (double)sal.NetSalary;
+            ws.Cell(row, 6).Value = e.EmploymentStartDate.ToString("dd.MM.yyyy");
+            ws.Cell(row, 7).Value = e.EmploymentEndDate?.ToString("dd.MM.yyyy") ?? "";
 
-            if (orders.Count == 0)
+            if (sal is not null && sal.DeductionAmount > 0 && sal.EnforcementOrder is not null)
             {
-                WriteEmployee(row);
-                row++;
+                ws.Cell(row, 8).Value = sal.EnforcementOrder.ExecutorName;
+                ws.Cell(row, 9).Value = sal.EnforcementOrder.ExecutorBankAccount;
+                ws.Cell(row, 10).Value = sal.EnforcementOrder.OrderNumber;
+                ws.Cell(row, 11).Value = (double)sal.DeductionAmount;
             }
-            else
-            {
-                bool first = true;
-                foreach (var o in orders)
-                {
-                    if (first) { WriteEmployee(row); first = false; }
-                    ws.Cell(row, 8).Value = o.ExecutorName;
-                    ws.Cell(row, 9).Value = o.ExecutorBankAccount;
-                    ws.Cell(row, 10).Value = o.OrderNumber;
-                    ws.Cell(row, 11).Value = (double)o.TotalAmount;
-                    row++;
-                }
-            }
+            row++;
         }
 
         int lastRow = Math.Max(row - 1, 2);
