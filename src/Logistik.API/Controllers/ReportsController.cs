@@ -56,10 +56,13 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("companies/{companyId:int}/employees/export/excel")]
-    public async Task<IActionResult> CompanyEmployeesExcel(int companyId, CancellationToken ct)
+    public async Task<IActionResult> CompanyEmployeesExcel(int companyId, [FromQuery] int year, [FromQuery] int month, [FromQuery] string lang = "mk", CancellationToken ct = default)
     {
-        var bytes = await _export.ExportCompanyEmployeesToExcelAsync(companyId, ct);
-        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"company_{companyId}_employees.xlsx");
+        var now = DateTime.UtcNow;
+        if (year < 2000 || year > 2100) year = now.Year;
+        if (month < 1 || month > 12) month = now.Month;
+        var bytes = await _export.ExportCompanyEmployeesToExcelAsync(companyId, year, month, lang, ct);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"vraboteni-{companyId}-{year}-{month:D2}.xlsx");
     }
 
     [HttpGet("companies/{companyId:int}/enforcement-deductions/export/excel")]

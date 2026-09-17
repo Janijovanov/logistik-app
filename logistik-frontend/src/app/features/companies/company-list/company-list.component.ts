@@ -129,6 +129,12 @@ import { RehireDialogComponent } from '../../employees/rehire-dialog/rehire-dial
                 }
               </button>
 
+              @if (viewMode() === 'all' && authService.canExportCompany(selectedCompany()!.id)) {
+                <button mat-stroked-button (click)="exportEmployeesExcel()" class="export-btn">
+                  <mat-icon>download</mat-icon>
+                  Excel
+                </button>
+              }
               @if (viewMode() === 'orders' && ordersCount() > 0 && authService.canExportCompany(selectedCompany()!.id)) {
                 <button mat-stroked-button (click)="exportOrdersExcel()" class="export-btn">
                   <mat-icon>download</mat-icon>
@@ -535,6 +541,21 @@ export class CompanyListComponent implements OnInit {
     this.employeesService.getMonthlySalary(company.id, month.getFullYear(), month.getMonth() + 1).subscribe({
       next: data => { this.monthlyData.set(data); this.loadingEmployees.set(false); },
       error: () => this.loadingEmployees.set(false)
+    });
+  }
+
+  exportEmployeesExcel(): void {
+    const company = this.selectedCompany();
+    if (!company) return;
+    const m = this.monthCtrl.value ?? this.currentMonth();
+    const lang = this.translate.currentLang || 'mk';
+    this.employeesService.exportAllExcel(company.id, m.getFullYear(), m.getMonth() + 1, lang).subscribe(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vraboteni-${company.name}-${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
     });
   }
 

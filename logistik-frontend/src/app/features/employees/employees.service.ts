@@ -82,9 +82,10 @@ export class EmployeesService {
       { responseType: 'blob' });
   }
 
-  exportAllExcel(companyId: number): Observable<Blob> {
-    return this.http.get(`${environment.apiUrl}/reports/companies/${companyId}/employees/export/excel`,
-      { responseType: 'blob' });
+  exportAllExcel(companyId: number, year?: number, month?: number, lang = 'mk'): Observable<Blob> {
+    let url = `${environment.apiUrl}/reports/companies/${companyId}/employees/export/excel?lang=${lang}`;
+    if (year && month) url += `&year=${year}&month=${month}`;
+    return this.http.get(url, { responseType: 'blob' });
   }
 
   exportEnforcementDeductionsExcel(companyId: number, year: number, month: number): Observable<Blob> {
