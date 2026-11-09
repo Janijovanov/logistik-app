@@ -17,15 +17,18 @@ public class ExpensesController : ControllerBase
 
     // ── GET /api/expenses?year=2026 ──────────────────────────────────────────
     [HttpGet]
-    public async Task<IActionResult> GetForYear([FromQuery] int year, CancellationToken ct)
+    public async Task<IActionResult> GetForYear([FromQuery] int year, [FromQuery] int scope, CancellationToken ct)
     {
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
         // Load all entries for all years (no filtered include) then filter in memory.
         // Filtered includes + ThenInclude have compatibility issues across EF Core versions.
+        // Category headers: private (scope 1) shows main + private; main (scope 0) shows only main.
+        // Subcategories: each page shows only its own (matching scope), so amounts/plan stay separate.
         var categories = await _db.ExpenseCategories
             .Include(c => c.Subcategories)
                 .ThenInclude(s => s.Entries)
+            .Where(c => scope == 1 || c.Scope == 0)
             .OrderBy(c => c.Order)
             .ToListAsync(ct);
 
@@ -34,7 +37,9 @@ public class ExpensesController : ControllerBase
             c.Id,
             c.Name,
             c.Order,
+            c.Scope,
             subcategories = c.Subcategories
+                .Where(s => s.Scope == scope)
                 .OrderBy(s => s.Order)
                 .Select(s => new
                 {
@@ -59,10 +64,10 @@ public class ExpensesController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest(new { message = "Името е задолжително." });
         var maxOrder = await _db.ExpenseCategories.MaxAsync(c => (int?)c.Order, ct) ?? 0;
-        var cat = new ExpenseCategory { Name = req.Name.Trim(), Order = maxOrder + 1 };
+        var cat = new ExpenseCategory { Name = req.Name.Trim(), Order = maxOrder + 1, Scope = req.Scope };
         _db.ExpenseCategories.Add(cat);
         await _db.SaveChangesAsync(ct);
-        return Ok(new { cat.Id, cat.Name, cat.Order });
+        return Ok(new { cat.Id, cat.Name, cat.Order, cat.Scope });
     }
 
     [HttpPut("categories/{id:int}")]
@@ -102,11 +107,12 @@ public class ExpensesController : ControllerBase
             CategoryId = req.CategoryId,
             Name = req.Name.Trim(),
             Order = maxOrder + 1,
-            AnnualPlan = req.AnnualPlan
+            AnnualPlan = req.AnnualPlan,
+            Scope = req.Scope
         };
         _db.ExpenseSubcategories.Add(sub);
         await _db.SaveChangesAsync(ct);
-        return Ok(new { sub.Id, sub.CategoryId, sub.Name, sub.Order, sub.AnnualPlan });
+        return Ok(new { sub.Id, sub.CategoryId, sub.Name, sub.Order, sub.AnnualPlan, sub.Scope });
     }
 
     [HttpPut("subcategories/{id:int}")]
@@ -171,14 +177,19 @@ public class ExpensesController : ControllerBase
 
     // ── GET /api/expenses/export?year=2026 — Excel export ────────────────────
     [HttpGet("export")]
-    public async Task<IActionResult> Export([FromQuery] int year, CancellationToken ct)
+    public async Task<IActionResult> Export([FromQuery] int year, [FromQuery] int scope, CancellationToken ct)
     {
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
         var categories = await _db.ExpenseCategories
             .Include(c => c.Subcategories).ThenInclude(s => s.Entries)
+            .Where(c => scope == 1 || c.Scope == 0)
             .OrderBy(c => c.Order)
             .ToListAsync(ct);
+
+        // Keep only the subcategories belonging to this page (scope), so amounts match the table.
+        foreach (var c in categories)
+            c.Subcategories = c.Subcategories.Where(s => s.Scope == scope).OrderBy(s => s.Order).ToList();
 
         string[] months = { "Јан", "Фев", "Мар", "Апр", "Мај", "Јун", "Јул", "Авг", "Сеп", "Окт", "Ное", "Дек" };
 
@@ -200,7 +211,7 @@ public class ExpensesController : ControllerBase
             c.Subcategories.Sum(s => amountsBySub[s.Id].Values.Sum()));
 
         using var wb = new XLWorkbook();
-        var ws = wb.Worksheets.Add($"Трошоци {year}");
+        var ws = wb.Worksheets.Add($"{(scope == 1 ? "Приватни трошоци" : "Трошоци")} {year}");
 
         // Header — Бр. | Назив | Jan..Dec | Вкупно | % | бр.мес. | Месечно | Годишно
         int col = 1;
@@ -294,6 +305,6 @@ public class ExpensesController : ControllerBase
     }
 }
 
-public record CategoryRequest(string Name);
-public record SubcategoryRequest(int CategoryId, string Name, decimal AnnualPlan);
+public record CategoryRequest(string Name, int Scope = 0);
+public record SubcategoryRequest(int CategoryId, string Name, decimal AnnualPlan, int Scope = 0);
 public record EntryRequest(int SubcategoryId, int Year, int Month, decimal Amount);

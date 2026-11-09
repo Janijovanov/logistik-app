@@ -509,6 +509,9 @@ namespace Logistik.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -572,6 +575,9 @@ namespace Logistik.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Scope")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")

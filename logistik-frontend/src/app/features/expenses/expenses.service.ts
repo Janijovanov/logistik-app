@@ -9,12 +9,12 @@ export class ExpensesService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/expenses`;
 
-  getForYear(year: number): Observable<ExpensesYearDto> {
-    return this.http.get<ExpensesYearDto>(`${this.base}?year=${year}`);
+  getForYear(year: number, scope = 0): Observable<ExpensesYearDto> {
+    return this.http.get<ExpensesYearDto>(`${this.base}?year=${year}&scope=${scope}`);
   }
 
-  createCategory(name: string): Observable<any> {
-    return this.http.post(`${this.base}/categories`, { name });
+  createCategory(name: string, scope = 0): Observable<any> {
+    return this.http.post(`${this.base}/categories`, { name, scope });
   }
 
   updateCategory(id: number, name: string): Observable<void> {
@@ -25,8 +25,8 @@ export class ExpensesService {
     return this.http.delete<void>(`${this.base}/categories/${id}`);
   }
 
-  createSubcategory(categoryId: number, name: string, annualPlan: number): Observable<any> {
-    return this.http.post(`${this.base}/subcategories`, { categoryId, name, annualPlan });
+  createSubcategory(categoryId: number, name: string, annualPlan: number, scope = 0): Observable<any> {
+    return this.http.post(`${this.base}/subcategories`, { categoryId, name, annualPlan, scope });
   }
 
   updateSubcategory(id: number, categoryId: number, name: string, annualPlan: number): Observable<void> {
@@ -41,7 +41,7 @@ export class ExpensesService {
     return this.http.put<void>(`${this.base}/entries`, { subcategoryId, year, month, amount });
   }
 
-  exportExcel(year: number): Observable<Blob> {
-    return this.http.get(`${this.base}/export?year=${year}`, { responseType: 'blob' });
+  exportExcel(year: number, scope = 0): Observable<Blob> {
+    return this.http.get(`${this.base}/export?year=${year}&scope=${scope}`, { responseType: 'blob' });
   }
 }

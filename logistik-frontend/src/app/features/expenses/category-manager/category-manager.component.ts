@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -37,8 +37,12 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
               <button mat-icon-button (click)="editingCatId.set(null)"><mat-icon>close</mat-icon></button>
             } @else {
               <strong class="cat-name">{{ cat.name }}</strong>
-              <button mat-icon-button (click)="startEditCat(cat)"><mat-icon>edit</mat-icon></button>
-              <button mat-icon-button color="warn" (click)="deleteCategory(cat)"><mat-icon>delete</mat-icon></button>
+              @if ((cat.scope ?? 0) === scope) {
+                <button mat-icon-button (click)="startEditCat(cat)"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button color="warn" (click)="deleteCategory(cat)"><mat-icon>delete</mat-icon></button>
+              } @else {
+                <span class="shared-tag">од Трошоци</span>
+              }
             }
           </div>
 
@@ -110,6 +114,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
     .category-block { padding: 12px 0 8px; }
     .category-header { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
     .cat-name { font-size: 15px; flex: 1; }
+    .shared-tag { font-size: 11px; color: rgba(0,0,0,0.4); font-style: italic; padding-right: 8px; }
     .subcategory-list { padding-left: 16px; }
     .sub-row { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
     .sub-name { flex: 1; font-size: 14px; }
@@ -128,6 +133,8 @@ export class CategoryManagerComponent implements OnInit {
   private notifications = inject(NotificationService);
   private dialog = inject(MatDialog);
   dialogRef = inject(MatDialogRef<CategoryManagerComponent>);
+  private dialogData = inject(MAT_DIALOG_DATA, { optional: true }) as { scope?: number } | null;
+  readonly scope = this.dialogData?.scope ?? 0;
 
   categories = signal<ExpenseCategoryDto[]>([]);
   changed = signal(false);
@@ -146,7 +153,7 @@ export class CategoryManagerComponent implements OnInit {
   ngOnInit(): void { this.load(); }
 
   private load(): void {
-    this.service.getForYear(new Date().getFullYear()).subscribe({
+    this.service.getForYear(new Date().getFullYear(), this.scope).subscribe({
       next: data => this.categories.set(data.categories),
       error: () => {}
     });
@@ -190,7 +197,7 @@ export class CategoryManagerComponent implements OnInit {
 
   confirmAddCat(): void {
     if (!this.newCatName.trim()) return;
-    this.service.createCategory(this.newCatName.trim()).subscribe({
+    this.service.createCategory(this.newCatName.trim(), this.scope).subscribe({
       next: (created) => {
         this.categories.update(cats => [...cats, { ...created, subcategories: [] }]);
         this.newCatName = '';
@@ -248,7 +255,7 @@ export class CategoryManagerComponent implements OnInit {
 
   confirmAddSub(cat: ExpenseCategoryDto): void {
     if (!this.newSubName.trim()) return;
-    this.service.createSubcategory(cat.id, this.newSubName.trim(), this.newSubPlan).subscribe({
+    this.service.createSubcategory(cat.id, this.newSubName.trim(), this.newSubPlan, this.scope).subscribe({
       next: (created) => {
         cat.subcategories = [...cat.subcategories, { ...created, amounts: {} }];
         this.newSubName = '';

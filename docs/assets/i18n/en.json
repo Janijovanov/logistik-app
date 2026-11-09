@@ -6,9 +6,14 @@
     "logout": "Sign out",
     "adminPanel": "Admin Panel",
     "expenses": "Expenses",
+    "privateExpenses": "Private Expenses",
     "workTime": "Work Time",
     "brandTag": "Accountant",
     "brandName": "Logistik"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "privateTitle": "Private Expenses"
   },
   "auth": {
     "title": "Logistik",

@@ -29,6 +29,12 @@ export const routes: Routes = [
         loadChildren: () => import('./features/expenses/expenses.routes').then(m => m.expensesRoutes)
       },
       {
+        path: 'private-expenses',
+        canActivate: [roleGuard('Admin')],
+        loadComponent: () => import('./features/expenses/expenses-page/expenses-page.component').then(m => m.ExpensesPageComponent),
+        data: { scope: 1, titleKey: 'expenses.privateTitle' }
+      },
+      {
         path: 'work-time',
         loadChildren: () => import('./features/work-time/work-time.routes').then(m => m.workTimeRoutes)
       },

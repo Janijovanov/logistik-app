@@ -11,6 +11,7 @@ export interface ExpenseCategoryDto {
   id: number;
   name: string;
   order: number;
+  scope?: number; // 0 = main (shared), 1 = private-only
   subcategories: ExpenseSubcategoryDto[];
 }
 

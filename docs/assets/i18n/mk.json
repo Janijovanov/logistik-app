@@ -6,9 +6,14 @@
     "logout": "Одјава",
     "adminPanel": "Админ панел",
     "expenses": "Трошоци",
+    "privateExpenses": "Приватни трошоци",
     "workTime": "Работно Време",
     "brandTag": "Сметководствено биро",
     "brandName": "Логистик"
+  },
+  "expenses": {
+    "title": "Трошоци",
+    "privateTitle": "Приватни трошоци"
   },
   "auth": {
     "title": "Logistik",

@@ -7,6 +7,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ActivatedRoute } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ExpensesService } from '../expenses.service';
 import { ExpenseCategoryDto, ExpenseSubcategoryDto, ExpensesYearDto } from '../../../core/models/expense.models';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -21,12 +23,12 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
   imports: [
     CommonModule, FormsModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    MatDialogModule, MatTooltipModule
+    MatDialogModule, MatTooltipModule, TranslateModule
   ],
   template: `
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">Трошоци</h1>
+        <h1 class="page-title">{{ titleKey | translate }}</h1>
         <div class="year-nav">
           <button mat-icon-button (click)="changeYear(-1)"><mat-icon>chevron_left</mat-icon></button>
           <span class="year-label">{{ year() }}</span>
@@ -278,6 +280,11 @@ export class ExpensesPageComponent implements OnInit {
   private service = inject(ExpensesService);
   private dialog = inject(MatDialog);
   private notifications = inject(NotificationService);
+  private route = inject(ActivatedRoute);
+
+  // 0 = Трошоци (main), 1 = Приватни трошоци — set from route data.
+  readonly scope: number = this.route.snapshot.data['scope'] ?? 0;
+  readonly titleKey: string = this.route.snapshot.data['titleKey'] ?? 'expenses.title';
 
   readonly months = MONTHS;
   readonly monthNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -298,7 +305,7 @@ export class ExpensesPageComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.service.getForYear(this.year()).subscribe({
+    this.service.getForYear(this.year(), this.scope).subscribe({
       next: d => { this.data.set(d); this.loading.set(false); },
       error: () => { this.loading.set(false); }
     });
@@ -312,7 +319,7 @@ export class ExpensesPageComponent implements OnInit {
   }
 
   openCategoryManager(): void {
-    this.dialog.open(CategoryManagerComponent, { width: '600px', maxWidth: '96vw' })
+    this.dialog.open(CategoryManagerComponent, { width: '600px', maxWidth: '96vw', data: { scope: this.scope } })
       .afterClosed().subscribe(() => this.load());
   }
 
@@ -320,13 +327,13 @@ export class ExpensesPageComponent implements OnInit {
     if (this.exporting()) return;
     this.exporting.set(true);
     const yr = this.year();
-    this.service.exportExcel(yr).subscribe({
+    this.service.exportExcel(yr, this.scope).subscribe({
       next: blob => {
         this.exporting.set(false);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Trosoci-${yr}.xlsx`;
+        a.download = `${this.scope === 1 ? 'Privatni-Trosoci' : 'Trosoci'}-${yr}.xlsx`;
         a.click();
         URL.revokeObjectURL(url);
       },
