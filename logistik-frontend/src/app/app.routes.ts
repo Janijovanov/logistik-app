@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard';
+import { roleGuard, adminUserGuard } from './core/guards/role.guard';
 import { companiesAccessGuard } from './core/guards/companies-access.guard';
 
 export const routes: Routes = [
@@ -30,7 +30,7 @@ export const routes: Routes = [
       },
       {
         path: 'private-expenses',
-        canActivate: [roleGuard('Admin')],
+        canActivate: [adminUserGuard],
         loadComponent: () => import('./features/expenses/expenses-page/expenses-page.component').then(m => m.ExpensesPageComponent),
         data: { scope: 1, titleKey: 'expenses.privateTitle' }
       },

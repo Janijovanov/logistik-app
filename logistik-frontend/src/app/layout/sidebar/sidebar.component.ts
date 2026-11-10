@@ -12,6 +12,7 @@ interface NavItem {
   icon: string;
   route: string;
   adminOnly?: boolean;
+  adminUserOnly?: boolean; // only the 'admin' user account, not every Admin role
   needsCompanies?: boolean;
 }
 
@@ -145,13 +146,15 @@ export class SidebarComponent {
     { labelKey: 'nav.users', icon: 'manage_accounts', route: '/users', adminOnly: true },
     { labelKey: 'nav.workTime', icon: 'schedule', route: '/work-time' },
     { labelKey: 'nav.expenses', icon: 'receipt_long', route: '/expenses', adminOnly: true },
-    { labelKey: 'nav.privateExpenses', icon: 'lock', route: '/private-expenses', adminOnly: true },
+    { labelKey: 'nav.privateExpenses', icon: 'lock', route: '/private-expenses', adminUserOnly: true },
   ];
 
   get visibleItems(): NavItem[] {
     const isAdmin = this.authService.isAdmin();
-    const hasCompanies = (this.authService.currentUser()?.assignedCompanyIds?.length ?? 0) > 0;
+    const user = this.authService.currentUser();
+    const hasCompanies = (user?.assignedCompanyIds?.length ?? 0) > 0;
     return this.navItems.filter(item => {
+      if (item.adminUserOnly && user?.username !== 'admin') return false;
       if (item.adminOnly && !isAdmin) return false;
       if (item.needsCompanies && !isAdmin && !hasCompanies) return false;
       return true;

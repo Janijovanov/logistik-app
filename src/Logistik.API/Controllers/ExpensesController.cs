@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using Logistik.Application.Common.Interfaces;
 using Logistik.Domain.Entities;
 using Logistik.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -13,12 +14,23 @@ namespace Logistik.API.Controllers;
 public class ExpensesController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public ExpensesController(AppDbContext db) => _db = db;
+    private readonly ICurrentUserService _currentUser;
+    public ExpensesController(AppDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
+
+    // Private expenses (scope 1) are visible ONLY to the specific admin user account,
+    // not every Admin-role user.
+    private bool IsPrivateOwner => _currentUser.Username == "admin";
+    private bool DeniedPrivate(int scope) => scope == 1 && !IsPrivateOwner;
 
     // ── GET /api/expenses?year=2026 ──────────────────────────────────────────
     [HttpGet]
     public async Task<IActionResult> GetForYear([FromQuery] int year, [FromQuery] int scope, CancellationToken ct)
     {
+        if (DeniedPrivate(scope)) return Forbid();
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
         // Load all entries for all years (no filtered include) then filter in memory.
@@ -62,6 +74,7 @@ public class ExpensesController : ControllerBase
     [HttpPost("categories")]
     public async Task<IActionResult> CreateCategory([FromBody] CategoryRequest req, CancellationToken ct)
     {
+        if (DeniedPrivate(req.Scope)) return Forbid();
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest(new { message = "Името е задолжително." });
         var maxOrder = await _db.ExpenseCategories.MaxAsync(c => (int?)c.Order, ct) ?? 0;
         var cat = new ExpenseCategory { Name = req.Name.Trim(), Order = maxOrder + 1, Scope = req.Scope };
@@ -98,6 +111,7 @@ public class ExpensesController : ControllerBase
     [HttpPost("subcategories")]
     public async Task<IActionResult> CreateSubcategory([FromBody] SubcategoryRequest req, CancellationToken ct)
     {
+        if (DeniedPrivate(req.Scope)) return Forbid();
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest(new { message = "Името е задолжително." });
         var cat = await _db.ExpenseCategories.FindAsync([req.CategoryId], ct);
         if (cat is null) return BadRequest(new { message = "Категоријата не постои." });
@@ -147,6 +161,11 @@ public class ExpensesController : ControllerBase
         if (req.Month < 1 || req.Month > 12) return BadRequest(new { message = "Невалиден месец." });
         if (req.Year < 2000 || req.Year > 2100) return BadRequest(new { message = "Невалидна година." });
 
+        // Block writing into a private subcategory from anyone but the private owner.
+        var subScope = await _db.ExpenseSubcategories
+            .Where(s => s.Id == req.SubcategoryId).Select(s => (int?)s.Scope).FirstOrDefaultAsync(ct);
+        if (subScope.HasValue && DeniedPrivate(subScope.Value)) return Forbid();
+
         var existing = await _db.ExpenseEntries.FirstOrDefaultAsync(
             e => e.SubcategoryId == req.SubcategoryId && e.Year == req.Year && e.Month == req.Month, ct);
 
@@ -179,6 +198,7 @@ public class ExpensesController : ControllerBase
     [HttpGet("export")]
     public async Task<IActionResult> Export([FromQuery] int year, [FromQuery] int scope, CancellationToken ct)
     {
+        if (DeniedPrivate(scope)) return Forbid();
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
         var categories = await _db.ExpenseCategories
