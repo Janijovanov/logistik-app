@@ -285,6 +285,7 @@
     "yearSummary": "Company totals by month",
     "month": "Month",
     "avgTime": "Avg (min/doc)",
+    "total": "Total",
     "monthTotal": "Month total",
     "saveAll": "Save All",
     "saved": "Saved successfully.",

@@ -40,10 +40,11 @@ public class ExpensesController : ControllerBase
         if (await DeniedPrivateAsync(scope, ct)) return Forbid();
         if (year < 2000 || year > 2100) year = DateTime.UtcNow.Year;
 
-        // Load all entries for all years (no filtered include) then filter in memory.
-        // Filtered includes + ThenInclude have compatibility issues across EF Core versions.
         // Category headers: private (scope 1) shows main + private; main (scope 0) shows only main.
-        // Subcategories: each page shows only its own (matching scope), so amounts/plan stay separate.
+        // Subcategories: main page shows its own (scope 0). Private page pulls the main
+        // subcategories too (scope 0) so the category rows show the Trošoci numbers, plus
+        // its own private subcategories (scope 1). The client renders only matching-scope
+        // subcategory rows but totals every subcategory, so main rows show Trošoci figures.
         var categories = await _db.ExpenseCategories
             .Include(c => c.Subcategories)
                 .ThenInclude(s => s.Entries)
@@ -58,11 +59,12 @@ public class ExpensesController : ControllerBase
             c.Order,
             c.Scope,
             subcategories = c.Subcategories
-                .Where(s => s.Scope == scope)
+                .Where(s => scope == 1 || s.Scope == 0)
                 .OrderBy(s => s.Order)
                 .Select(s => new
                 {
                     s.Id,
+                    s.Scope,
                     s.CategoryId,
                     s.Name,
                     s.Order,
@@ -214,9 +216,10 @@ public class ExpensesController : ControllerBase
             .OrderBy(c => c.Order)
             .ToListAsync(ct);
 
-        // Keep only the subcategories belonging to this page (scope), so amounts match the table.
+        // Pull every subcategory that counts toward this page (main page: scope 0 only;
+        // private page: main scope-0 for the category figures + its own scope-1 rows).
         foreach (var c in categories)
-            c.Subcategories = c.Subcategories.Where(s => s.Scope == scope).OrderBy(s => s.Order).ToList();
+            c.Subcategories = c.Subcategories.Where(s => scope == 1 || s.Scope == 0).OrderBy(s => s.Order).ToList();
 
         string[] months = { "Јан", "Фев", "Мар", "Апр", "Мај", "Јун", "Јул", "Авг", "Сеп", "Окт", "Ное", "Дек" };
 
@@ -281,6 +284,9 @@ public class ExpensesController : ControllerBase
             int subIdx = 0;
             foreach (var sub in cat.Subcategories.OrderBy(s => s.Order))
             {
+                // On the private page, don't list the pulled Trošoci subcategory rows —
+                // they only feed the category figures above. Only private rows are listed.
+                if (sub.Scope != scope) continue;
                 subIdx++;
                 decimal subVkupno = 0;
                 int cnt = 0;

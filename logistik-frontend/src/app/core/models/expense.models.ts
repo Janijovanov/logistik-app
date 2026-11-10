@@ -4,6 +4,7 @@ export interface ExpenseSubcategoryDto {
   name: string;
   order: number;
   annualPlan: number;
+  scope?: number; // 0 = main (Trošoci), 1 = private
   amounts: Record<number, number>; // month (1-12) -> amount
 }
 

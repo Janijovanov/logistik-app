@@ -85,8 +85,8 @@ const PLAN_COL = 13; // logical column for the editable "Месечно" (monthl
                 <td class="plan-cell cat-amount">{{ catAnnual(cat) | number:'1.0-0':'mk' }}</td>
               </tr>
 
-              @for (sub of cat.subcategories; track sub.id; let subIdx = $index) {
-                <!-- Subcategory row -->
+              @for (sub of visibleSubs(cat); track sub.id; let subIdx = $index) {
+                <!-- Subcategory row (only this page's own; pulled Trošoci subs feed the category totals but aren't listed) -->
                 <tr class="sub-row">
                   <td class="idx-col sub-no">{{ catIdx + 1 }}.{{ subIdx + 1 }}</td>
                   <td class="name-col sub-name">{{ sub.name }}</td>
@@ -297,9 +297,15 @@ export class ExpensesPageComponent implements OnInit {
   editingCell = signal<{ subId: number; month: number } | null>(null);
   editingPlanSubId = signal<number | null>(null);
 
-  // Flat list of subcategories in visual order — the grid's row axis for keyboard nav.
+  // Flat list of EDITABLE subcategories (this page's own scope) — the grid's row axis.
   flatSubs = computed<ExpenseSubcategoryDto[]>(() =>
-    (this.data()?.categories ?? []).flatMap(c => c.subcategories));
+    (this.data()?.categories ?? []).flatMap(c => this.visibleSubs(c)));
+
+  // Rows shown for a category: only this page's own subcategories. Pulled Trošoci
+  // subcategories (other scope) still count toward the category totals but aren't listed.
+  visibleSubs(cat: ExpenseCategoryDto): ExpenseSubcategoryDto[] {
+    return cat.subcategories.filter(s => (s.scope ?? 0) === this.scope);
+  }
 
   ngOnInit(): void { this.load(); }
 

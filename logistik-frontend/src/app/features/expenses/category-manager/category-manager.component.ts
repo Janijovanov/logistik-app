@@ -154,7 +154,12 @@ export class CategoryManagerComponent implements OnInit {
 
   private load(): void {
     this.service.getForYear(new Date().getFullYear(), this.scope).subscribe({
-      next: data => this.categories.set(data.categories),
+      // Only this page's own subcategories are managed here; pulled Trošoci ones
+      // (shown on the private page for their figures) are managed in Trošoci.
+      next: data => this.categories.set(data.categories.map(c => ({
+        ...c,
+        subcategories: c.subcategories.filter(s => (s.scope ?? 0) === this.scope)
+      }))),
       error: () => {}
     });
   }
