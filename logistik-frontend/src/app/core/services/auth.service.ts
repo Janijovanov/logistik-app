@@ -93,7 +93,7 @@ export class AuthService {
 
     this._currentUser.set({
       id: Number(payload['sub']),
-      username: payload['username'] as string ?? payload['email'] as string ?? '',
+      username: payload['unique_name'] as string ?? payload['username'] as string ?? payload['email'] as string ?? '',
       email: payload['email'] as string ?? '',
       firstName: payload['firstName'] as string ?? '',
       lastName: payload['lastName'] as string ?? '',
@@ -101,5 +101,9 @@ export class AuthService {
       assignedCompanyIds: (payload['companies'] as string ?? '').split(',').filter(Boolean).map(Number),
       permissions: []
     });
+
+    // The JWT doesn't carry the real username/permissions, so refine from the API
+    // (gives the accurate username used for admin-user-only features and permissions).
+    this.getCurrentUserFromApi().subscribe({ error: () => { /* keep token-derived user */ } });
   }
 }
