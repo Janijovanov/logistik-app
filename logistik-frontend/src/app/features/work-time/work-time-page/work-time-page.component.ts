@@ -115,13 +115,14 @@ interface RowState {
         </h3>
         <div class="table-wrapper">
           <table class="wt-table aligned">
-            <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+            <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" />@if (selectedKind === 1) { <col class="col-num" /> }<col /></colgroup>
             <thead>
               <tr>
                 <th>{{ 'workTime.month' | translate }}</th>
                 <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                 <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
                 <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+                @if (selectedKind === 1) { <th class="num-col">{{ 'workTime.total' | translate }}</th> }
                 <th class="notes-col"></th>
               </tr>
             </thead>
@@ -132,6 +133,7 @@ interface RowState {
                   <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ row.documentCount }}</td>
                   <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ row.minutes }}</td>
                   <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(row.minutes, row.documentCount) | number:'1.0-1':'mk' }}</td>
+                  @if (selectedKind === 1) { <td class="num-col" [attr.data-label]="'workTime.total' | translate">{{ row.minutes }}</td> }
                   <td class="ghost-cell notes-col"></td>
                 </tr>
               }
@@ -140,6 +142,7 @@ interface RowState {
                 <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ yearTotalDocs() }}</strong></td>
                 <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ yearTotalMinutes() }}</strong></td>
                 <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(yearTotalMinutes(), yearTotalDocs()) | number:'1.0-1':'mk' }}</strong></td>
+                @if (selectedKind === 1) { <td class="num-col"><strong>{{ yearTotalMinutes() }}</strong></td> }
                 <td class="ghost-cell notes-col"></td>
               </tr>
             </tbody>
@@ -163,13 +166,14 @@ interface RowState {
           @if (entries().length > 0 || monthlyTotal().documentCount > 0 || monthlyTotal().minutes > 0) {
           <div class="company-total">
             <table class="wt-table aligned">
-              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+              <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" />@if (selectedKind === 1) { <col class="col-num" /> }<col /></colgroup>
               <thead>
                 <tr>
                   <th></th>
                   <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                   <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
                   <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+                  @if (selectedKind === 1) { <th class="num-col">{{ 'workTime.total' | translate }}</th> }
                   <th class="notes-col"></th>
                 </tr>
               </thead>
@@ -180,6 +184,7 @@ interface RowState {
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(entries(), 'documentCount') }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(entries(), 'minutes'), groupTotal(entries(), 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
+                    @if (selectedKind === 1) { <td class="num-col"><strong>{{ groupTotal(entries(), 'minutes') }}</strong></td> }
                     <td class="ghost-cell notes-col"></td>
                   </tr>
                 }
@@ -188,6 +193,7 @@ interface RowState {
                   <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
                   <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
                   <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
+                  @if (selectedKind === 1) { <td class="num-col"><strong>{{ monthlyTotal().minutes }}</strong></td> }
                   <td class="ghost-cell notes-col"></td>
                 </tr>
               </tbody>
@@ -206,13 +212,14 @@ interface RowState {
                 <h3 class="group-title">{{ group.userName }}</h3>
                 <div class="table-wrapper">
                   <table class="wt-table aligned">
-                    <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" /><col /></colgroup>
+                    <colgroup><col class="col-name" /><col class="col-num" /><col class="col-num" /><col class="col-num" />@if (selectedKind === 1) { <col class="col-num" /> }<col /></colgroup>
                     <thead>
                       <tr>
                         <th>{{ 'workTime.docType' | translate }}</th>
                         <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                         <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
                         <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
+                        @if (selectedKind === 1) { <th class="num-col">{{ 'workTime.total' | translate }}</th> }
                         <th class="notes-col">{{ 'common.notes' | translate }}</th>
                       </tr>
                     </thead>
@@ -223,6 +230,7 @@ interface RowState {
                           <td class="num-col" [attr.data-label]="'workTime.docCount' | translate">{{ entry.documentCount }}</td>
                           <td class="num-col" [attr.data-label]="'workTime.minutes' | translate">{{ entry.minutes }}</td>
                           <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(entry.minutes, entry.documentCount) | number:'1.0-1':'mk' }}</td>
+                          @if (selectedKind === 1) { <td class="num-col" [attr.data-label]="'workTime.total' | translate">{{ entry.minutes }}</td> }
                           <td class="notes-col" [attr.data-label]="'common.notes' | translate">{{ entry.notes || '—' }}</td>
                         </tr>
                       }
@@ -231,6 +239,7 @@ interface RowState {
                         <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ groupTotal(group.entries, 'documentCount') }}</strong></td>
                         <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td>
                         <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(groupTotal(group.entries, 'minutes'), groupTotal(group.entries, 'documentCount')) | number:'1.0-1':'mk' }}</strong></td>
+                        @if (selectedKind === 1) { <td class="num-col"><strong>{{ groupTotal(group.entries, 'minutes') }}</strong></td> }
                         <td class="ghost-cell"></td>
                       </tr>
                     </tbody>
@@ -253,9 +262,7 @@ interface RowState {
               <table class="wt-table editable-table">
                 <colgroup>
                   <col class="col-order" /><col class="col-name" /><col class="col-num" />
-                  <col class="col-num" /><col class="col-num" />
-                  @if (selectedKind === 1) { <col class="col-num" /> }
-                  <col /><col class="col-action" />
+                  <col class="col-num" /><col class="col-num" /><col /><col class="col-action" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -264,9 +271,6 @@ interface RowState {
                     <th class="num-col">{{ 'workTime.docCount' | translate }}</th>
                     <th class="num-col">{{ 'workTime.minutes' | translate }}</th>
                     <th class="num-col">{{ 'workTime.avgTime' | translate }}</th>
-                    @if (selectedKind === 1) {
-                      <th class="num-col">{{ 'workTime.total' | translate }}</th>
-                    }
                     <th class="notes-col">{{ 'common.notes' | translate }}</th>
                     <th class="action-col"></th>
                   </tr>
@@ -303,9 +307,6 @@ interface RowState {
                         />
                       </td>
                       <td class="num-col avg-cell" [attr.data-label]="'workTime.avgTime' | translate">{{ avgTime(+row.minutes, +row.documentCount) | number:'1.0-1':'mk' }}</td>
-                      @if (selectedKind === 1) {
-                        <td class="num-col total-cell" [attr.data-label]="'workTime.total' | translate">{{ rowTotal(row) | number:'1.0-0':'mk' }}</td>
-                      }
                       <td class="notes-col" [attr.data-label]="'common.notes' | translate">
                         <input
                           type="text"
@@ -342,9 +343,6 @@ interface RowState {
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ totalDocs() }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ totalMinutes() }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(totalMinutes(), totalDocs()) | number:'1.0-1':'mk' }}</strong></td>
-                    @if (selectedKind === 1) {
-                      <td class="num-col" [attr.data-label]="'workTime.total' | translate"><strong>{{ totalRowMinutes() | number:'1.0-0':'mk' }}</strong></td>
-                    }
                     <td colspan="2" class="ghost-cell"></td>
                   </tr>
                   <tr class="grand-total-row month-total-row">
@@ -353,9 +351,6 @@ interface RowState {
                     <td class="num-col" [attr.data-label]="'workTime.docCount' | translate"><strong>{{ monthlyTotal().documentCount }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.minutes' | translate"><strong>{{ monthlyTotal().minutes }}</strong></td>
                     <td class="num-col" [attr.data-label]="'workTime.avgTime' | translate"><strong>{{ avgTime(monthlyTotal().minutes, monthlyTotal().documentCount) | number:'1.0-1':'mk' }}</strong></td>
-                    @if (selectedKind === 1) {
-                      <td class="num-col ghost-cell"></td>
-                    }
                     <td colspan="2" class="ghost-cell"></td>
                   </tr>
                 </tfoot>
@@ -565,10 +560,6 @@ export class WorkTimePageComponent implements OnInit {
   avgTime(minutes: number, docs: number): number { return docs > 0 ? minutes / docs : 0; }
   // Select the field content on focus so typing replaces the default 0 (no "05").
   selectAll(event: Event): void { (event.target as HTMLInputElement).select(); }
-
-  // Процена tab "Вкупно" column: total minutes for a row = documents × minutes.
-  rowTotal(row: RowState): number { return (+row.documentCount || 0) * (+row.minutes || 0); }
-  totalRowMinutes(): number { return this.rows().reduce((s, r) => s + this.rowTotal(r), 0); }
 
   // Excel-like arrow navigation across the entry grid.
   // Columns: 0 = documents, 1 = minutes, 2 = notes. Up/Down move rows,
