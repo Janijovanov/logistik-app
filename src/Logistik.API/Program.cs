@@ -99,11 +99,21 @@ if (app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 app.UseCors();
+
+// On-premise single-process hosting: serve the built Angular app from wwwroot.
+// On the cloud/API-only deployment wwwroot has no index.html, so these are no-ops.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// SPA fallback — any non-API, non-file route returns index.html (client-side routing).
+// Harmless when wwwroot is empty (returns 404, which is the current cloud behaviour).
+app.MapFallbackToFile("index.html");
 
 // Hangfire dashboard
 app.UseHangfireDashboard("/hangfire");
